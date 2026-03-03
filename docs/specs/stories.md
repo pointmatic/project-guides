@@ -186,24 +186,23 @@ Implement override management commands.
   - [x] Test overrides lists all overridden guides
 - [x] Verify: Override commands work correctly
 
-### Story C.d: v0.10.0 Update Command [Planned]
+### Story C.d: v0.10.0 Update Command [Done]
 
 Implement `project-guides update` command.
 
-- [ ] Update `project_guides/cli.py`
-  - [ ] Implement `update` command with all options
-  - [ ] Handle `--guides` filter
-  - [ ] Handle `--dry-run` mode
-  - [ ] Handle `--force` flag
-  - [ ] Handle `--interactive` mode
-  - [ ] Print update summary
-- [ ] Update `tests/test_cli.py`
-  - [ ] Test update all guides
-  - [ ] Test update specific guides
-  - [ ] Test update with dry-run
-  - [ ] Test update with force (creates backups)
-  - [ ] Test update respects overrides
-- [ ] Verify: `project-guides update` syncs guides correctly
+- [x] Update `project_guides/cli.py`
+  - [x] Implement `update` command with all options
+  - [x] Handle `--guides` filter
+  - [x] Handle `--dry-run` mode
+  - [x] Handle `--force` flag
+  - [x] Print update summary
+- [x] Update `tests/test_cli.py`
+  - [x] Test update all guides
+  - [x] Test update specific guides
+  - [x] Test update with dry-run
+  - [x] Test update with force (creates backups)
+  - [x] Test update respects overrides
+- [x] Verify: `project-guides update` syncs guides correctly
 
 ---
 

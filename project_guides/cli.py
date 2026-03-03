@@ -18,7 +18,7 @@ import click
 
 from project_guides.version import __version__
 from project_guides.config import Config
-from project_guides.sync import get_all_guide_names, copy_guide, compare_versions
+from project_guides.sync import get_all_guide_names, copy_guide, compare_versions, sync_guides
 
 
 @click.group()
@@ -154,6 +154,89 @@ def status():
             click.echo("Run 'project-guides update' to sync.")
     else:
         click.secho("All guides are up to date.", fg='green')
+
+
+@main.command()
+@click.option('--guides', multiple=True, help='Specific guides to update')
+@click.option('--dry-run', is_flag=True, help='Show what would be updated without applying')
+@click.option('--force', is_flag=True, help='Update even overridden guides (creates backups)')
+def update(guides: tuple, dry_run: bool, force: bool):
+    """Update guides to latest version."""
+    config_path = Path(".project-guides.yml")
+    
+    # Check if config exists
+    if not config_path.exists():
+        click.secho(
+            "Error: No .project-guides.yml found. Run 'project-guides init' first.",
+            fg='red',
+            err=True
+        )
+        raise click.Abort()
+    
+    # Load config
+    config = Config.load(str(config_path))
+    
+    # Convert guides tuple to list or None
+    guides_list = list(guides) if guides else None
+    
+    # Validate specific guides if provided
+    if guides_list:
+        all_guides = get_all_guide_names()
+        for guide in guides_list:
+            if guide not in all_guides:
+                click.secho(
+                    f"Error: Guide '{guide}' not found.",
+                    fg='red',
+                    err=True
+                )
+                click.echo(f"Available guides: {', '.join(all_guides)}")
+                raise click.Abort()
+    
+    # Run sync
+    if dry_run:
+        click.echo("Dry-run mode: showing what would be updated...")
+        click.echo()
+    
+    updated, skipped, current = sync_guides(config, guides_list, force, dry_run)
+    
+    # Print results
+    if updated:
+        action = "Would update" if dry_run else "Updated"
+        click.secho(f"{action}:", fg='green')
+        for guide in updated:
+            click.secho(f"  ✓ {guide}", fg='green')
+    
+    if skipped:
+        click.secho("Skipped (overridden):", fg='yellow')
+        for guide in skipped:
+            override = config.overrides[guide]
+            click.secho(f"  ⊘ {guide} - {override.reason}", fg='yellow')
+    
+    if current:
+        click.echo("Already current:")
+        for guide in current:
+            click.echo(f"  • {guide}")
+    
+    # Update config if not dry-run and updates were made
+    if not dry_run and updated:
+        config.installed_version = __version__
+        config.save(str(config_path))
+    
+    # Print summary
+    click.echo()
+    if dry_run:
+        if updated:
+            click.echo(f"Would update {len(updated)} guide{'s' if len(updated) != 1 else ''}.")
+            click.echo("Run without --dry-run to apply changes.")
+        else:
+            click.echo("No updates needed.")
+    else:
+        if updated:
+            click.secho(f"✓ Updated {len(updated)} guide{'s' if len(updated) != 1 else ''}.", fg='green')
+        elif skipped and not current:
+            click.echo("All guides are overridden. Use --force to update anyway.")
+        else:
+            click.echo("All guides are up to date.")
 
 
 @main.command()
