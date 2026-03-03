@@ -30,13 +30,13 @@ class SyncError(ProjectGuidesError):
 
 class GuideNotFoundError(ProjectGuidesError):
     """Exception raised when a guide template is not found."""
-    
-    def __init__(self, guide_name: str, available_guides: list = None):
+
+    def __init__(self, guide_name: str, available_guides: list | None = None):
         self.guide_name = guide_name
         self.available_guides = available_guides or []
-        
+
         message = f"Guide '{guide_name}' not found."
         if available_guides:
             message += f"\nAvailable guides: {', '.join(sorted(available_guides))}"
-        
+
         super().__init__(message)

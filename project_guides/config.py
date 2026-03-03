@@ -15,10 +15,11 @@
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from typing import Dict
 
 import yaml
+
 from project_guides.exceptions import ConfigError
+
 
 @dataclass
 class GuideOverride:
@@ -51,30 +52,30 @@ class Config:
     version: str = "1.0"
     installed_version: str = ""
     target_dir: str = "docs/guides"
-    overrides: Dict[str, GuideOverride] = field(default_factory=dict)
+    overrides: dict[str, GuideOverride] = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: str = ".project-guides.yml") -> "Config":
         """Load configuration from YAML file."""
         config_path = Path(path)
-        
+
         if not config_path.exists():
             raise ConfigError(
                 f"Configuration file not found: {config_path}\n"
                 "Run 'project-guides init' to create it."
             )
-        
+
         try:
-            with open(path, 'r') as f:
+            with open(path) as f:
                 data = yaml.safe_load(f)
         except yaml.YAMLError as e:
             raise ConfigError(f"Invalid YAML in {config_path}: {e}")
         except PermissionError:
             raise ConfigError(f"Permission denied reading {config_path}")
-        
+
         if not data:
             raise ConfigError(f"Empty configuration file: {config_path}")
-        
+
         # Parse overrides
         overrides = {}
         if 'overrides' in data:
@@ -87,7 +88,7 @@ class Config:
                     overrides[guide_name] = GuideOverride(**override_data)
                 except (TypeError, ValueError) as e:
                     raise ConfigError(f"Invalid override data for '{guide_name}': {e}")
-        
+
         return Config(
             version=data.get('version', '1.0'),
             installed_version=data.get('installed_version'),
@@ -102,13 +103,14 @@ class Config:
             "installed_version": self.installed_version,
             "target_dir": self.target_dir,
         }
-        
+
         if self.overrides:
-            data["overrides"] = {
+            overrides_dict = {
                 guide_name: override.to_dict()
                 for guide_name, override in self.overrides.items()
             }
-        
+            data["overrides"] = overrides_dict  # type: ignore[assignment]
+
         config_path = Path(path)
         with open(config_path, "w") as f:
             yaml.dump(data, f, default_flow_style=False, sort_keys=False)

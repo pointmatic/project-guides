@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import click
 
-from project_guides.version import __version__
 from project_guides.config import Config
-from project_guides.sync import get_all_guide_names, copy_guide, compare_versions, sync_guides
-from project_guides.exceptions import ConfigError, SyncError, GuideNotFoundError
+from project_guides.exceptions import ConfigError, SyncError
+from project_guides.sync import compare_versions, copy_guide, get_all_guide_names, sync_guides
+from project_guides.version import __version__
 
 
 @click.group()
@@ -36,7 +36,7 @@ def main():
 def init(target_dir: str, force: bool):
     """Initialize guides in a new project."""
     config_path = Path(".project-guides.yml")
-    
+
     # Check if config already exists
     if config_path.exists() and not force:
         click.secho(
@@ -45,18 +45,18 @@ def init(target_dir: str, force: bool):
             err=True
         )
         raise click.Abort()
-    
+
     # Create target directory
     target_path = Path(target_dir)
     target_path.mkdir(parents=True, exist_ok=True)
-    
+
     # Get all guide names
     guide_names = get_all_guide_names()
-    
+
     # Copy all templates
     click.echo(f"Initializing project-guides v{__version__}...")
     click.secho(f"✓ Created {target_dir}/", fg='green')
-    
+
     for guide_name in guide_names:
         try:
             copy_guide(guide_name, target_path, force=force)
@@ -67,7 +67,7 @@ def init(target_dir: str, force: bool):
         except SyncError as e:
             click.secho(f"Error: {e}", fg='red', err=True)
             sys.exit(2)  # File I/O error exit code
-    
+
     # Create config file
     config = Config(
         version="1.0",
@@ -76,7 +76,7 @@ def init(target_dir: str, force: bool):
     )
     config.save(str(config_path))
     click.secho(f"✓ Created {config_path}", fg='green')
-    
+
     click.echo(f"\nSuccessfully initialized {len(guide_names)} guides.")
 
 
@@ -84,7 +84,7 @@ def init(target_dir: str, force: bool):
 def status():
     """Show status of all guides."""
     config_path = Path(".project-guides.yml")
-    
+
     # Check if config exists
     if not config_path.exists():
         click.secho(
@@ -93,32 +93,32 @@ def status():
             err=True
         )
         raise click.Abort()
-    
+
     # Load config
     try:
         config = Config.load(str(config_path))
     except ConfigError as e:
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(3)  # Configuration error exit code
-    
+
     # Show version info
     package_version = __version__
     click.echo(f"project-guides v{package_version} (installed: v{config.installed_version})")
     click.echo()
-    
+
     # Check each guide's status
     guide_names = get_all_guide_names()
     target_dir = Path(config.target_dir)
-    
+
     current_count = 0
     outdated_count = 0
     overridden_count = 0
     missing_count = 0
-    
+
     click.echo("Guides status:")
     for guide_name in guide_names:
         target_file = target_dir / guide_name
-        
+
         # Check if overridden
         if config.is_overridden(guide_name):
             override = config.overrides[guide_name]
@@ -142,7 +142,7 @@ def status():
                 fg='yellow'
             )
             outdated_count += 1
-    
+
     # Show summary
     click.echo()
     summary_parts = []
@@ -152,7 +152,7 @@ def status():
         summary_parts.append(f"{outdated_count} update{'s' if outdated_count != 1 else ''} available")
     if missing_count > 0:
         summary_parts.append(f"{missing_count} guide{'s' if missing_count != 1 else ''} missing")
-    
+
     if summary_parts:
         click.echo(", ".join(summary_parts).capitalize())
         if outdated_count > 0 or missing_count > 0:
@@ -168,7 +168,7 @@ def status():
 def update(guides: tuple, dry_run: bool, force: bool):
     """Update guides to latest version."""
     config_path = Path(".project-guides.yml")
-    
+
     # Check if config exists
     if not config_path.exists():
         click.secho(
@@ -177,17 +177,17 @@ def update(guides: tuple, dry_run: bool, force: bool):
             err=True
         )
         raise click.Abort()
-    
+
     # Load config
     try:
         config = Config.load(str(config_path))
     except ConfigError as e:
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(3)  # Configuration error exit code
-    
+
     # Convert guides tuple to list or None
     guides_list = list(guides) if guides else None
-    
+
     # Validate specific guides if provided
     if guides_list:
         all_guides = get_all_guide_names()
@@ -200,41 +200,41 @@ def update(guides: tuple, dry_run: bool, force: bool):
                 )
                 click.echo(f"Available guides: {', '.join(all_guides)}")
                 sys.exit(1)  # General error exit code
-    
+
     # Run sync
     if dry_run:
         click.echo("Dry-run mode: showing what would be updated...")
         click.echo()
-    
+
     try:
         updated, skipped, current = sync_guides(config, guides_list, force, dry_run)
     except SyncError as e:
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(2)  # File I/O error exit code
-    
+
     # Print results
     if updated:
         action = "Would update" if dry_run else "Updated"
         click.secho(f"{action}:", fg='green')
         for guide in updated:
             click.secho(f"  ✓ {guide}", fg='green')
-    
+
     if skipped:
         click.secho("Skipped (overridden):", fg='yellow')
         for guide in skipped:
             override = config.overrides[guide]
             click.secho(f"  ⊘ {guide} - {override.reason}", fg='yellow')
-    
+
     if current:
         click.echo("Already current:")
         for guide in current:
             click.echo(f"  • {guide}")
-    
+
     # Update config if not dry-run and updates were made
     if not dry_run and updated:
         config.installed_version = __version__
         config.save(str(config_path))
-    
+
     # Print summary
     click.echo()
     if dry_run:
@@ -258,7 +258,7 @@ def update(guides: tuple, dry_run: bool, force: bool):
 def override(guide_name: str, reason: str):
     """Mark a guide as overridden to prevent updates."""
     config_path = Path(".project-guides.yml")
-    
+
     # Check if config exists
     if not config_path.exists():
         click.secho(
@@ -267,14 +267,14 @@ def override(guide_name: str, reason: str):
             err=True
         )
         raise click.Abort()
-    
+
     # Load config
     try:
         config = Config.load(str(config_path))
     except ConfigError as e:
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(3)  # Configuration error exit code
-    
+
     # Verify guide exists
     all_guides = get_all_guide_names()
     if guide_name not in all_guides:
@@ -285,11 +285,11 @@ def override(guide_name: str, reason: str):
         )
         click.echo(f"Available guides: {', '.join(all_guides)}")
         sys.exit(1)  # General error exit code
-    
+
     # Add override
     config.add_override(guide_name, reason, config.installed_version or __version__)
     config.save(str(config_path))
-    
+
     click.secho(f"✓ Marked {guide_name} as overridden", fg='green')
     click.echo(f"  Reason: {reason}")
 
@@ -299,7 +299,7 @@ def override(guide_name: str, reason: str):
 def unoverride(guide_name: str):
     """Remove override status from a guide."""
     config_path = Path(".project-guides.yml")
-    
+
     # Check if config exists
     if not config_path.exists():
         click.secho(
@@ -308,14 +308,14 @@ def unoverride(guide_name: str):
             err=True
         )
         raise click.Abort()
-    
+
     # Load config
     try:
         config = Config.load(str(config_path))
     except ConfigError as e:
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(3)  # Configuration error exit code
-    
+
     # Check if guide is overridden
     if not config.is_overridden(guide_name):
         click.secho(
@@ -324,11 +324,11 @@ def unoverride(guide_name: str):
             err=True
         )
         raise click.Abort()
-    
+
     # Remove override
     config.remove_override(guide_name)
     config.save(str(config_path))
-    
+
     click.secho(f"✓ Removed override from {guide_name}", fg='green')
 
 
@@ -336,7 +336,7 @@ def unoverride(guide_name: str):
 def overrides():
     """List all overridden guides."""
     config_path = Path(".project-guides.yml")
-    
+
     # Check if config exists
     if not config_path.exists():
         click.secho(
@@ -345,19 +345,19 @@ def overrides():
             err=True
         )
         raise click.Abort()
-    
+
     # Load config
     try:
         config = Config.load(str(config_path))
     except ConfigError as e:
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(3)  # Configuration error exit code
-    
+
     # Check if any overrides exist
     if not config.overrides:
         click.echo("No overridden guides.")
         return
-    
+
     # List overrides
     click.echo(f"Overridden guides ({len(config.overrides)}):")
     for guide_name, override in sorted(config.overrides.items()):
