@@ -1,0 +1,16 @@
+# macOS only
+.DS_Store
+
+# Python build and test artifacts
+__pycache__
+*.egg-info
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# Pyve virtual environment
+.pyve/testenv
+.envrc
+.env
+.venv

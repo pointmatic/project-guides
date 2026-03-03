@@ -1,0 +1,35 @@
+[project]
+name = "project-guides"
+version = "0.2.0"
+description = "Manage LLM development workflow documentation across projects"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+authors = [
+    { name = "Pointmatic", email = "pointmatic@example.com" }
+]
+keywords = ["llm", "documentation", "workflow", "guides", "templates"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "click>=8.1",
+    "pyyaml>=6.0",
+    "packaging>=24.0",
+]
+
+[project.scripts]
+project-guides = "project_guides.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["project_guides"]
