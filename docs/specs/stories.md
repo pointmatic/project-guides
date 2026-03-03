@@ -60,24 +60,24 @@ Implement configuration data model and YAML I/O.
   - [x] Test invalid YAML handling
 - [x] Verify: All config tests pass
 
-### Story A.c: v0.3.0 Template Bundle Structure [Planned]
+### Story A.c: v0.3.0 Template Bundle Structure [Done]
 
 Set up package data structure for bundled guide templates.
 
-- [ ] Create `project_guides/templates/guides/` directory
-- [ ] Create placeholder guide templates
-  - [ ] `project_guides/templates/guides/README.md`
-  - [ ] `project_guides/templates/guides/project-guide.md`
-  - [ ] `project_guides/templates/guides/best-practices-guide.md`
-  - [ ] `project_guides/templates/guides/debug-guide.md`
-  - [ ] `project_guides/templates/guides/documentation-setup-guide.md`
-- [ ] Create `project_guides/templates/guides/developer/` directory
-  - [ ] `project_guides/templates/guides/developer/codecov-setup-guide.md`
-  - [ ] `project_guides/templates/guides/developer/production-mode.md`
-- [ ] Create `project_guides/templates/.project-guides.yml.template`
-- [ ] Update `pyproject.toml` to include package data
-  - [ ] Configure `[tool.hatch.build.targets.wheel.force-include]`
-- [ ] Verify: Templates are included in wheel build
+- [x] Create `project_guides/templates/guides/` directory
+- [x] Create placeholder guide templates
+  - [x] `project_guides/templates/guides/README.md`
+  - [x] `project_guides/templates/guides/project-guide.md`
+  - [x] `project_guides/templates/guides/best-practices-guide.md`
+  - [x] `project_guides/templates/guides/debug-guide.md`
+  - [x] `project_guides/templates/guides/documentation-setup-guide.md`
+- [x] Create `project_guides/templates/guides/developer/` directory
+  - [x] `project_guides/templates/guides/developer/codecov-setup-guide.md`
+  - [x] `project_guides/templates/guides/developer/production-mode.md`
+- [x] Create `project_guides/templates/.project-guides.yml.template`
+- [x] Update `pyproject.toml` to include package data
+  - [x] Configure `[tool.hatch.build.targets.wheel.force-include]`
+- [x] Verify: Templates are included in wheel build
 
 ---
 

@@ -1,0 +1,3 @@
+version: "1.0"
+installed_version: "{version}"
+target_dir: "docs/guides"
