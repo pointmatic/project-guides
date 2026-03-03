@@ -105,7 +105,7 @@ def test_version_upgrade_scenario(runner, tmp_path):
 
         # Verify version was updated
         config = Config.load(".project-guides.yml")
-        assert config.installed_version == "0.14.0"
+        assert config.installed_version == "1.0.0"
 
         # Status should now show all current
         result = runner.invoke(main, ['status'])
@@ -199,8 +199,8 @@ def test_dry_run_doesnt_modify_files(runner, tmp_path):
 
         # Modify a guide file
         guide_path = Path("docs/guides/debug-guide.md")
-        guide_path.read_text()
-        guide_path.write_text("MODIFIED CONTENT")
+        guide_path.read_text(encoding="utf-8")
+        guide_path.write_text("MODIFIED CONTENT", encoding="utf-8")
 
         # Simulate old version
         config = Config.load(".project-guides.yml")
@@ -214,7 +214,7 @@ def test_dry_run_doesnt_modify_files(runner, tmp_path):
         assert "Run without --dry-run to apply changes" in result.output
 
         # Verify file wasn't modified
-        assert guide_path.read_text() == "MODIFIED CONTENT"
+        assert guide_path.read_text(encoding="utf-8") == "MODIFIED CONTENT"
 
         # Verify config wasn't updated
         config_check = Config.load(".project-guides.yml")
@@ -241,4 +241,4 @@ def test_specific_guide_update(runner, tmp_path):
 
         # Verify config was updated
         config = Config.load(".project-guides.yml")
-        assert config.installed_version == "0.14.0"
+        assert config.installed_version == "1.0.0"

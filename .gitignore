@@ -8,6 +8,8 @@ __pycache__
 coverage.xml
 htmlcov/
 .pytest_cache/
+build/
+dist/
 
 # Pyve virtual environment
 .pyve/testenv

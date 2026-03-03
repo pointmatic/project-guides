@@ -26,14 +26,8 @@ from project_guides.version import __version__
 
 def get_template_path(guide_name: str) -> Path:
     """Get path to bundled template for a guide."""
-    # Use importlib.resources to access package data
-    if importlib.resources.is_resource("project_guides.templates.guides", guide_name):
-        # For files in the guides directory
-        with importlib.resources.as_file(
-            importlib.resources.files("project_guides.templates.guides").joinpath(guide_name)
-        ) as path:
-            return Path(path)
-    elif "/" in guide_name or "\\" in guide_name:
+    # Check for subdirectories first (before calling is_resource which doesn't accept paths)
+    if "/" in guide_name or "\\" in guide_name:
         # For files in subdirectories like developer/
         parts = guide_name.replace("\\", "/").split("/")
         if len(parts) == 2 and parts[0] == "developer":
@@ -41,6 +35,16 @@ def get_template_path(guide_name: str) -> Path:
                 importlib.resources.files("project_guides.templates.guides.developer").joinpath(parts[1])
             ) as path:
                 return Path(path)
+    else:
+        # For files in the main guides directory (no path separators)
+        try:
+            with importlib.resources.as_file(
+                importlib.resources.files("project_guides.templates.guides").joinpath(guide_name)
+            ) as path:
+                if path.exists():
+                    return Path(path)
+        except (FileNotFoundError, AttributeError):
+            pass
 
     raise GuideNotFoundError(guide_name, get_all_guide_names())
 
