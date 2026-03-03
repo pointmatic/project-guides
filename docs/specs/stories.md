@@ -152,22 +152,24 @@ Implement `project-guides init` command.
   - [x] Test init with custom --target-dir
 - [x] Verify: `project-guides init` creates guides and config
 
-### Story C.b: v0.8.0 Status Command [Planned]
+### Story C.b: v0.8.0 Status Command [Done]
 
 Implement `project-guides status` command.
 
-- [ ] Update `project_guides/cli.py`
-  - [ ] Implement `status` command
-  - [ ] Load config
-  - [ ] Check each guide's status
-  - [ ] Print formatted table
-  - [ ] Show summary counts
-- [ ] Update `tests/test_cli.py`
-  - [ ] Test status with all guides current
-  - [ ] Test status with outdated guides
-  - [ ] Test status with overridden guides
-  - [ ] Test status with missing config (error)
-- [ ] Verify: `project-guides status` shows correct state
+- [x] Update `project_guides/cli.py`
+  - [x] Implement `status` command
+  - [x] Load config
+  - [x] Check each guide's status
+  - [x] Print formatted table
+  - [x] Show version comparison
+  - [x] Show override status
+  - [x] Show summary counts
+- [x] Update `tests/test_cli.py`
+  - [x] Test status with all guides current
+  - [x] Test status with outdated guides
+  - [x] Test status with overridden guides
+  - [x] Test status with missing config
+- [x] Verify: `project-guides status` shows guide status
 
 ### Story C.c: v0.9.0 Override Commands [Planned]
 

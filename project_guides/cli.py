@@ -18,7 +18,7 @@ import click
 
 from project_guides.version import __version__
 from project_guides.config import Config
-from project_guides.sync import get_all_guide_names, copy_guide
+from project_guides.sync import get_all_guide_names, copy_guide, compare_versions
 
 
 @click.group()
@@ -73,6 +73,87 @@ def init(target_dir: str, force: bool):
     click.secho(f"✓ Created {config_path}", fg='green')
     
     click.echo(f"\nSuccessfully initialized {len(guide_names)} guides.")
+
+
+@main.command()
+def status():
+    """Show status of all guides."""
+    config_path = Path(".project-guides.yml")
+    
+    # Check if config exists
+    if not config_path.exists():
+        click.secho(
+            "Error: No .project-guides.yml found. Run 'project-guides init' first.",
+            fg='red',
+            err=True
+        )
+        raise click.Abort()
+    
+    # Load config
+    try:
+        config = Config.load(str(config_path))
+    except Exception as e:
+        click.secho(f"Error loading config: {e}", fg='red', err=True)
+        raise click.Abort()
+    
+    # Show version info
+    package_version = __version__
+    click.echo(f"project-guides v{package_version} (installed: v{config.installed_version})")
+    click.echo()
+    
+    # Check each guide's status
+    guide_names = get_all_guide_names()
+    target_dir = Path(config.target_dir)
+    
+    current_count = 0
+    outdated_count = 0
+    overridden_count = 0
+    missing_count = 0
+    
+    click.echo("Guides status:")
+    for guide_name in guide_names:
+        target_file = target_dir / guide_name
+        
+        # Check if overridden
+        if config.is_overridden(guide_name):
+            override = config.overrides[guide_name]
+            click.secho(
+                f"  ⊘ {guide_name:40} v{override.locked_version}  (overridden: \"{override.reason}\")",
+                fg='yellow'
+            )
+            overridden_count += 1
+        # Check if file exists
+        elif not target_file.exists():
+            click.secho(f"  ✗ {guide_name:40} (missing)", fg='red')
+            missing_count += 1
+        # Check if current version
+        elif config.installed_version and compare_versions(config.installed_version, package_version) == 0:
+            click.secho(f"  ✓ {guide_name:40} v{package_version}  (current)", fg='green')
+            current_count += 1
+        # Must be outdated
+        else:
+            click.secho(
+                f"  ⚠ {guide_name:40} v{config.installed_version}  (update available)",
+                fg='yellow'
+            )
+            outdated_count += 1
+    
+    # Show summary
+    click.echo()
+    summary_parts = []
+    if overridden_count > 0:
+        summary_parts.append(f"{overridden_count} guide{'s' if overridden_count != 1 else ''} overridden")
+    if outdated_count > 0:
+        summary_parts.append(f"{outdated_count} update{'s' if outdated_count != 1 else ''} available")
+    if missing_count > 0:
+        summary_parts.append(f"{missing_count} guide{'s' if missing_count != 1 else ''} missing")
+    
+    if summary_parts:
+        click.echo(", ".join(summary_parts).capitalize())
+        if outdated_count > 0 or missing_count > 0:
+            click.echo("Run 'project-guides update' to sync.")
+    else:
+        click.secho("All guides are up to date.", fg='green')
 
 
 if __name__ == "__main__":

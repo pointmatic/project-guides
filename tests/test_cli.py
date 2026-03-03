@@ -89,3 +89,67 @@ def test_init_with_custom_target_dir(runner, tmp_path):
         # Verify config has correct target_dir
         config = Config.load(".project-guides.yml")
         assert config.target_dir == "custom/path"
+
+
+def test_status_with_all_guides_current(runner, tmp_path):
+    """Test status command when all guides are current."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        # Initialize project
+        runner.invoke(main, ['init'])
+        
+        # Run status
+        result = runner.invoke(main, ['status'])
+        
+        assert result.exit_code == 0
+        assert "project-guides v0.8.0" in result.output
+        assert "Guides status:" in result.output
+        assert "All guides are up to date" in result.output
+
+
+def test_status_with_outdated_guides(runner, tmp_path):
+    """Test status command with outdated guides."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        # Initialize project
+        runner.invoke(main, ['init'])
+        
+        # Modify config to simulate older version
+        config = Config.load(".project-guides.yml")
+        config.installed_version = "0.7.0"
+        config.save(".project-guides.yml")
+        
+        # Run status
+        result = runner.invoke(main, ['status'])
+        
+        assert result.exit_code == 0
+        assert "update available" in result.output
+        assert "Run 'project-guides update' to sync" in result.output
+
+
+def test_status_with_overridden_guides(runner, tmp_path):
+    """Test status command with overridden guides."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        # Initialize project
+        runner.invoke(main, ['init'])
+        
+        # Add an override
+        config = Config.load(".project-guides.yml")
+        config.add_override("debug-guide.md", "Custom content", "0.8.0")
+        config.save(".project-guides.yml")
+        
+        # Run status
+        result = runner.invoke(main, ['status'])
+        
+        assert result.exit_code == 0
+        assert "overridden" in result.output
+        assert "Custom content" in result.output
+        assert "1 guide overridden" in result.output
+
+
+def test_status_with_missing_config(runner, tmp_path):
+    """Test status command when config doesn't exist."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(main, ['status'])
+        
+        assert result.exit_code == 1
+        assert "No .project-guides.yml found" in result.output
+        assert "Run 'project-guides init' first" in result.output
