@@ -133,24 +133,24 @@ Implement high-level sync logic.
 
 ## Phase C: CLI Commands
 
-### Story C.a: v0.7.0 Init Command [Planned]
+### Story C.a: v0.7.0 Init Command [Done]
 
 Implement `project-guides init` command.
 
-- [ ] Update `project_guides/cli.py`
-  - [ ] Add `click` dependency
-  - [ ] Implement `init` command with options
-  - [ ] Check for existing `.project-guides.yml`
-  - [ ] Create target directory
-  - [ ] Copy all templates
-  - [ ] Create `.project-guides.yml`
-  - [ ] Print success message with guide list
-- [ ] Create `tests/test_cli.py`
-  - [ ] Test init in empty directory
-  - [ ] Test init with existing config (error)
-  - [ ] Test init with --force flag
-  - [ ] Test init with custom --target-dir
-- [ ] Verify: `project-guides init` creates guides and config
+- [x] Update `project_guides/cli.py`
+  - [x] Add `click` dependency
+  - [x] Implement `init` command with options
+  - [x] Check for existing `.project-guides.yml`
+  - [x] Create target directory
+  - [x] Copy all templates
+  - [x] Create `.project-guides.yml`
+  - [x] Print success message with guide list
+- [x] Create `tests/test_cli.py`
+  - [x] Test init in empty directory
+  - [x] Test init with existing config (error)
+  - [x] Test init with --force flag
+  - [x] Test init with custom --target-dir
+- [x] Verify: `project-guides init` creates guides and config
 
 ### Story C.b: v0.8.0 Status Command [Planned]
 
