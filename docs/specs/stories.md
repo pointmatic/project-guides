@@ -37,28 +37,28 @@ Minimal runnable Python package with CLI entry point.
 - [x] Verify: `python -m project_guides --version` prints `0.1.0`
 - [x] Verify: `project-guides --version` works after local install
 
-### Story A.b: v0.2.0 Configuration Model [Planned]
+### Story A.b: v0.2.0 Configuration Model [Done]
 
 Implement configuration data model and YAML I/O.
 
-- [ ] Add dependencies to `pyproject.toml`
-  - [ ] Add `pyyaml ^6.0`
-  - [ ] Add `packaging ^24.0`
-- [ ] Create `project_guides/config.py`
-  - [ ] Define `GuideOverride` dataclass
-  - [ ] Define `Config` dataclass with defaults
-  - [ ] Implement `Config.load()` class method
-  - [ ] Implement `Config.save()` method
-  - [ ] Implement `Config.is_overridden()` method
-  - [ ] Implement `Config.add_override()` method
-  - [ ] Implement `Config.remove_override()` method
-- [ ] Create `tests/__init__.py`
-- [ ] Create `tests/test_config.py`
-  - [ ] Test config creation with defaults
-  - [ ] Test config save/load round-trip
-  - [ ] Test override add/remove
-  - [ ] Test invalid YAML handling
-- [ ] Verify: All config tests pass
+- [x] Add dependencies to `pyproject.toml`
+  - [x] Add `pyyaml ^6.0`
+  - [x] Add `packaging ^24.0`
+- [x] Create `project_guides/config.py`
+  - [x] Define `GuideOverride` dataclass
+  - [x] Define `Config` dataclass with defaults
+  - [x] Implement `Config.load()` class method
+  - [x] Implement `Config.save()` method
+  - [x] Implement `Config.is_overridden()` method
+  - [x] Implement `Config.add_override()` method
+  - [x] Implement `Config.remove_override()` method
+- [x] Create `tests/__init__.py`
+- [x] Create `tests/test_config.py`
+  - [x] Test config creation with defaults
+  - [x] Test config save/load round-trip
+  - [x] Test override add/remove
+  - [x] Test invalid YAML handling
+- [x] Verify: All config tests pass
 
 ### Story A.c: v0.3.0 Template Bundle Structure [Planned]
 
