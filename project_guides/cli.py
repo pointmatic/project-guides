@@ -64,6 +64,9 @@ def init(target_dir: str, force: bool):
         except FileExistsError:
             if not force:
                 click.secho(f"⚠ Skipped {guide_name} (already exists)", fg='yellow')
+        except SyncError as e:
+            click.secho(f"Error: {e}", fg='red', err=True)
+            sys.exit(2)  # File I/O error exit code
     
     # Create config file
     config = Config(
@@ -203,7 +206,11 @@ def update(guides: tuple, dry_run: bool, force: bool):
         click.echo("Dry-run mode: showing what would be updated...")
         click.echo()
     
-    updated, skipped, current = sync_guides(config, guides_list, force, dry_run)
+    try:
+        updated, skipped, current = sync_guides(config, guides_list, force, dry_run)
+    except SyncError as e:
+        click.secho(f"Error: {e}", fg='red', err=True)
+        sys.exit(2)  # File I/O error exit code
     
     # Print results
     if updated:

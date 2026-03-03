@@ -83,7 +83,7 @@ def test_get_package_version_matches_version_py():
     version = get_package_version()
     
     assert version == __version__
-    assert version == "0.11.0"
+    assert version == "0.12.0"
 
 
 def test_copy_guide_creates_files_correctly(tmp_path):
@@ -257,7 +257,7 @@ def test_sync_guides_current_version(tmp_path):
     """Test that guides at current version are not updated."""
     target_dir = tmp_path / "guides"
     config = Config(
-        installed_version="0.11.0",  # Same as current package version
+        installed_version="0.12.0",  # Same as current package version
         target_dir=str(target_dir)
     )
     

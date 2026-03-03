@@ -226,22 +226,22 @@ Add comprehensive error handling and user-friendly messages.
 - [x] Add exit codes (0=success, 1=general error, 3=config error)
 - [x] Verify: All error messages are clear and actionable
 
-### Story D.b: v0.12.0 CLI Output Formatting [Planned]
+### Story D.b: v0.12.0 CLI Output Formatting [Done]
 
 Improve CLI output with colors and better formatting.
 
-- [ ] Update `project_guides/cli.py`
-  - [ ] Use `click.secho()` for colored output
-  - [ ] Green for success messages
-  - [ ] Yellow for warnings
-  - [ ] Red for errors
-  - [ ] Format tables with proper alignment
-- [ ] Add exit codes
-  - [ ] 0 for success
-  - [ ] 1 for general errors
-  - [ ] 2 for file I/O errors
-  - [ ] 3 for configuration errors
-- [ ] Verify: CLI output is clear and visually organized
+- [x] Update `project_guides/cli.py`
+  - [x] Use `click.secho()` for colored output
+  - [x] Green for success messages
+  - [x] Yellow for warnings
+  - [x] Red for errors
+  - [x] Format tables with proper alignment
+- [x] Add exit codes
+  - [x] 0 for success
+  - [x] 1 for general errors
+  - [x] 2 for file I/O errors
+  - [x] 3 for configuration errors
+- [x] Verify: CLI output is clear and visually organized
 
 ---
 
