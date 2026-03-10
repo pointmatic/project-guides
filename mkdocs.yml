@@ -1,0 +1,78 @@
+site_name: project-guides
+site_description: Stay organized and consistent using LLM workflow guides with project-specific overrides
+site_url: https://pointmatic.github.io/project-guides/
+repo_url: https://github.com/pointmatic/project-guides
+repo_name: pointmatic/project-guides
+
+docs_dir: docs/site
+site_dir: site
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+nav:
+  - Home: index.html
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+      - Configuration: getting-started/configuration.md
+  - User Guide:
+      - Commands: user-guide/commands.md
+      - Workflow: user-guide/workflow.md
+      - Override Management: user-guide/overrides.md
+  - Developer Guide:
+      - Contributing: developer-guide/contributing.md
+      - Development Setup: developer-guide/development.md
+      - Testing: developer-guide/testing.md
+  - About:
+      - License: about/license.md
+      - Changelog: about/changelog.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago

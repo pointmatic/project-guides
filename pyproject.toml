@@ -32,6 +32,10 @@ dev = [
     "mypy>=1.0",
     "types-PyYAML>=6.0",
 ]
+docs = [
+    "mkdocs-material>=9.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.0",
+]
 
 [project.scripts]
 project-guides = "project_guides.cli:main"

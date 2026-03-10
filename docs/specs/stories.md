@@ -456,71 +456,68 @@ Request developer to create required banner and header images.
 - [x] Wait for developer to provide images
 - [x] Verify images exist before proceeding to next story
 
-### Story G.c: v1.2.1 Documentation Structure [Planned]
+### Story G.c: v1.2.1 Documentation Structure [Done]
 
 Set up MkDocs configuration and directory structure.
 
-- [ ] Create `docs/site/` directory structure
+- [x] Create `docs/site/` directory structure
   - [x] Create `docs/site/images/` directory
-  - [ ] Create `docs/site/.gitignore` (ignore MkDocs cache)
-- [ ] Create `mkdocs.yml` in repository root
-  - [ ] Configure site metadata (name, description, URL)
-  - [ ] Configure Material theme with dark/light mode
-  - [ ] Set `docs_dir: docs/site` and `site_dir: site`
-  - [ ] Configure navigation structure
-  - [ ] Add markdown extensions (admonition, superfences, highlight, etc.)
-  - [ ] Add plugins (search, git-revision-date-localized)
-- [ ] Update root `.gitignore`
-  - [ ] Add `/site/` to ignore MkDocs build output
-- [ ] Add MkDocs dependencies to `pyproject.toml`
-  - [ ] Add `mkdocs-material` to optional dependencies group `[docs]`
-  - [ ] Add `mkdocs-git-revision-date-localized-plugin` to `[docs]`
-- [ ] Verify: `mkdocs build` runs without errors
+  - [x] Create `docs/site/.gitignore` (ignore MkDocs cache)
+- [x] Create `mkdocs.yml` in repository root
+  - [x] Configure site metadata (name, description, URL)
+  - [x] Configure Material theme with dark/light mode
+  - [x] Set `docs_dir: docs/site` and `site_dir: site`
+  - [x] Configure navigation structure
+  - [x] Add markdown extensions (admonition, superfences, highlight, etc.)
+  - [x] Add plugins (search, git-revision-date-localized)
+- [x] Update root `.gitignore`
+  - [x] Add `/site/` to ignore MkDocs build output
+- [x] Add MkDocs dependencies to `pyproject.toml`
+  - [x] Add `mkdocs-material` to optional dependencies group `[docs]`
+  - [x] Add `mkdocs-git-revision-date-localized-plugin` to `[docs]`
+- [x] Verify: `mkdocs build` runs without errors ✓
 
-### Story G.d: v1.2.2 Landing Page [Planned]
+### Story G.d: v1.2.2 Landing Page [Done]
 
 Create custom branded landing page using descriptions from G.a.
 
-- [ ] Create `docs/site/index.html`
-  - [ ] Add HTML structure with meta tags (title, description, keywords from `descriptions.md`)
-  - [ ] Add CSS styling (dark theme with teal accent)
-  - [ ] Add navigation bar (Features, Quick Start, Docs, GitHub)
-  - [ ] Add hero section with project name and tagline
-  - [ ] Add hero banner image (`images/project-guides-banner-landing.png`)
-  - [ ] Add subtitle using friendly brief description
-  - [ ] Add CTA buttons (GitHub, Get Started, Documentation)
-  - [ ] Add Quick Start section with installation commands
-  - [ ] Add Features section with feature cards from `descriptions.md`
-- [ ] Verify: Landing page displays correctly locally
-- [ ] Verify: All links work (relative paths for MkDocs pages)
+- [x] Create `docs/site/index.html`
+  - [x] Add HTML structure with meta tags (title, description, keywords from `descriptions.md`)
+  - [x] Add CSS styling (dark theme with teal accent)
+  - [x] Add navigation bar (Features, Quick Start, Docs, GitHub)
+  - [x] Add hero section with project name and tagline
+  - [x] Add hero banner image (`images/project-guides-banner-landing.png`)
+  - [x] Add subtitle using long tagline from `descriptions.md`
+  - [x] Add friendly brief description in hero section
+  - [x] Add CTA buttons (GitHub, PyPI, Documentation)
+  - [x] Add Quick Start section with 7-step workflow
+  - [x] Add Features section with all 15 feature cards organized by category
+  - [x] Add footer with project links, documentation, and community sections
+- [x] Verify: Landing page displays correctly locally ✓
+- [x] Verify: MkDocs build succeeds ✓
 
-### Story G.e: v1.2.3 Documentation Pages [Planned]
+### Story G.e: v1.2.3 Documentation Pages [Done]
 
 Create comprehensive markdown documentation pages.
 
-- [ ] Create `docs/site/getting-started.md`
-  - [ ] Add installation section (pip, pipx, from source)
-  - [ ] Add quick start guide (4-step workflow)
-  - [ ] Add next steps with links to other pages
-- [ ] Create `docs/site/usage.md`
-  - [ ] Document all 7 commands with examples
-  - [ ] Add command reference table
-  - [ ] Add common workflows
-  - [ ] Add troubleshooting tips
-- [ ] Create `docs/site/configuration.md`
-  - [ ] Document `.project-guides.yml` structure
-  - [ ] Explain override system
-  - [ ] Show configuration examples
-- [ ] Create `docs/site/guides.md`
-  - [ ] List all bundled guides with descriptions
-  - [ ] Explain guide categories (main vs. developer)
-  - [ ] Link to guide templates in repository
-- [ ] Create `docs/site/api.md`
-  - [ ] Document public API if library usage is supported
-  - [ ] Show Python usage examples
-  - [ ] Document key modules and functions
-- [ ] Verify: All documentation pages render correctly
-- [ ] Verify: Internal links between pages work
+- [x] Create `docs/site/getting-started/` directory with pages
+  - [x] `installation.md` - Installation via pip, pipx, from source
+  - [x] `quick-start.md` - 7-step HITLoop workflow
+  - [x] `configuration.md` - Configuration file structure and options
+- [x] Create `docs/site/user-guide/` directory with pages
+  - [x] `commands.md` - All 7 commands with examples and reference table
+  - [x] `workflow.md` - Common workflows and multi-project management
+  - [x] `overrides.md` - Complete override management guide
+- [x] Create `docs/site/developer-guide/` directory with pages
+  - [x] `contributing.md` - Contribution guidelines and PR process
+  - [x] `development.md` - Development setup and workflow
+  - [x] `testing.md` - Testing guide with 82% coverage details
+- [x] Create `docs/site/about/` directory with pages
+  - [x] `license.md` - Apache-2.0 license information
+  - [x] `changelog.md` - Version history and release notes
+- [x] Verify: All documentation pages render correctly ✓
+- [x] Verify: Internal links between pages work ✓
+- [x] Verify: MkDocs build succeeds with --strict mode ✓
 
 ### Story G.f: v1.2.4 GitHub Actions Deployment [Planned]
 

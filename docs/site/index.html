@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>project-guides - Stay organized in LLM-based coding</title>
+    <meta name="description" content="Stay organized and consistent using LLM workflow guides with project-specific overrides">
+    <meta name="keywords" content="llm, human-in-the-loop, hitloop, documentation, workflow, guides, templates, python, cli, version-management, synchronization, project-management, development-tools, best-practices, override-support, yaml-config, cross-platform">
+    <meta name="author" content="Pointmatic">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-dark: #0d1117;
+            --bg-darker: #010409;
+            --bg-card: #161b22;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent: #14b8a6;
+            --accent-hover: #0d9488;
+            --border: #30363d;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        /* Navigation */
+        nav {
+            background: var(--bg-darker);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        nav .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        nav a:hover {
+            color: var(--accent);
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 4rem 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent) 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero .subtitle {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        
+        .hero-banner {
+            margin: 2rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        
+        .hero-banner img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .hero-description {
+            max-width: 800px;
+            margin: 2rem auto;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.75rem 2rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--accent);
+            color: white;
+        }
+        
+        /* Quick Start Section */
+        .quick-start {
+            background: var(--bg-card);
+            padding: 4rem 0;
+            margin: 4rem 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .quick-start h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--accent);
+        }
+        
+        .quick-start-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .quick-start-step {
+            background: var(--bg-dark);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        
+        .quick-start-step h3 {
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .quick-start-step code {
+            background: var(--bg-darker);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--accent);
+            border: 1px solid var(--border);
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 4rem 0;
+        }
+        
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+        
+        .features-category {
+            margin: 3rem 0;
+        }
+        
+        .features-category h3 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--text-primary);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+        }
+        
+        .feature-card h4 {
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+            font-size: 1.3rem;
+        }
+        
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--bg-darker);
+            border-top: 1px solid var(--border);
+            padding: 3rem 0;
+            margin-top: 4rem;
+        }
+        
+        footer .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        
+        footer h4 {
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+        
+        footer ul {
+            list-style: none;
+        }
+        
+        footer li {
+            margin-bottom: 0.5rem;
+        }
+        
+        footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        footer a:hover {
+            color: var(--accent);
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero .subtitle {
+                font-size: 1.2rem;
+            }
+            
+            nav ul {
+                gap: 1rem;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <a href="#" class="logo">project-guides</a>
+            <ul>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#quick-start">Quick Start</a></li>
+                <li><a href="https://pointmatic.github.io/project-guides/">Docs</a></li>
+                <li><a href="https://github.com/pointmatic/project-guides">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Stay organized in LLM-based coding</h1>
+            <p class="subtitle">Stay organized and consistent using LLM workflow guides with project-specific overrides</p>
+            
+            <div class="hero-banner">
+                <img src="images/project-guides-banner-landing.png" alt="project-guides banner">
+            </div>
+            
+            <div class="hero-description">
+                <p>Install project-guides in any repository with <code>pip install project-guides</code>, run <code>project-guides init</code>, then tell your LLM to "Read <code>docs/guides/project-guide.md</code> and start." The guide walks the LLM through planning documents, breaking work into stories, and implementing each story step-by-step. You just say "proceed" after each step. The developer stays in charge—guiding features, flow, and taste—while the LLM handles the typing.</p>
+                <br>
+                <p>This is "HITLoop" (human-in-the-loop) development: the developer directs, the LLM executes. The pace is "flaming agile"—an entire production-ready backend can be completed in 6-12 hours. When you customize a guide for your project, mark it as overridden so future package updates skip it. When you want the latest workflow improvements, run <code>project-guides update</code> to sync all non-overridden guides.</p>
+            </div>
+            
+            <div class="cta-buttons">
+                <a href="https://github.com/pointmatic/project-guides" class="btn btn-primary">View on GitHub</a>
+                <a href="https://pypi.org/project/project-guides/" class="btn btn-secondary">Install from PyPI</a>
+                <a href="https://pointmatic.github.io/project-guides/" class="btn btn-secondary">Read Documentation</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="quick-start" class="quick-start">
+        <div class="container">
+            <h2>Quick Start</h2>
+            <div class="quick-start-grid">
+                <div class="quick-start-step">
+                    <h3>1. Install</h3>
+                    <p>Install via pip or pipx for system-wide CLI access</p>
+                    <code>pip install project-guides</code>
+                </div>
+                <div class="quick-start-step">
+                    <h3>2. Initialize</h3>
+                    <p>Navigate to your project directory and initialize</p>
+                    <code>project-guides init</code>
+                </div>
+                <div class="quick-start-step">
+                    <h3>3. Start</h3>
+                    <p>Tell your LLM to read the guide and begin</p>
+                    <code>Read `docs/guides/project-guide.md` and start.</code>
+                </div>
+                <div class="quick-start-step">
+                    <h3>4. Collaborate</h3>
+                    <p>Say "proceed" after each step as the LLM works</p>
+                    <code>proceed</code>
+                </div>
+                <div class="quick-start-step">
+                    <h3>5. Customize</h3>
+                    <p>Mark guides as overridden when you customize them</p>
+                    <code>project-guides override &lt;guide-name&gt;</code>
+                </div>
+                <div class="quick-start-step">
+                    <h3>6. Update</h3>
+                    <p>Pull latest workflow improvements</p>
+                    <code>project-guides update</code>
+                </div>
+                <div class="quick-start-step">
+                    <h3>7. Check Status</h3>
+                    <p>See which guides are current, outdated, or overridden</p>
+                    <code>project-guides status</code>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2>Features</h2>
+            
+            <div class="features-category">
+                <h3>Core Capabilities</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>Battle-Tested Workflows</h4>
+                        <p>Crafted guides walk your LLM from project concept through production release—planning docs, stories breakdown, step-by-step implementation.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Centralized Guide Templates</h4>
+                        <p>Maintain LLM workflow guides in one package and distribute them across all your projects with a single command.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Smart Version Tracking</h4>
+                        <p>Track which guide versions are installed in each project and update to the latest versions automatically.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Project-Specific Overrides</h4>
+                        <p>Lock customized guides to prevent accidental overwrites while still syncing other guides to latest versions.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Sync Latest Improvements</h4>
+                        <p>Pull the newest workflow refinements into all non-overridden guides across projects with one command.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="features-category">
+                <h3>Operational Benefits</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>Zero Configuration</h4>
+                        <p>Works out of the box with sensible defaults—guides go in <code>docs/guides</code>, no config file needed for basic usage.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Clear Status Reporting</h4>
+                        <p>See at a glance which guides are current, outdated, overridden, or missing with color-coded status output.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Automatic Backups</h4>
+                        <p>When updating overridden guides with --force, automatic .bak files preserve your customizations.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Safe Operations</h4>
+                        <p>Idempotent commands and explicit consent requirements ensure you never lose project-specific customizations.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Lightweight & Fast</h4>
+                        <p>Minimal dependencies (click, pyyaml, packaging) mean fast installation and no bloat.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Cross-Platform</h4>
+                        <p>Runs on macOS, Linux, and Windows with Python 3.11+ for consistent workflows everywhere.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Well Tested</h4>
+                        <p>82% test coverage with 53 comprehensive tests ensuring reliability and stability.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="features-category">
+                <h3>Development Philosophy</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>HITLoop Development</h4>
+                        <p>You direct features, flow, and taste. The LLM handles the typing. Human-in-the-loop collaboration at its best.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Flaming Agile Pace</h4>
+                        <p>Complete an entire production-ready backend in 6-12 hours with structured, methodical LLM collaboration.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Structured Workflow</h4>
+                        <p>Guides enforce a proven methodology: planning documents, story breakdown, step-by-step implementation, approval gates.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div>
+                <h4>Project</h4>
+                <ul>
+                    <li><a href="https://github.com/pointmatic/project-guides">GitHub Repository</a></li>
+                    <li><a href="https://pypi.org/project/project-guides/">PyPI Package</a></li>
+                    <li><a href="https://github.com/pointmatic/project-guides/blob/main/CHANGELOG.md">Changelog</a></li>
+                    <li><a href="https://github.com/pointmatic/project-guides/blob/main/LICENSE">License (Apache-2.0)</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Documentation</h4>
+                <ul>
+                    <li><a href="https://pointmatic.github.io/project-guides/">Getting Started</a></li>
+                    <li><a href="https://pointmatic.github.io/project-guides/">User Guide</a></li>
+                    <li><a href="https://pointmatic.github.io/project-guides/">Developer Guide</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Community</h4>
+                <ul>
+                    <li><a href="https://github.com/pointmatic/project-guides/issues">Report Issues</a></li>
+                    <li><a href="https://github.com/pointmatic/project-guides/discussions">Discussions</a></li>
+                    <li><a href="https://github.com/pointmatic/project-guides/blob/main/CONTRIBUTING.md">Contributing</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Pointmatic. Licensed under Apache-2.0.</p>
+        </div>
+    </footer>
+</body>
+</html>

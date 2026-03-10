@@ -16,3 +16,6 @@ dist/
 .envrc
 .env
 .venv
+
+# MkDocs build output
+/site/
