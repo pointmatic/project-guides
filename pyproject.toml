@@ -8,7 +8,25 @@ requires-python = ">=3.11"
 authors = [
     { name = "Pointmatic", email = "pointmatic@example.com" }
 ]
-keywords = ["llm", "documentation", "workflow", "guides", "templates"]
+keywords = [
+    "llm",
+    "human-in-the-loop",
+    "hitloop",
+    "documentation",
+    "workflow",
+    "guides",
+    "templates",
+    "python",
+    "cli",
+    "version-management",
+    "synchronization",
+    "project-management",
+    "development-tools",
+    "best-practices",
+    "override-support",
+    "yaml-config",
+    "cross-platform",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -23,6 +41,13 @@ dependencies = [
     "pyyaml>=6.0",
     "packaging>=24.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/pointmatic/project-guides"
+Documentation = "https://pointmatic.github.io/project-guides/"
+Repository = "https://github.com/pointmatic/project-guides"
+Issues = "https://github.com/pointmatic/project-guides/issues"
+Changelog = "https://github.com/pointmatic/project-guides/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [

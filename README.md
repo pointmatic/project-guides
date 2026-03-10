@@ -1,25 +1,28 @@
-# project-guides
+![project-guides](docs/site/images/project-guides-header-readme.png)
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://github.com/pointmatic/project-guides/workflows/Tests/badge.svg)](https://github.com/pointmatic/project-guides/actions)
 [![PyPI](https://img.shields.io/pypi/v/project-guides.svg)](https://pypi.org/project/project-guides/)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://pointmatic.github.io/project-guides/)
 
-A Python CLI tool that installs and synchronizes battle-tested LLM workflow guides across projects.
+A Python CLI tool that installs and synchronizes battle-tested LLM workflow guides across projects, supporting version tracking and project-specific overrides to keep documentation consistent while preserving customizations.
 
 ## Why project-guides?
 
-Install project-guides in any repository with `pip install project-guides`, run `project-guides init`, then tell your LLM to "Read `docs/guides/project-guide.md` and start." The guide walks the LLM through planning documents, breaking work into stories, and implementing each story step-by-step.
+Install project-guides in any repository with `pip install project-guides`, run `project-guides init`, then tell your LLM to "Read `docs/guides/project-guide.md` and start." The guide walks the LLM through planning documents, breaking work into stories, and implementing each story step-by-step. You just say "proceed" after each step. The developer stays in charge—guiding features, flow, and taste—while the LLM handles the typing.
+
+This is "HITLoop" (human-in-the-loop) development: the developer directs, the LLM executes. The pace is "flaming agile"—an entire production-ready backend can be completed in 6-12 hours.
 
 **Key Features:**
-- 📚 **Centralized Templates** - Maintain workflow guides in one place
-- 🔄 **Version Management** - Track and update guides across projects
-- ✏️ **Override Support** - Customize guides per project without losing sync
-- 🔒 **Backup Protection** - Automatic backups when updating overridden guides
-- 🎨 **CLI Interface** - Simple commands for all operations
-- 🧪 **Well Tested** - 82% test coverage with 48 comprehensive tests
-- **Quick start guide** with 4-step workflow
-- **Command reference** - All 7 commands with detailed options and examples
+- 📚 **Battle-Tested Workflows** - Crafted guides from concept through production release
+- 🔄 **Version Management** - Track and update guides across projects automatically
+- ✏️ **Project-Specific Overrides** - Lock customized guides to prevent overwrites
+- 🔒 **Automatic Backups** - Preserve customizations when forcing updates
+- 🎨 **CLI Interface** - Seven intuitive commands for all operations
+- 🧪 **Well Tested** - 82% test coverage with 53 comprehensive tests
+- ⚡ **Zero Configuration** - Works with sensible defaults out of the box
+- 🌐 **Cross-Platform** - Runs on macOS, Linux, and Windows with Python 3.11+
 
 ## Installation
 
@@ -398,11 +401,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
+## Documentation
+
+📚 **Full documentation is available at [pointmatic.github.io/project-guides](https://pointmatic.github.io/project-guides/)**
+
+- [Getting Started](https://pointmatic.github.io/project-guides/getting-started/installation/) - Installation and quick start
+- [User Guide](https://pointmatic.github.io/project-guides/user-guide/commands/) - Commands, workflows, and override management
+- [Developer Guide](https://pointmatic.github.io/project-guides/developer-guide/contributing/) - Contributing and development setup
+- [Workflow Guides](docs/guides/) - Bundled LLM workflow guides in your project
+
 ## Support
 
 - **Issues:** [GitHub Issues](https://github.com/pointmatic/project-guides/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/pointmatic/project-guides/discussions)
-- **Documentation:** [Full Documentation](https://github.com/pointmatic/project-guides/tree/main/docs)
+- **Documentation:** [GitHub Pages](https://pointmatic.github.io/project-guides/)
 
 ---
 

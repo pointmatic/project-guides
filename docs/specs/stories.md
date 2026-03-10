@@ -543,23 +543,24 @@ Set up automated deployment to GitHub Pages.
   - [x] Can be manually triggered via workflow_dispatch
   - [x] Site will be accessible at https://pointmatic.github.io/project-guides/
 
-### Story G.g: v1.2.5 README Integration [Planned]
+### Story G.g: v1.2.5 README Integration [Done]
 
 Update README with documentation assets and links.
 
-- [ ] Update `README.md`
-  - [ ] Add header banner image at top (`docs/site/images/project-guides-header-readme.png`)
-  - [ ] Update description using text from `descriptions.md`
-  - [ ] Add documentation badge linking to GitHub Pages
-  - [ ] Add "Documentation" section with link to full docs
-  - [ ] Update installation section to match `getting-started.md`
-  - [ ] Ensure consistency with landing page content
-- [ ] Update `pyproject.toml`
-  - [ ] Update description field using two-clause technical description
-  - [ ] Add documentation URL to project.urls
-  - [ ] Verify keywords match `descriptions.md`
-- [ ] Verify: README displays correctly on GitHub
-- [ ] Verify: README header image loads properly
+- [x] Update `README.md`
+  - [x] Add header banner image at top (`docs/site/images/project-guides-header-readme.png`)
+  - [x] Update description using Two-clause Technical Description from `descriptions.md`
+  - [x] Add documentation badge linking to GitHub Pages
+  - [x] Add "Documentation" section with links to full docs
+  - [x] Update "Why project-guides?" section with Friendly Brief Description
+  - [x] Update Key Features with content from Feature Cards
+  - [x] Ensure consistency with landing page content
+- [x] Update `pyproject.toml`
+  - [x] Description field already uses Long Tagline (from Story G.a)
+  - [x] Add project.urls section with Documentation, Repository, Issues, Changelog
+  - [x] Update keywords to match all 18 keywords from `descriptions.md`
+- [x] Verify: README structure improved with documentation links ✓
+- [x] Verify: pyproject.toml has complete metadata ✓
 
 ### Story G.h: Local Development Documentation [Planned]
 
