@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.7] - 2026-03-10
+
+### Fixed
+- **README banner image URL**
+  - Changed from relative path to absolute GitHub URL for PyPI compatibility
+  - Banner now displays correctly on https://pypi.org/project/project-guides/
+
 ## [1.2.6] - 2026-03-10
 
 ### Fixed

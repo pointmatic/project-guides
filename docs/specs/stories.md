@@ -595,12 +595,24 @@ Fix version comparison bug in sync_guides causing test failure.
 - [x] Verify: All 53 tests pass ✓
 - [x] Verify: Test coverage remains at 82% ✓
 
+### Story G.j: v1.2.7 README Banner Fix [Done]
+
+Fix README banner image URL for PyPI compatibility.
+
+- [x] Update `README.md` banner image URL
+  - [x] Change from relative path to absolute GitHub URL
+  - [x] Use `https://raw.githubusercontent.com/pointmatic/project-guides/main/docs/site/images/project-guides-header-readme.png`
+  - [x] Ensures banner displays on both GitHub and PyPI
+- [x] Update CHANGELOG.md
+  - [x] Add v1.2.7 entry with README banner fix
+- [x] Verify: Banner URL uses absolute path ✓
+
 ---
 
 ## Summary
 
-**Total Stories**: 31 (26 with version numbers, 5 without)
-**Current Version**: v1.2.6
+**Total Stories**: 32 (27 with version numbers, 5 without)
+**Current Version**: v1.2.7
 **Phases**: 7 (A-G)
 
 **Phase Breakdown**:
@@ -610,4 +622,4 @@ Fix version comparison bug in sync_guides causing test failure.
 - **Phase D (Error Handling)**: 2 stories — Error handling and output polish
 - **Phase E (Testing & Quality)**: 3 stories — Integration tests, coverage, linting
 - **Phase F (Documentation & Release)**: 7 stories — README, templates, releases (v1.0.0, v1.1.0, v1.1.2, v1.1.3)
-- **Phase G (Comprehensive Documentation)**: 9 stories — Project descriptions, landing page, MkDocs setup, GitHub Pages deployment, bug fixes (v1.2.0-v1.2.6)
+- **Phase G (Comprehensive Documentation)**: 10 stories — Project descriptions, landing page, MkDocs setup, GitHub Pages deployment, bug fixes (v1.2.0-v1.2.7)
