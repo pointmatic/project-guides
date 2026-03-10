@@ -254,7 +254,7 @@ def test_sync_guides_dry_run_mode(tmp_path):
 def test_sync_guides_current_version(tmp_path):
     """Test that guides at current version are not updated."""
     from project_guides.version import __version__
-    
+
     target_dir = tmp_path / "guides"
     config = Config(
         installed_version=__version__,  # Same as current package version
