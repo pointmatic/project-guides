@@ -56,12 +56,12 @@ project-guides status
 
 Output:
 ```
-project-guides v0.15.0 (installed: v0.15.0)
+project-guides v1.1.2 (installed: v1.1.2)
 
 Guides status:
-  ✓ project-guide.md                         v0.15.0  (current)
-  ✓ best-practices-guide.md                  v0.15.0  (current)
-  ✓ debug-guide.md                           v0.15.0  (current)
+  ✓ project-guide.md                         v1.1.2  (current)
+  ✓ best-practices-guide.md                  v1.1.2  (current)
+  ✓ debug-guide.md                           v1.1.2  (current)
 
 All guides are up to date.
 ```
@@ -228,13 +228,13 @@ The `.project-guides.yml` file stores project configuration:
 
 ```yaml
 version: "1.0"
-installed_version: "0.15.0"
+installed_version: "1.1.2"
 target_dir: "docs/guides"
 overrides:
   debug-guide.md:
-    reason: "Custom debugging workflow"
-    version: "0.12.0"
-    last_updated: "2026-03-03"
+    reason: "Custom debugging workflow with project-specific tools"
+    locked_version: "1.0.0"
+    last_updated: "2026-03-09"
 ```
 
 **Fields:**

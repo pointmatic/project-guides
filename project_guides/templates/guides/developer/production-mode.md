@@ -32,7 +32,7 @@ This guide provides concise instructions for the branch-based workflow used in p
 ### 1. Ensure You're on Latest Main
 
 ```bash
-git checkout main
+git switch main
 git pull origin main
 ```
 
@@ -46,13 +46,13 @@ git pull origin main
 
 ```bash
 # Example: Story J.d implementation
-git checkout -b story/j.d-release-workflow
+git switch -c story/j.d-release-workflow
 
 # Example: Bug fix
-git checkout -b fix/codecov-upload-error
+git switch -c fix/codecov-upload-error
 
 # Example: Documentation update
-git checkout -b docs/update-readme
+git switch -c docs/update-readme
 ```
 
 ### 3. Make Changes and Commit
@@ -167,13 +167,13 @@ gh pr merge --merge --delete-branch
 
 ```bash
 # Switch back to main
-git checkout main
+git switch main
 
 # Pull the merged changes
 git pull origin main
 
 # Delete local feature branch (if not auto-deleted)
-git branch -d story/j.d-release-workflow
+git branch --delete story/j.d-release-workflow
 ```
 
 ---
@@ -200,7 +200,7 @@ If `main` has been updated while you're working on your branch:
 
 ```bash
 # Ensure you're on your feature branch
-git checkout story/j.d-release-workflow
+git switch story/j.d-release-workflow
 
 # Fetch latest changes
 git fetch origin
@@ -222,10 +222,10 @@ git push --force-with-lease
 
 ```bash
 # Switch to main
-git checkout main
+git switch main
 
 # Delete local branch
-git branch -D story/j.d-release-workflow
+git branch --delete --force story/j.d-release-workflow
 
 # Delete remote branch
 git push origin --delete story/j.d-release-workflow
@@ -237,9 +237,9 @@ git push origin --delete story/j.d-release-workflow
 
 ### Create and Push Branch
 ```bash
-git checkout main
+git switch main
 git pull origin main
-git checkout -b feature/my-feature
+git switch -c feature/my-feature
 # ... make changes ...
 git add .
 git commit -m "feat: add new feature"
@@ -257,9 +257,9 @@ git push
 ### Merge and Cleanup
 ```bash
 # After PR is merged on GitHub
-git checkout main
+git switch main
 git pull origin main
-git branch -d feature/my-feature
+git branch --delete feature/my-feature
 ```
 
 ---
@@ -307,10 +307,10 @@ git branch -d feature/my-feature
 
 ```bash
 # If you accidentally committed to main
-git checkout -b feature/my-changes  # Create branch from current state
-git checkout main
+git switch -c feature/my-changes  # Create branch from current state
+git switch main
 git reset --hard origin/main  # Reset main to remote state
-git checkout feature/my-changes
+git switch feature/my-changes
 git push -u origin feature/my-changes
 ```
 
@@ -384,7 +384,7 @@ gh pr merge --squash --delete-branch
 6. Keep `main` branch clean and stable
 
 **Key commands:**
-- `git checkout -b feature/name` — Create branch
+- `git switch -c feature/name` — Create branch
 - `git push -u origin feature/name` — Push branch
 - `gh pr create` — Create PR
-- `git checkout main && git pull` — Update main
+- `git switch main && git pull` — Update main

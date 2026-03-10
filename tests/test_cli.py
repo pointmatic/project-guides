@@ -19,6 +19,7 @@ from click.testing import CliRunner
 
 from project_guides.cli import main
 from project_guides.config import Config
+from project_guides.version import __version__
 
 
 @pytest.fixture
@@ -101,7 +102,7 @@ def test_status_with_all_guides_current(runner, tmp_path):
         result = runner.invoke(main, ['status'])
 
         assert result.exit_code == 0
-        assert "project-guides v1.1.0" in result.output
+        assert f"project-guides v{__version__}" in result.output
         assert "Guides status:" in result.output
         assert "All guides are up to date" in result.output
 
@@ -277,7 +278,7 @@ def test_update_all_guides(runner, tmp_path):
 
         # Verify config was updated
         config = Config.load(".project-guides.yml")
-        assert config.installed_version == "1.1.0"
+        assert config.installed_version == __version__
 
 
 def test_update_specific_guides(runner, tmp_path):

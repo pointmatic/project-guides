@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-03-09
+
+### Changed
+- **Modernized Git commands** in `production-mode.md` guide template
+  - Updated `git checkout` to `git switch` for switching branches
+  - Updated `git checkout -b` to `git switch -c` for creating branches
+  - Updated `git branch -d` to `git branch --delete` for clarity
+  - Updated `git branch -D` to `git branch --delete --force` for explicit force deletion
+  - All workflow examples, quick references, and troubleshooting sections updated
+- **Refactored test suite** to eliminate version number scatter
+  - Tests now use `__version__` import instead of hardcoded version strings
+  - Makes tests self-maintaining across version bumps
+  - Only `version.py` needs updating for future releases
+
 ## [1.1.0] - 2026-03-03
 
 ### Added
@@ -202,7 +216,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - developer/codecov-setup-guide.md
   - developer/github-actions-guide.md
 
-[Unreleased]: https://github.com/pointmatic/project-guides/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/pointmatic/project-guides/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/pointmatic/project-guides/compare/v1.1.0...v1.1.2
 [1.1.0]: https://github.com/pointmatic/project-guides/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/pointmatic/project-guides/compare/v0.15.0...v1.0.0
 [0.15.0]: https://github.com/pointmatic/project-guides/compare/v0.14.0...v0.15.0

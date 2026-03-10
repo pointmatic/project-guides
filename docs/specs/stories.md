@@ -372,15 +372,37 @@ Add cleanup command to remove project-guides from a project.
 - [x] Update CHANGELOG.md with v1.1.0 entry
 - [x] Verify: All 53 tests pass ✓
 - [x] Build package successfully ✓
-- [ ] Create GitHub release with tag `v1.1.0` (manual step)
+- [x] Create GitHub release with tag `v1.1.0` ✓
+- [x] Verify: Package publishes to PyPI ✓
+
+### Story F.e: v1.1.2 Git Command Modernization [Done]
+
+Update guide templates to use modern Git commands.
+
+- [x] Review guide templates for outdated Git commands
+- [x] Update `production-mode.md` with modern Git syntax
+  - [x] Replace `git checkout` with `git switch`
+  - [x] Replace `git checkout -b` with `git switch -c`
+  - [x] Replace `git branch -d` with `git branch --delete`
+  - [x] Replace `git branch -D` with `git branch --delete --force`
+  - [x] Update all workflow examples and quick reference
+- [x] Update version to `1.1.2` in `version.py` and `pyproject.toml`
+- [x] Update CHANGELOG.md with v1.1.2 entry
+- [x] Update README.md version examples to 1.1.2
+- [x] Refactor tests to use `__version__` instead of hardcoded strings
+  - [x] Eliminates version scatter across test files
+  - [x] Makes tests self-maintaining for future releases
+- [x] Verify: All 53 tests pass ✓
+- [x] Build package successfully ✓
+- [ ] Create GitHub release with tag `v1.1.2` (manual step)
 - [ ] Verify: Package publishes to PyPI (after release)
 
 ---
 
 ## Summary
 
-**Total Stories**: 20 (17 with version numbers, 3 without)
-**Current Version**: v1.1.0
+**Total Stories**: 21 (18 with version numbers, 3 without)
+**Current Version**: v1.1.2
 **Phases**: 6 (A-F)
 
 **Phase Breakdown**:
@@ -389,4 +411,4 @@ Add cleanup command to remove project-guides from a project.
 - **Phase C (CLI Commands)**: 4 stories — All CLI commands
 - **Phase D (Error Handling)**: 2 stories — Error handling and output polish
 - **Phase E (Testing & Quality)**: 3 stories — Integration tests, coverage, linting
-- **Phase F (Documentation & Release)**: 5 stories — README, templates, releases (v1.0.0, v1.1.0)
+- **Phase F (Documentation & Release)**: 6 stories — README, templates, releases (v1.0.0, v1.1.0, v1.1.2)
