@@ -7,6 +7,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.5] - 2026-03-10
+
+### Changed
+- **Updated README.md** with comprehensive documentation integration
+  - Added header banner image
+  - Updated description with Two-clause Technical Description
+  - Added Documentation badge linking to GitHub Pages
+  - Added dedicated Documentation section with links to full docs
+  - Updated "Why project-guides?" with Friendly Brief Description and HITLoop explanation
+  - Updated Key Features with content from Feature Cards
+- **Updated pyproject.toml** metadata
+  - Added project.urls section (Homepage, Documentation, Repository, Issues, Changelog)
+  - Expanded keywords to 18 items matching descriptions.md
+
+## [1.2.4] - 2026-03-10
+
+### Added
+- **GitHub Actions workflow** for automated documentation deployment
+  - `.github/workflows/deploy-docs.yml` for deploying to GitHub Pages
+  - Triggers on push to main branch and manual workflow_dispatch
+  - Builds with strict mode to fail on warnings
+  - Deploys to https://pointmatic.github.io/project-guides/
+
+## [1.2.3] - 2026-03-10
+
+### Added
+- **Comprehensive documentation pages** in `docs/site/`
+  - Getting Started: installation.md, quick-start.md, configuration.md
+  - User Guide: commands.md, workflow.md, overrides.md
+  - Developer Guide: contributing.md, development.md, testing.md
+  - About: license.md, changelog.md
+- All pages include cross-references and internal links
+- Documentation verified with `mkdocs build --strict`
+
+## [1.2.2] - 2026-03-10
+
+### Added
+- **Custom branded landing page** at `docs/site/index.html`
+  - Dark theme with teal accent colors
+  - Hero section with tagline and banner image
+  - Friendly Brief Description explaining HITLoop workflow
+  - Quick Start section with 7-step workflow
+  - 15 Feature Cards organized into 3 categories (Core, Operational, Philosophy)
+  - Responsive design with navigation and footer
+
+## [1.2.1] - 2026-03-10
+
+### Added
+- **MkDocs documentation infrastructure**
+  - `mkdocs.yml` configuration with Material theme
+  - Dark/light mode toggle with teal accent
+  - Navigation structure for all documentation sections
+  - Markdown extensions (admonition, superfences, highlight, etc.)
+  - Plugins: search, git-revision-date-localized
+  - `docs/site/.gitignore` for MkDocs cache
+  - Updated root `.gitignore` to ignore `/site/` build output
+  - Added `[docs]` optional dependency group in pyproject.toml
+
+## [1.2.0] - 2026-03-10
+
+### Added
+- **Canonical project descriptions** in `docs/specs/descriptions.md`
+  - Project name, taglines (short and long), one-liner
+  - Friendly Brief Description explaining HITLoop workflow
+  - Two-clause Technical Description
+  - Benefits list (10 items)
+  - Technical Description (3 paragraphs)
+  - Keywords (18 items including HITLoop)
+  - Quick Start section (7 essential steps)
+  - Feature Cards (15 cards in 3 categories)
+  - Usage Notes mapping descriptions to consumer files
+
+### Changed
+- **Updated README.md** with canonical descriptions
+  - Line 8: Two-clause Technical Description
+  - Line 12: Friendly Brief Description (first sentence)
+- **Updated pyproject.toml**
+  - Description field: Long Tagline
+- **Updated docs/specs/features.md**
+  - Line 11: Two-clause Technical Description
+- **Enhanced project-guide.md template**
+  - Added "How to Use This Guide" section
+  - Clarified "proceed" language for step-by-step workflow
+
 ## [1.1.3] - 2026-03-09
 
 ### Added

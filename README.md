@@ -354,6 +354,31 @@ mypy project_guides/
 ruff format project_guides/ tests/
 ```
 
+### Documentation Development
+
+The project uses MkDocs with Material theme for documentation.
+
+```bash
+# Install documentation dependencies
+pip install -e ".[docs]"
+
+# Preview documentation locally (with live reload)
+mkdocs serve
+# Open http://127.0.0.1:8000
+
+# Build documentation
+mkdocs build
+
+# Build with strict mode (fails on warnings)
+mkdocs build --strict
+```
+
+**Directory Structure:**
+- `docs/site/` - Documentation source files (markdown)
+- `site/` - Built documentation (generated, gitignored)
+- `mkdocs.yml` - MkDocs configuration
+- `.github/workflows/deploy-docs.yml` - Automated deployment to GitHub Pages
+
 ## Contributing
 
 Contributions are welcome! Please follow these guidelines:

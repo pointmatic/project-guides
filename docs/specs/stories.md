@@ -562,23 +562,23 @@ Update README with documentation assets and links.
 - [x] Verify: README structure improved with documentation links ✓
 - [x] Verify: pyproject.toml has complete metadata ✓
 
-### Story G.h: Local Development Documentation [Planned]
+### Story G.h: Local Development Documentation [Done]
 
 Document local development workflow for documentation.
 
-- [ ] Add "Documentation Development" section to `README.md`
-  - [ ] Document how to install docs dependencies (`pip install -e ".[docs]"`)
-  - [ ] Document how to preview locally (`mkdocs serve`)
-  - [ ] Document how to build locally (`mkdocs build`)
-  - [ ] Explain directory structure (`docs/site/` vs. `site/`)
-- [ ] Create `docs/site/contributing.md` (optional)
-  - [ ] Document how to contribute to documentation
-  - [ ] Explain markdown conventions
-  - [ ] Link to MkDocs Material documentation
-- [ ] Update CHANGELOG.md
-  - [ ] Add v1.2.0 through v1.2.5 entries
-  - [ ] Document all documentation features added
-- [ ] Verify: Local development instructions are clear and complete
+- [x] Add "Documentation Development" section to `README.md`
+  - [x] Document how to install docs dependencies (`pip install -e ".[docs]"`)
+  - [x] Document how to preview locally (`mkdocs serve`)
+  - [x] Document how to build locally (`mkdocs build` and `mkdocs build --strict`)
+  - [x] Explain directory structure (`docs/site/`, `site/`, `mkdocs.yml`, workflow)
+- [x] Update CHANGELOG.md
+  - [x] Add v1.2.5 - README and pyproject.toml updates
+  - [x] Add v1.2.4 - GitHub Actions deployment workflow
+  - [x] Add v1.2.3 - Comprehensive documentation pages
+  - [x] Add v1.2.2 - Custom branded landing page
+  - [x] Add v1.2.1 - MkDocs infrastructure
+  - [x] Add v1.2.0 - Canonical project descriptions
+- [x] Verify: Local development instructions are clear and complete ✓
 
 ---
 
