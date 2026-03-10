@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-03-09
+
+### Added
+- **GitHub repository setup section** in `production-mode.md` guide
+  - Branch protection rules with UI-matching checklist format
+  - Security settings: Dependency graph, Dependabot alerts, security updates, grouped updates
+  - GitHub Actions permissions guidance (Read-only by default)
+  - Uses `default` branch for flexibility (works with `main` or `master`)
+
+### Changed
+- **Updated `project-guide.md` prerequisites**
+  - Clarified developer must provide OR LLM must ask for requirements
+  - Documented that project idea is often in `docs/specs/concept.md`
+- **Updated `templates/guides/README.md`**
+  - Added production mode workflow to developer guide list
+  - Clarified LLMs may reference developer guides for step-by-step instructions
+
 ## [1.1.2] - 2026-03-09
 
 ### Changed
@@ -216,7 +233,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - developer/codecov-setup-guide.md
   - developer/github-actions-guide.md
 
-[Unreleased]: https://github.com/pointmatic/project-guides/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/pointmatic/project-guides/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/pointmatic/project-guides/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/pointmatic/project-guides/compare/v1.1.0...v1.1.2
 [1.1.0]: https://github.com/pointmatic/project-guides/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/pointmatic/project-guides/compare/v0.15.0...v1.0.0

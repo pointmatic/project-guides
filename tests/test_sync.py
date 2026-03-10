@@ -255,7 +255,7 @@ def test_sync_guides_current_version(tmp_path):
     """Test that guides at current version are not updated."""
     target_dir = tmp_path / "guides"
     config = Config(
-        installed_version="1.1.2",  # Same as current package version
+        installed_version="1.1.3",  # Same as current package version
         target_dir=str(target_dir)
     )
 

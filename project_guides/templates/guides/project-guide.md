@@ -6,9 +6,9 @@ This guide provides step-by-step instructions for an LLM to help a developer cre
 
 ## Prerequisites
 
-Before starting, the developer must provide:
+Before starting, the developer must provide (or the LLM must ask):
 
-1. **A project idea** — a short description of what the project should do (a few sentences to a few paragraphs).
+1. **A project idea** — a short description of what the project should do (a few sentences to a few paragraphs). This is often documented in a `docs/specs/concept.md` file.
 2. **Language / runtime** — e.g. Python 3.14, Node 22, Go 1.23, etc.
 3. **License preference** — e.g. Apache-2.0, MIT, MPL-2.0, GPL-3.0. If a `LICENSE` file already exists in the project root, that license prevails.
 

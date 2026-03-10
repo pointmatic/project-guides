@@ -1,6 +1,6 @@
 [project]
 name = "project-guides"
-version = "1.1.2"
+version = "1.1.3"
 description = "Manage LLM development workflow documentation across projects"
 readme = "README.md"
 license = "Apache-2.0"

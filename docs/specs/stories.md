@@ -397,12 +397,34 @@ Update guide templates to use modern Git commands.
 - [ ] Create GitHub release with tag `v1.1.2` (manual step)
 - [ ] Verify: Package publishes to PyPI (after release)
 
+### Story F.f: v1.1.3 Template Improvements [Done]
+
+Enhance guide templates with better instructions and setup procedures.
+
+- [x] Add GitHub repository setup section to `production-mode.md`
+  - [x] Branch protection rules with UI-matching checklist
+  - [x] Security settings (Dependabot, dependency graph, grouped updates)
+  - [x] GitHub Actions permissions guidance
+  - [x] Use `default` branch instead of hardcoded `main`
+- [x] Update `README.md` in templates/guides
+  - [x] Add production mode workflow to developer guide list
+  - [x] Clarify LLMs may reference developer guides for step-by-step instructions
+- [x] Update `project-guide.md` prerequisites
+  - [x] Clarify developer must provide OR LLM must ask for requirements
+  - [x] Document that project idea is often in `docs/specs/concept.md`
+- [x] Update version to `1.1.3` in `version.py` and `pyproject.toml`
+- [x] Update CHANGELOG.md with v1.1.3 entry
+- [x] Verify: All 53 tests pass ✓
+- [x] Build package successfully ✓
+- [ ] Create GitHub release with tag `v1.1.3` (manual step)
+- [ ] Verify: Package publishes to PyPI (after release)
+
 ---
 
 ## Summary
 
-**Total Stories**: 21 (18 with version numbers, 3 without)
-**Current Version**: v1.1.2
+**Total Stories**: 22 (19 with version numbers, 3 without)
+**Current Version**: v1.1.3
 **Phases**: 6 (A-F)
 
 **Phase Breakdown**:
@@ -411,4 +433,4 @@ Update guide templates to use modern Git commands.
 - **Phase C (CLI Commands)**: 4 stories — All CLI commands
 - **Phase D (Error Handling)**: 2 stories — Error handling and output polish
 - **Phase E (Testing & Quality)**: 3 stories — Integration tests, coverage, linting
-- **Phase F (Documentation & Release)**: 6 stories — README, templates, releases (v1.0.0, v1.1.0, v1.1.2)
+- **Phase F (Documentation & Release)**: 7 stories — README, templates, releases (v1.0.0, v1.1.0, v1.1.2, v1.1.3)
