@@ -607,12 +607,18 @@ Fix README banner image URL for PyPI compatibility.
   - [x] Add v1.2.7 entry with README banner fix
 - [x] Verify: Banner URL uses absolute path ✓
 
+### Story G.k: v1.2.8 Spike and hello world explained [Done]
+
+- [x] Add spike definition and example template to `best-practices-guide.md`
+- [x] Add spike/hello world concept as rules (stack, again with integration boundaries).
+- [x] Bump version to 1.2.8
+
 ---
 
 ## Summary
 
 **Total Stories**: 32 (27 with version numbers, 5 without)
-**Current Version**: v1.2.7
+**Current Version**: v1.2.8
 **Phases**: 7 (A-G)
 
 **Phase Breakdown**:
@@ -622,4 +628,4 @@ Fix README banner image URL for PyPI compatibility.
 - **Phase D (Error Handling)**: 2 stories — Error handling and output polish
 - **Phase E (Testing & Quality)**: 3 stories — Integration tests, coverage, linting
 - **Phase F (Documentation & Release)**: 7 stories — README, templates, releases (v1.0.0, v1.1.0, v1.1.2, v1.1.3)
-- **Phase G (Comprehensive Documentation)**: 10 stories — Project descriptions, landing page, MkDocs setup, GitHub Pages deployment, bug fixes (v1.2.0-v1.2.7)
+- **Phase G (Comprehensive Documentation)**: 10 stories — Project descriptions, landing page, MkDocs setup, GitHub Pages deployment, bug fixes (v1.2.0-v1.2.8)
