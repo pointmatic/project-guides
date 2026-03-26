@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-03-25
+
+### Added
+- **Content-based change detection** in `update` command
+  - New `file_matches_template()` function uses SHA-256 hash to compare file content with templates
+  - Detects user modifications even when version numbers match
+  - `status` command now shows "(modified)" for files with user edits
+- **Missing file detection** in `update` command
+  - Missing files are now properly detected and reported separately
+  - `update` command displays missing files in cyan with "+" indicator
+  - Missing files are always created, even if version numbers match
+
+### Fixed
+- **Critical bug**: `update` command incorrectly reported "all guides are up to date" when files were missing
+- **Critical bug**: `update` command didn't detect user modifications to guide files
+- `sync_guides()` now returns 4-tuple `(updated, skipped, current, missing)` instead of 3-tuple
+
+### Changed
+- Enhanced `status` command output to differentiate between:
+  - Outdated version: "(update available)"
+  - User modifications: "(modified)"
+  - Missing files: "(missing)"
+- Test suite expanded from 53 to 58 tests with 5 new comprehensive tests
+
 ## [1.2.7] - 2026-03-10
 
 ### Fixed

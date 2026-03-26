@@ -168,16 +168,22 @@ def test_sync_guides_with_no_overrides(tmp_path):
     )
 
     # Sync a subset of guides
-    updated, skipped, current = sync_guides(
+    updated, skipped, current, missing = sync_guides(
         config,
         guides=["project-guide.md", "debug-guide.md"]
     )
 
-    assert len(updated) == 2
-    assert "project-guide.md" in updated
-    assert "debug-guide.md" in updated
+    # Files don't exist, so they should be in missing list
+    assert len(missing) == 2
+    assert "project-guide.md" in missing
+    assert "debug-guide.md" in missing
+    assert len(updated) == 0
     assert len(skipped) == 0
     assert len(current) == 0
+
+    # Verify files were created
+    assert (tmp_path / "guides" / "project-guide.md").exists()
+    assert (tmp_path / "guides" / "debug-guide.md").exists()
 
     # Verify files were created
     assert (tmp_path / "guides" / "project-guide.md").exists()
@@ -192,15 +198,16 @@ def test_sync_guides_with_overrides_skipped(tmp_path):
     )
     config.add_override("debug-guide.md", "Custom content", "0.5.0")
 
-    updated, skipped, current = sync_guides(
+    updated, skipped, current, missing = sync_guides(
         config,
         guides=["project-guide.md", "debug-guide.md"]
     )
 
-    assert len(updated) == 1
-    assert "project-guide.md" in updated
+    assert len(updated) == 0
     assert len(skipped) == 1
     assert "debug-guide.md" in skipped
+    assert len(missing) == 1
+    assert "project-guide.md" in missing
     assert len(current) == 0
 
 
@@ -216,7 +223,7 @@ def test_sync_guides_with_force_flag(tmp_path):
     copy_guide("debug-guide.md", target_dir)
     config.add_override("debug-guide.md", "Custom content", "0.5.0")
 
-    updated, skipped, current = sync_guides(
+    updated, skipped, current, missing = sync_guides(
         config,
         guides=["debug-guide.md"],
         force=True
@@ -238,16 +245,18 @@ def test_sync_guides_dry_run_mode(tmp_path):
         target_dir=str(tmp_path / "guides")
     )
 
-    updated, skipped, current = sync_guides(
+    updated, skipped, current, missing = sync_guides(
         config,
         guides=["project-guide.md"],
         dry_run=True
     )
 
-    assert len(updated) == 1
-    assert "project-guide.md" in updated
+    # File doesn't exist, so should be in missing list
+    assert len(missing) == 1
+    assert "project-guide.md" in missing
+    assert len(updated) == 0
 
-    # Verify file was NOT created
+    # Verify file was NOT created (dry-run mode)
     assert not (tmp_path / "guides" / "project-guide.md").exists()
 
 
@@ -264,7 +273,7 @@ def test_sync_guides_current_version(tmp_path):
     # Create existing guide
     copy_guide("project-guide.md", target_dir)
 
-    updated, skipped, current = sync_guides(
+    updated, skipped, current, missing = sync_guides(
         config,
         guides=["project-guide.md"]
     )
@@ -273,3 +282,94 @@ def test_sync_guides_current_version(tmp_path):
     assert len(skipped) == 0
     assert len(current) == 1
     assert "project-guide.md" in current
+    assert len(missing) == 0
+
+
+def test_sync_guides_detects_missing_files(tmp_path):
+    """Test that missing files are detected and created."""
+    from project_guides.version import __version__
+
+    target_dir = tmp_path / "guides"
+    config = Config(
+        installed_version=__version__,
+        target_dir=str(target_dir)
+    )
+
+    # Don't create any files - they should be detected as missing
+    updated, skipped, current, missing = sync_guides(
+        config,
+        guides=["project-guide.md", "debug-guide.md"]
+    )
+
+    assert len(missing) == 2
+    assert "project-guide.md" in missing
+    assert "debug-guide.md" in missing
+    assert len(updated) == 0
+    assert len(current) == 0
+
+    # Verify files were created
+    assert (target_dir / "project-guide.md").exists()
+    assert (target_dir / "debug-guide.md").exists()
+
+
+def test_sync_guides_detects_user_modifications(tmp_path):
+    """Test that user-modified files are detected and updated."""
+    from project_guides.version import __version__
+
+    target_dir = tmp_path / "guides"
+    config = Config(
+        installed_version=__version__,
+        target_dir=str(target_dir)
+    )
+
+    # Create guide and modify it
+    copy_guide("project-guide.md", target_dir)
+    guide_file = target_dir / "project-guide.md"
+
+    # Modify the file content
+    with open(guide_file, 'a') as f:
+        f.write("\n# User added content\n")
+
+    updated, skipped, current, missing = sync_guides(
+        config,
+        guides=["project-guide.md"]
+    )
+
+    # Modified file should be updated
+    assert len(updated) == 1
+    assert "project-guide.md" in updated
+    assert len(current) == 0
+    assert len(missing) == 0
+
+
+def test_file_matches_template_with_identical_content(tmp_path):
+    """Test that file_matches_template returns True for identical content."""
+    from project_guides.sync import file_matches_template
+
+    target_dir = tmp_path / "guides"
+    copy_guide("project-guide.md", target_dir)
+
+    assert file_matches_template(target_dir / "project-guide.md", "project-guide.md")
+
+
+def test_file_matches_template_with_modified_content(tmp_path):
+    """Test that file_matches_template returns False for modified content."""
+    from project_guides.sync import file_matches_template
+
+    target_dir = tmp_path / "guides"
+    copy_guide("project-guide.md", target_dir)
+
+    # Modify the file
+    guide_file = target_dir / "project-guide.md"
+    with open(guide_file, 'a') as f:
+        f.write("\n# Modified\n")
+
+    assert not file_matches_template(guide_file, "project-guide.md")
+
+
+def test_file_matches_template_with_nonexistent_file(tmp_path):
+    """Test that file_matches_template returns False for nonexistent files."""
+    from project_guides.sync import file_matches_template
+
+    nonexistent = tmp_path / "nonexistent.md"
+    assert not file_matches_template(nonexistent, "project-guide.md")

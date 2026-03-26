@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import hashlib
 import importlib.resources
 import shutil
 from datetime import datetime
@@ -126,6 +127,35 @@ def backup_guide(guide_path: Path) -> Path:
     return backup_path
 
 
+def file_matches_template(file_path: Path, guide_name: str) -> bool:
+    """
+    Check if a file's content matches the bundled template.
+
+    Args:
+        file_path: Path to the file to check
+        guide_name: Name of the guide template to compare against
+
+    Returns:
+        True if file content matches template, False otherwise
+    """
+    if not file_path.exists():
+        return False
+
+    try:
+        # Get template content
+        template_path = get_template_path(guide_name)
+        with open(template_path, 'rb') as f:
+            template_hash = hashlib.sha256(f.read()).hexdigest()
+
+        # Get file content
+        with open(file_path, 'rb') as f:
+            file_hash = hashlib.sha256(f.read()).hexdigest()
+
+        return template_hash == file_hash
+    except (OSError, GuideNotFoundError):
+        return False
+
+
 def compare_versions(installed: str, package: str) -> int:
     """
     Compare two version strings.
@@ -151,7 +181,7 @@ def sync_guides(
     guides: list[str] | None = None,
     force: bool = False,
     dry_run: bool = False
-) -> tuple[list[str], list[str], list[str]]:
+) -> tuple[list[str], list[str], list[str], list[str]]:
     """
     Sync guides to latest version.
 
@@ -162,11 +192,16 @@ def sync_guides(
         dry_run: If True, show what would change without applying
 
     Returns:
-        Tuple of (updated, skipped, current) guide name lists
+        Tuple of (updated, skipped, current, missing) guide name lists
+        - updated: Guides that were/will be updated (outdated or modified)
+        - skipped: Guides skipped due to override (unless force=True)
+        - current: Guides that match template and are up-to-date
+        - missing: Guides that don't exist and need to be created
     """
     updated = []
     skipped = []
     current = []
+    missing = []
 
     # Get list of guides to sync
     guides_to_sync = get_all_guide_names() if guides is None else guides
@@ -182,23 +217,28 @@ def sync_guides(
             skipped.append(guide_name)
             continue
 
-        # Check if guide exists and compare versions
-        if target_file.exists():
-            # If installed version equals package version, mark as current
-            if config.installed_version and compare_versions(config.installed_version, package_version) == 0:
-                current.append(guide_name)
-                continue
-            # If installed version is older, will update below
-
-        # If file doesn't exist and versions match, still mark as current (no update needed)
-        elif config.installed_version and compare_versions(config.installed_version, package_version) == 0:
-            current.append(guide_name)
+        # Check if file exists
+        if not target_file.exists():
+            # File is missing - always needs to be created
+            missing.append(guide_name)
+            # Update the guide if not dry-run
+            if not dry_run:
+                copy_guide(guide_name, target_dir, force=True)
             continue
 
-        # Update the guide
+        # File exists - check if it matches template and version is current
+        if config.installed_version and compare_versions(config.installed_version, package_version) == 0:
+            # Version is current - check if content matches template
+            if file_matches_template(target_file, guide_name):
+                # File matches template exactly - mark as current
+                current.append(guide_name)
+                continue
+            # else: File was modified by user, will update below
+
+        # File needs updating (outdated version or user modifications)
         if not dry_run:
             # If overridden and force=True, create backup first
-            if config.is_overridden(guide_name) and force and target_file.exists():
+            if config.is_overridden(guide_name) and force:
                 backup_guide(target_file)
 
             # Copy the guide
@@ -206,4 +246,4 @@ def sync_guides(
 
         updated.append(guide_name)
 
-    return (updated, skipped, current)
+    return (updated, skipped, current, missing)

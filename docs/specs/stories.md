@@ -615,11 +615,50 @@ Fix README banner image URL for PyPI compatibility.
 
 ---
 
+## Phase H: Enhanced Features
+
+### Story H.a: v1.3.0 Enhanced Update Detection [Done]
+
+Fix critical bugs in update command and add content-based change detection.
+
+- [x] Add `file_matches_template()` function in `project_guides/sync.py`
+  - [x] Use SHA-256 hash to compare file content with template
+  - [x] Return False for nonexistent files
+  - [x] Handle OSError and GuideNotFoundError gracefully
+- [x] Fix `sync_guides()` to properly detect missing files
+  - [x] Change return signature from 3-tuple to 4-tuple: `(updated, skipped, current, missing)`
+  - [x] Detect missing files and add to `missing` list (always create them)
+  - [x] Check file content matches template when version is current
+  - [x] Mark files as "current" only if content matches template exactly
+  - [x] Update files that were modified by user even if version is current
+- [x] Update CLI `update` command
+  - [x] Handle 4-tuple return from `sync_guides()`
+  - [x] Display missing files separately with cyan color
+  - [x] Update summary messages to include missing file count
+  - [x] Show "Would create" vs "Created" for missing files
+- [x] Update CLI `status` command
+  - [x] Import and use `file_matches_template()` to check content
+  - [x] Show "(modified)" status for files with user edits
+  - [x] Differentiate between outdated version and modified content
+- [x] Fix all existing tests for new 4-tuple return
+  - [x] Update 5 test functions to unpack 4 values
+  - [x] Fix test assertions for new behavior
+- [x] Add comprehensive new tests (5 new tests)
+  - [x] `test_sync_guides_detects_missing_files` - Verify missing file detection
+  - [x] `test_sync_guides_detects_user_modifications` - Verify content comparison
+  - [x] `test_file_matches_template_with_identical_content` - Hash comparison works
+  - [x] `test_file_matches_template_with_modified_content` - Detects changes
+  - [x] `test_file_matches_template_with_nonexistent_file` - Handles missing files
+- [x] Verify: All 58 tests pass ✓
+- [x] Verify: Test coverage remains at 82% ✓
+
+---
+
 ## Summary
 
-**Total Stories**: 32 (27 with version numbers, 5 without)
-**Current Version**: v1.2.8
-**Phases**: 7 (A-G)
+**Total Stories**: 33 (28 with version numbers, 5 without)
+**Current Version**: v1.3.0
+**Phases**: 8 (A-H)
 
 **Phase Breakdown**:
 - **Phase A (Foundation)**: 3 stories — Basic package structure, config model, template bundle
@@ -628,4 +667,5 @@ Fix README banner image URL for PyPI compatibility.
 - **Phase D (Error Handling)**: 2 stories — Error handling and output polish
 - **Phase E (Testing & Quality)**: 3 stories — Integration tests, coverage, linting
 - **Phase F (Documentation & Release)**: 7 stories — README, templates, releases (v1.0.0, v1.1.0, v1.1.2, v1.1.3)
-- **Phase G (Comprehensive Documentation)**: 10 stories — Project descriptions, landing page, MkDocs setup, GitHub Pages deployment, bug fixes (v1.2.0-v1.2.8)
+- **Phase G (Comprehensive Documentation)**: 11 stories — Project descriptions, landing page, MkDocs setup, GitHub Pages deployment, bug fixes (v1.2.0-v1.2.8)
+- **Phase H (Enhanced Features)**: 1 story — Enhanced update detection with content comparison (v1.3.0)

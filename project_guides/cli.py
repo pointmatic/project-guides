@@ -131,11 +131,20 @@ def status():
         elif not target_file.exists():
             click.secho(f"  ✗ {guide_name:40} (missing)", fg='red')
             missing_count += 1
-        # Check if current version
+        # Check if current version and content matches
         elif config.installed_version and compare_versions(config.installed_version, package_version) == 0:
-            click.secho(f"  ✓ {guide_name:40} v{package_version}  (current)", fg='green')
-            current_count += 1
-        # Must be outdated
+            # Version is current - check if content matches template
+            from project_guides.sync import file_matches_template
+            if file_matches_template(target_file, guide_name):
+                click.secho(f"  ✓ {guide_name:40} v{package_version}  (current)", fg='green')
+                current_count += 1
+            else:
+                click.secho(
+                    f"  ⚠ {guide_name:40} v{package_version}  (modified)",
+                    fg='yellow'
+                )
+                outdated_count += 1
+        # Must be outdated version
         else:
             click.secho(
                 f"  ⚠ {guide_name:40} v{config.installed_version}  (update available)",
@@ -207,7 +216,7 @@ def update(guides: tuple, dry_run: bool, force: bool):
         click.echo()
 
     try:
-        updated, skipped, current = sync_guides(config, guides_list, force, dry_run)
+        updated, skipped, current, missing = sync_guides(config, guides_list, force, dry_run)
     except SyncError as e:
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(2)  # File I/O error exit code
@@ -218,6 +227,12 @@ def update(guides: tuple, dry_run: bool, force: bool):
         click.secho(f"{action}:", fg='green')
         for guide in updated:
             click.secho(f"  ✓ {guide}", fg='green')
+
+    if missing:
+        action = "Would create" if dry_run else "Created"
+        click.secho(f"{action} (missing files):", fg='cyan')
+        for guide in missing:
+            click.secho(f"  + {guide}", fg='cyan')
 
     if skipped:
         click.secho("Skipped (overridden):", fg='yellow')
@@ -238,14 +253,26 @@ def update(guides: tuple, dry_run: bool, force: bool):
     # Print summary
     click.echo()
     if dry_run:
-        if updated:
-            click.echo(f"Would update {len(updated)} guide{'s' if len(updated) != 1 else ''}.")
+        total_changes = len(updated) + len(missing)
+        if total_changes > 0:
+            parts = []
+            if updated:
+                parts.append(f"update {len(updated)}")
+            if missing:
+                parts.append(f"create {len(missing)}")
+            click.echo(f"Would {' and '.join(parts)} guide{'s' if total_changes != 1 else ''}.")
             click.echo("Run without --dry-run to apply changes.")
         else:
             click.echo("No updates needed.")
     else:
-        if updated:
-            click.secho(f"✓ Updated {len(updated)} guide{'s' if len(updated) != 1 else ''}.", fg='green')
+        total_changes = len(updated) + len(missing)
+        if total_changes > 0:
+            parts = []
+            if updated:
+                parts.append(f"updated {len(updated)}")
+            if missing:
+                parts.append(f"created {len(missing)}")
+            click.secho(f"✓ Successfully {' and '.join(parts)} guide{'s' if total_changes != 1 else ''}.", fg='green')
         elif skipped and not current:
             click.echo("All guides are overridden. Use --force to update anyway.")
         else:
