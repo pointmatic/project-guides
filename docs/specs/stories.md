@@ -662,7 +662,8 @@ Protect user edits by prompting before overwriting modified guides.
   - [x] `--force` moves modified files to `updated` after creating `.bak` backup
   - [x] Add `apply_guide_update()` helper for single-guide update with optional backup
 - [x] Update CLI `update` command in `project_guides/cli.py`
-  - [x] Prompt `Overwrite <guide>? [y/N]` for each file in `modified` list
+  - [x] Prompt `Backup and overwrite <guide>? [y/N]` for each file in `modified` list
+  - [x] Always create `.bak` backup before any overwrite (prompt or `--force`)
   - [x] Track `user_approved` and `user_declined` separately
   - [x] Show "Skipped (user declined):" section in output
   - [x] Show "Updated (backed up):" label when `--force` is used
@@ -673,8 +674,10 @@ Protect user edits by prompting before overwriting modified guides.
   - [x] Fix `test_sync_guides_detects_user_modifications` — now asserts `modified` list
   - [x] Fix `test_cli.py` and `test_integration.py` label assertions
   - [x] Add `test_sync_guides_force_overwrites_modified_with_backup`
+- [x] Fix mypy `var-annotated` error — add `list[str]` annotations to `user_approved`, `user_declined`, `user_backed_up`
 - [x] Verify: All 59 tests pass ✓
 - [x] Verify: Linting passes ✓
+- [x] Verify: mypy passes ✓
 
 ---
 

@@ -228,9 +228,9 @@ def update(guides: tuple, dry_run: bool, force: bool):
         sys.exit(2)  # File I/O error exit code
 
     # Handle modified files - prompt user for each one
-    user_approved = []
-    user_declined = []
-    user_backed_up = []
+    user_approved: list[str] = []
+    user_declined: list[str] = []
+    user_backed_up: list[str] = []
 
     if modified and not dry_run:
         click.secho("Modified files detected:", fg='yellow')
