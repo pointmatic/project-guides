@@ -55,7 +55,7 @@ class Config:
     overrides: dict[str, GuideOverride] = field(default_factory=dict)
 
     @classmethod
-    def load(cls, path: str = ".project-guides.yml") -> "Config":
+    def load(cls, path: str = ".project-guide.yml") -> "Config":
         """Load configuration from YAML file."""
         config_path = Path(path)
 
@@ -96,7 +96,7 @@ class Config:
             overrides=overrides
         )
 
-    def save(self, path: str = ".project-guides.yml") -> None:
+    def save(self, path: str = ".project-guide.yml") -> None:
         """Save configuration to YAML file."""
         data = {
             "version": self.version,

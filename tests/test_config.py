@@ -32,7 +32,7 @@ def test_config_creation_with_defaults():
 
 def test_config_save_load_round_trip(tmp_path):
     """Test saving and loading a config file."""
-    config_file = tmp_path / ".project-guides.yml"
+    config_file = tmp_path / ".project-guide.yml"
 
     config = Config(
         version="1.0",
@@ -74,7 +74,7 @@ def test_override_add_remove():
 
 def test_invalid_yaml_handling(tmp_path):
     """Test handling of invalid YAML."""
-    config_file = tmp_path / ".project-guides.yml"
+    config_file = tmp_path / ".project-guide.yml"
 
     config_file.write_text("invalid: yaml: content:")
 
@@ -85,12 +85,12 @@ def test_invalid_yaml_handling(tmp_path):
 def test_missing_config_file():
     """Test loading from non-existent config file."""
     with pytest.raises(ConfigError, match="Configuration file not found"):
-        Config.load("/nonexistent/path/.project-guides.yml")
+        Config.load("/nonexistent/path/.project-guide.yml")
 
 
 def test_config_with_no_overrides(tmp_path):
     """Test config without any overrides."""
-    config_file = tmp_path / ".project-guides.yml"
+    config_file = tmp_path / ".project-guide.yml"
 
     config = Config(
         version="1.0",

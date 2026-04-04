@@ -34,7 +34,7 @@ def test_purge_removes_all_files(runner, tmp_path):
         assert result.exit_code == 0
 
         # Verify files exist
-        assert Path(".project-guides.yml").exists()
+        assert Path(".project-guide.yml").exists()
         assert Path("docs/guides").exists()
 
         # Purge with --force to skip confirmation
@@ -42,11 +42,11 @@ def test_purge_removes_all_files(runner, tmp_path):
         assert result.exit_code == 0
         # Handle both Unix (/) and Windows (\) path separators
         assert ("✓ Removed docs/guides/" in result.output or "✓ Removed docs\\guides/" in result.output)
-        assert "✓ Removed .project-guides.yml" in result.output
+        assert "✓ Removed .project-guide.yml" in result.output
         assert "project-guides has been purged" in result.output
 
         # Verify files are gone
-        assert not Path(".project-guides.yml").exists()
+        assert not Path(".project-guide.yml").exists()
         assert not Path("docs/guides").exists()
 
 
@@ -62,7 +62,7 @@ def test_purge_with_confirmation_prompt(runner, tmp_path):
         assert "Are you sure you want to purge project-guides?" in result.output
 
         # Files should still exist
-        assert Path(".project-guides.yml").exists()
+        assert Path(".project-guide.yml").exists()
         assert Path("docs/guides").exists()
 
         # Purge without --force, answer 'y' to confirm
@@ -70,7 +70,7 @@ def test_purge_with_confirmation_prompt(runner, tmp_path):
         assert result.exit_code == 0
 
         # Files should be gone
-        assert not Path(".project-guides.yml").exists()
+        assert not Path(".project-guide.yml").exists()
         assert not Path("docs/guides").exists()
 
 
@@ -82,7 +82,7 @@ def test_purge_with_custom_target_dir(runner, tmp_path):
         assert result.exit_code == 0
 
         # Verify files exist
-        assert Path(".project-guides.yml").exists()
+        assert Path(".project-guide.yml").exists()
         assert Path("custom/guides").exists()
 
         # Purge
@@ -92,7 +92,7 @@ def test_purge_with_custom_target_dir(runner, tmp_path):
         assert ("✓ Removed custom/guides/" in result.output or "✓ Removed custom\\guides/" in result.output)
 
         # Verify files are gone
-        assert not Path(".project-guides.yml").exists()
+        assert not Path(".project-guide.yml").exists()
         assert not Path("custom/guides").exists()
 
 
@@ -120,7 +120,7 @@ def test_purge_handles_missing_guides_dir(runner, tmp_path):
         assert result.exit_code == 0
         # Handle both Unix (/) and Windows (\) path separators
         assert ("docs/guides/ not found (skipped)" in result.output or "docs\\guides/ not found (skipped)" in result.output)
-        assert "✓ Removed .project-guides.yml" in result.output
+        assert "✓ Removed .project-guide.yml" in result.output
 
         # Config should be gone
-        assert not Path(".project-guides.yml").exists()
+        assert not Path(".project-guide.yml").exists()

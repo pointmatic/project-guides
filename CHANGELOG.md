@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-04-03
+
+### Changed
+- **Renamed config file from `.project-guides.yml` to `.project-guide.yml`**
+  - All CLI commands now read and write `.project-guide.yml`
+  - Automatic one-time migration: if `.project-guides.yml` exists and `.project-guide.yml` does not, the file is renamed on next command run with a printed notice
+  - Template updated to `.project-guide.yml.template`
+
 ## [1.4.0] - 2026-04-03
 
 ### Added
@@ -381,7 +389,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - developer/codecov-setup-guide.md
   - developer/github-actions-guide.md
 
-[Unreleased]: https://github.com/pointmatic/project-guides/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/pointmatic/project-guides/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/pointmatic/project-guides/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/pointmatic/project-guides/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/pointmatic/project-guides/compare/v1.3.0...v1.3.1
 [1.1.3]: https://github.com/pointmatic/project-guides/compare/v1.1.2...v1.1.3

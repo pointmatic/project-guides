@@ -38,7 +38,7 @@ def test_init_in_empty_directory(runner, tmp_path):
         assert "Successfully initialized" in result.output
 
         # Verify config file was created
-        assert Path(".project-guides.yml").exists()
+        assert Path(".project-guide.yml").exists()
 
         # Verify guides were created
         assert Path("docs/guides/project-guide.md").exists()
@@ -88,7 +88,7 @@ def test_init_with_custom_target_dir(runner, tmp_path):
         assert Path("custom/path/project-guide.md").exists()
 
         # Verify config has correct target_dir
-        config = Config.load(".project-guides.yml")
+        config = Config.load(".project-guide.yml")
         assert config.target_dir == "custom/path"
 
 
@@ -114,9 +114,9 @@ def test_status_with_outdated_guides(runner, tmp_path):
         runner.invoke(main, ['init'])
 
         # Modify config to simulate older version
-        config = Config.load(".project-guides.yml")
+        config = Config.load(".project-guide.yml")
         config.installed_version = "0.7.0"
-        config.save(".project-guides.yml")
+        config.save(".project-guide.yml")
 
         # Run status
         result = runner.invoke(main, ['status'])
@@ -133,9 +133,9 @@ def test_status_with_overridden_guides(runner, tmp_path):
         runner.invoke(main, ['init'])
 
         # Add an override
-        config = Config.load(".project-guides.yml")
+        config = Config.load(".project-guide.yml")
         config.add_override("debug-guide.md", "Custom content", "0.8.0")
-        config.save(".project-guides.yml")
+        config.save(".project-guide.yml")
 
         # Run status
         result = runner.invoke(main, ['status'])
@@ -152,7 +152,7 @@ def test_status_with_missing_config(runner, tmp_path):
         result = runner.invoke(main, ['status'])
 
         assert result.exit_code == 1
-        assert "No .project-guides.yml found" in result.output
+        assert "No .project-guide.yml found" in result.output
         assert "Run 'project-guides init' first" in result.output
 
 
@@ -170,7 +170,7 @@ def test_override_adds_entry_to_config(runner, tmp_path):
         assert "Custom debugging workflow" in result.output
 
         # Verify config was updated
-        config = Config.load(".project-guides.yml")
+        config = Config.load(".project-guide.yml")
         assert config.is_overridden("debug-guide.md")
         assert config.overrides["debug-guide.md"].reason == "Custom debugging workflow"
 
@@ -205,7 +205,7 @@ def test_unoverride_removes_entry(runner, tmp_path):
         assert "Removed override from debug-guide.md" in result.output
 
         # Verify config was updated
-        config = Config.load(".project-guides.yml")
+        config = Config.load(".project-guide.yml")
         assert not config.is_overridden("debug-guide.md")
 
 
@@ -265,9 +265,9 @@ def test_update_all_guides(runner, tmp_path):
         runner.invoke(main, ['init'])
 
         # Modify config to simulate older version
-        config = Config.load(".project-guides.yml")
+        config = Config.load(".project-guide.yml")
         config.installed_version = "0.9.0"
-        config.save(".project-guides.yml")
+        config.save(".project-guide.yml")
 
         # Run update
         result = runner.invoke(main, ['update'])
@@ -277,7 +277,7 @@ def test_update_all_guides(runner, tmp_path):
         assert "guide" in result.output.lower()
 
         # Verify config was updated
-        config = Config.load(".project-guides.yml")
+        config = Config.load(".project-guide.yml")
         assert config.installed_version == __version__
 
 
@@ -288,9 +288,9 @@ def test_update_specific_guides(runner, tmp_path):
         runner.invoke(main, ['init'])
 
         # Modify config to simulate older version
-        config = Config.load(".project-guides.yml")
+        config = Config.load(".project-guide.yml")
         config.installed_version = "0.9.0"
-        config.save(".project-guides.yml")
+        config.save(".project-guide.yml")
 
         # Update only specific guides
         result = runner.invoke(main, ['update', '--guides', 'debug-guide.md', '--guides', 'project-guide.md'])
@@ -307,9 +307,9 @@ def test_update_with_dry_run(runner, tmp_path):
         runner.invoke(main, ['init'])
 
         # Modify config to simulate older version
-        config = Config.load(".project-guides.yml")
+        config = Config.load(".project-guide.yml")
         config.installed_version = "0.9.0"
-        config.save(".project-guides.yml")
+        config.save(".project-guide.yml")
 
         # Run dry-run update
         result = runner.invoke(main, ['update', '--dry-run'])
@@ -320,7 +320,7 @@ def test_update_with_dry_run(runner, tmp_path):
         assert "Run without --dry-run to apply changes" in result.output
 
         # Verify config was NOT updated
-        config = Config.load(".project-guides.yml")
+        config = Config.load(".project-guide.yml")
         assert config.installed_version == "0.9.0"
 
 
@@ -331,10 +331,10 @@ def test_update_with_force_creates_backups(runner, tmp_path):
         runner.invoke(main, ['init'])
 
         # Add override
-        config = Config.load(".project-guides.yml")
+        config = Config.load(".project-guide.yml")
         config.add_override("debug-guide.md", "Custom content", "0.10.0")
         config.installed_version = "0.9.0"
-        config.save(".project-guides.yml")
+        config.save(".project-guide.yml")
 
         # Update with force
         result = runner.invoke(main, ['update', '--force'])
@@ -355,10 +355,10 @@ def test_update_respects_overrides(runner, tmp_path):
         runner.invoke(main, ['init'])
 
         # Add override
-        config = Config.load(".project-guides.yml")
+        config = Config.load(".project-guide.yml")
         config.add_override("debug-guide.md", "Custom content", "0.10.0")
         config.installed_version = "0.9.0"
-        config.save(".project-guides.yml")
+        config.save(".project-guide.yml")
 
         # Update without force
         result = runner.invoke(main, ['update'])

@@ -10,7 +10,7 @@ Stories with code changes include a version number (e.g., v0.1.0). Stories with 
 
 Rename the package from `project-guides` to `project-guide` (singular). The goals are: reserve the PyPI name immediately with a minimal publish, then progressively clean up the codebase over subsequent stories. The old `project-guides` CLI entry point is kept alive through Story I.c to avoid breaking existing users mid-rename.
 
-### Story I.a: v1.4.0 Reserve PyPI Name [In Progress]
+### Story I.a: v1.4.0 Reserve PyPI Name [Done]
 
 Publish the package under the new name `project-guide` on PyPI. This is the minimal change needed to secure the name. The old `project-guides` CLI command continues to work — no regressions for existing users.
 
@@ -21,31 +21,31 @@ Publish the package under the new name `project-guide` on PyPI. This is the mini
   - [ ] Update description if needed
 - [x] Update `project_guides/version.py` to `"1.4.0"`
 - [x] Update `CHANGELOG.md` with v1.4.0 entry
-- [ ] Publish to PyPI via GitHub Actions
-  - [ ] Commit and push changes
-  - [ ] Create and publish a GitHub Release tagged `v1.4.0`
-  - [ ] Confirm the `Publish to PyPI` Actions workflow passes
-- [ ] Verify: `pip install project-guide` installs successfully
-- [ ] Verify: both `project-guide --help` and `project-guides --help` work
+- [x] Publish to PyPI via GitHub Actions
+  - [x] Commit and push changes
+  - [x] Create and publish a GitHub Release tagged `v1.4.0`
+  - [x] Confirm the `Publish to PyPI` Actions workflow passes
+- [x] Verify: `pip install project-guide` installs successfully
+- [x] Verify: both `project-guide --help` and `project-guides --help` work
 
-### Story I.b: v1.4.1 Rename Config File [Planned]
+### Story I.b: v1.4.1 Rename Config File [Done]
 
 Rename `.project-guides.yml` to `.project-guide.yml` everywhere: the template, all code references, and all documentation. Add a one-time migration so existing users' config files are renamed automatically with a printed notice.
 
-- [ ] Rename template file
-  - [ ] `project_guides/templates/.project-guides.yml.template` → `.project-guide.yml.template`
-- [ ] Update `config.py`
-  - [ ] Change the config filename constant from `.project-guides.yml` to `.project-guide.yml`
-- [ ] Update `cli.py`
-  - [ ] Add migration logic in the `main` group or a shared helper: if `.project-guides.yml` exists and `.project-guide.yml` does not, rename it and print: `"Renamed .project-guides.yml → .project-guide.yml"`
-  - [ ] Update all string references to the old config filename
-- [ ] Update `sync.py` references if any
-- [ ] Update `tests/` — all fixtures and assertions using the old filename
-- [ ] Update `README.md` and all guide docs referencing `.project-guides.yml`
-- [ ] Bump `version.py` and `pyproject.toml` to `1.4.1`
-- [ ] Update `CHANGELOG.md`
-- [ ] Verify: existing project with `.project-guides.yml` runs any command and gets renamed automatically
-- [ ] Verify: new `project-guide init` creates `.project-guide.yml`
+- [x] Rename template file
+  - [x] `project_guides/templates/.project-guides.yml.template` → `.project-guide.yml.template`
+- [x] Update `config.py`
+  - [x] Change the config filename constant from `.project-guides.yml` to `.project-guide.yml`
+- [x] Update `cli.py`
+  - [x] Add migration logic in the `main` group or a shared helper: if `.project-guides.yml` exists and `.project-guide.yml` does not, rename it and print: `"Renamed .project-guides.yml → .project-guide.yml"`
+  - [x] Update all string references to the old config filename
+- [x] Update `sync.py` references if any
+- [x] Update `tests/` — all fixtures and assertions using the old filename
+- [x] Update `README.md` and all guide docs referencing `.project-guides.yml`
+- [x] Bump `version.py` and `pyproject.toml` to `1.4.1`
+- [x] Update `CHANGELOG.md`
+- [x] Verify: existing project with `.project-guides.yml` runs any command and gets renamed automatically
+- [x] Verify: new `project-guide init` creates `.project-guide.yml`
 
 ### Story I.c: v1.5.0 Complete CLI Rename [Planned]
 

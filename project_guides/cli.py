@@ -29,11 +29,20 @@ from project_guides.sync import (
 from project_guides.version import __version__
 
 
+def _migrate_config_if_needed() -> None:
+    """Rename .project-guides.yml to .project-guide.yml if the old file exists."""
+    old_path = Path(".project-guides.yml")
+    new_path = Path(".project-guide.yml")
+    if old_path.exists() and not new_path.exists():
+        old_path.rename(new_path)
+        click.secho(f"Migrated {old_path} → {new_path}", fg='yellow')
+
+
 @click.group()
 @click.version_option(version=__version__)
 def main():
     """Manage LLM project guides across repositories."""
-    pass
+    _migrate_config_if_needed()
 
 
 @main.command()
@@ -41,7 +50,7 @@ def main():
 @click.option('--force', is_flag=True, help='Overwrite existing files')
 def init(target_dir: str, force: bool):
     """Initialize guides in a new project."""
-    config_path = Path(".project-guides.yml")
+    config_path = Path(".project-guide.yml")
 
     # Check if config already exists
     if config_path.exists() and not force:
@@ -89,12 +98,12 @@ def init(target_dir: str, force: bool):
 @main.command()
 def status():
     """Show status of all guides."""
-    config_path = Path(".project-guides.yml")
+    config_path = Path(".project-guide.yml")
 
     # Check if config exists
     if not config_path.exists():
         click.secho(
-            "Error: No .project-guides.yml found. Run 'project-guides init' first.",
+            "Error: No .project-guide.yml found. Run 'project-guides init' first.",
             fg='red',
             err=True
         )
@@ -182,12 +191,12 @@ def status():
 @click.option('--force', is_flag=True, help='Update even overridden guides (creates backups)')
 def update(guides: tuple, dry_run: bool, force: bool):
     """Update guides to latest version."""
-    config_path = Path(".project-guides.yml")
+    config_path = Path(".project-guide.yml")
 
     # Check if config exists
     if not config_path.exists():
         click.secho(
-            "Error: No .project-guides.yml found. Run 'project-guides init' first.",
+            "Error: No .project-guide.yml found. Run 'project-guides init' first.",
             fg='red',
             err=True
         )
@@ -330,12 +339,12 @@ def update(guides: tuple, dry_run: bool, force: bool):
 @click.argument('reason')
 def override(guide_name: str, reason: str):
     """Mark a guide as overridden to prevent updates."""
-    config_path = Path(".project-guides.yml")
+    config_path = Path(".project-guide.yml")
 
     # Check if config exists
     if not config_path.exists():
         click.secho(
-            "Error: No .project-guides.yml found. Run 'project-guides init' first.",
+            "Error: No .project-guide.yml found. Run 'project-guides init' first.",
             fg='red',
             err=True
         )
@@ -371,12 +380,12 @@ def override(guide_name: str, reason: str):
 @click.argument('guide_name')
 def unoverride(guide_name: str):
     """Remove override status from a guide."""
-    config_path = Path(".project-guides.yml")
+    config_path = Path(".project-guide.yml")
 
     # Check if config exists
     if not config_path.exists():
         click.secho(
-            "Error: No .project-guides.yml found. Run 'project-guides init' first.",
+            "Error: No .project-guide.yml found. Run 'project-guides init' first.",
             fg='red',
             err=True
         )
@@ -442,7 +451,7 @@ def purge(force):
         click.secho(f"Error: {e}", fg="red", err=True)
         sys.exit(3)
 
-    config_path = Path(".project-guides.yml")
+    config_path = Path(".project-guide.yml")
     guides_dir = Path(config.target_dir)
 
     # Show what will be removed
