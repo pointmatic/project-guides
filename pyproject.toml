@@ -43,11 +43,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/pointmatic/project-guides"
-Documentation = "https://pointmatic.github.io/project-guides/"
-Repository = "https://github.com/pointmatic/project-guides"
-Issues = "https://github.com/pointmatic/project-guides/issues"
-Changelog = "https://github.com/pointmatic/project-guides/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/pointmatic/project-guide"
+Documentation = "https://pointmatic.github.io/project-guide/"
+Repository = "https://github.com/pointmatic/project-guide"
+Issues = "https://github.com/pointmatic/project-guide/issues"
+Changelog = "https://github.com/pointmatic/project-guide/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
