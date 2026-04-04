@@ -10,20 +10,21 @@ Stories with code changes include a version number (e.g., v0.1.0). Stories with 
 
 Rename the package from `project-guides` to `project-guide` (singular). The goals are: reserve the PyPI name immediately with a minimal publish, then progressively clean up the codebase over subsequent stories. The old `project-guides` CLI entry point is kept alive through Story I.c to avoid breaking existing users mid-rename.
 
-### Story I.a: v1.4.0 Reserve PyPI Name [Planned]
+### Story I.a: v1.4.0 Reserve PyPI Name [In Progress]
 
 Publish the package under the new name `project-guide` on PyPI. This is the minimal change needed to secure the name. The old `project-guides` CLI command continues to work — no regressions for existing users.
 
 - [x] Update `pyproject.toml`
   - [x] Change `name` from `"project-guides"` to `"project-guide"`
-  - [ ] Add `project-guide = "project_guides.cli:main"` entry point alongside existing `project-guides`
-  - [ ] Bump version to `1.4.0`
+  - [x] Add `project-guide = "project_guides.cli:main"` entry point alongside existing `project-guides`
+  - [x] Bump version to `1.4.0`
   - [ ] Update description if needed
-- [ ] Update `project_guides/version.py` to `"1.4.0"`
-- [ ] Update `CHANGELOG.md` with v1.4.0 entry
-- [ ] Build and publish to PyPI
-  - [ ] `python -m build`
-  - [ ] `twine upload dist/*`
+- [x] Update `project_guides/version.py` to `"1.4.0"`
+- [x] Update `CHANGELOG.md` with v1.4.0 entry
+- [ ] Publish to PyPI via GitHub Actions
+  - [ ] Commit and push changes
+  - [ ] Create and publish a GitHub Release tagged `v1.4.0`
+  - [ ] Confirm the `Publish to PyPI` Actions workflow passes
 - [ ] Verify: `pip install project-guide` installs successfully
 - [ ] Verify: both `project-guide --help` and `project-guides --help` work
 
