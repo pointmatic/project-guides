@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-04-03
+
+### Changed
+- **Removed `project-guides` CLI entry point** — only `project-guide` is now installed
+  - Existing users must reinstall: `pip install project-guide`
+- Updated all user-facing CLI messages to reference `project-guide`
+- Updated guide template to reference `pip install project-guide` and `project-guide init`
+
+### Breaking Change
+- The `project-guides` command is no longer installed. Replace all uses with `project-guide`.
+
 ## [1.4.1] - 2026-04-03
 
 ### Changed
@@ -389,7 +400,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - developer/codecov-setup-guide.md
   - developer/github-actions-guide.md
 
-[Unreleased]: https://github.com/pointmatic/project-guides/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/pointmatic/project-guides/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/pointmatic/project-guides/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/pointmatic/project-guides/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/pointmatic/project-guides/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/pointmatic/project-guides/compare/v1.3.0...v1.3.1

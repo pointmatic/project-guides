@@ -43,7 +43,7 @@ def test_purge_removes_all_files(runner, tmp_path):
         # Handle both Unix (/) and Windows (\) path separators
         assert ("✓ Removed docs/guides/" in result.output or "✓ Removed docs\\guides/" in result.output)
         assert "✓ Removed .project-guide.yml" in result.output
-        assert "project-guides has been purged" in result.output
+        assert "project-guide has been purged" in result.output
 
         # Verify files are gone
         assert not Path(".project-guide.yml").exists()
@@ -59,7 +59,7 @@ def test_purge_with_confirmation_prompt(runner, tmp_path):
         # Purge without --force, answer 'n' to abort
         result = runner.invoke(main, ['purge'], input='n\n')
         assert result.exit_code == 1
-        assert "Are you sure you want to purge project-guides?" in result.output
+        assert "Are you sure you want to purge project-guide?" in result.output
 
         # Files should still exist
         assert Path(".project-guide.yml").exists()

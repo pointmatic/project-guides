@@ -34,7 +34,7 @@ def test_init_in_empty_directory(runner, tmp_path):
         result = runner.invoke(main, ['init'])
 
         assert result.exit_code == 0
-        assert "Initializing project-guides" in result.output
+        assert "Initializing project-guide" in result.output
         assert "Successfully initialized" in result.output
 
         # Verify config file was created
@@ -102,7 +102,7 @@ def test_status_with_all_guides_current(runner, tmp_path):
         result = runner.invoke(main, ['status'])
 
         assert result.exit_code == 0
-        assert f"project-guides v{__version__}" in result.output
+        assert f"project-guide v{__version__}" in result.output
         assert "Guides status:" in result.output
         assert "All guides are up to date" in result.output
 
@@ -123,7 +123,7 @@ def test_status_with_outdated_guides(runner, tmp_path):
 
         assert result.exit_code == 0
         assert "update available" in result.output
-        assert "Run 'project-guides update' to sync" in result.output
+        assert "Run 'project-guide update' to sync" in result.output
 
 
 def test_status_with_overridden_guides(runner, tmp_path):
@@ -153,7 +153,7 @@ def test_status_with_missing_config(runner, tmp_path):
 
         assert result.exit_code == 1
         assert "No .project-guide.yml found" in result.output
-        assert "Run 'project-guides init' first" in result.output
+        assert "Run 'project-guide init' first" in result.output
 
 
 def test_override_adds_entry_to_config(runner, tmp_path):

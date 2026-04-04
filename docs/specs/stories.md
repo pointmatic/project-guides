@@ -47,20 +47,20 @@ Rename `.project-guides.yml` to `.project-guide.yml` everywhere: the template, a
 - [x] Verify: existing project with `.project-guides.yml` runs any command and gets renamed automatically
 - [x] Verify: new `project-guide init` creates `.project-guide.yml`
 
-### Story I.c: v1.5.0 Complete CLI Rename [Planned]
+### Story I.c: v1.5.0 Complete CLI Rename [In Progress]
 
 Remove the old `project-guides` CLI entry point. Update all user-facing strings, documentation, and guide content to use `project-guide`. This is the breaking change — old users must reinstall.
 
-- [ ] Update `pyproject.toml`
-  - [ ] Remove `project-guides = "project_guides.cli:main"` entry point
-  - [ ] Bump version to `1.5.0`
-- [ ] Update `project_guides/version.py` to `"1.5.0"`
-- [ ] Update all CLI help strings in `cli.py` (e.g., `"Run project-guides init"` → `"Run project-guide init"`)
-- [ ] Update `README.md` — all command examples
-- [ ] Update all files under `project_guides/templates/guides/` that reference `project-guides`
-  - [ ] `project-guide.md` (How to Use section)
-  - [ ] Any other guide referencing the CLI command
-- [ ] Update `CHANGELOG.md`
+- [x] Update `pyproject.toml`
+  - [x] Remove `project-guides = "project_guides.cli:main"` entry point
+  - [x] Bump version to `1.5.0`
+- [x] Update `project_guides/version.py` to `"1.5.0"`
+- [x] Update all CLI help strings in `cli.py` (e.g., `"Run project-guides init"` → `"Run project-guide init"`)
+- [x] Update `README.md` — all command examples
+- [x] Update all files under `project_guards/templates/guides/` that reference `project-guides`
+  - [x] `project-guide.md` (How to Use section)
+  - [x] Any other guide referencing the CLI command
+- [x] Update `CHANGELOG.md`
 - [ ] Build and publish to PyPI
 - [ ] Verify: `project-guides --help` is no longer available after reinstall
 - [ ] Verify: `project-guide --help` works and shows correct command name
@@ -69,11 +69,11 @@ Remove the old `project-guides` CLI entry point. Update all user-facing strings,
 
 Admin tasks with no code changes. No version bump.
 
-- [ ] Rename GitHub repo from `project-guides` to `project-guide`
-  - [ ] Settings → Repository name → `project-guide`
-  - [ ] GitHub automatically redirects old URLs
+- [x] Rename GitHub repo from `project-guides` to `project-guide`
+  - [x] Settings → Repository name → `project-guide`
+  - [x] GitHub automatically redirects old URLs
 - [ ] Update all hardcoded GitHub URLs in the codebase and docs
-  - [ ] `README.md` badges and links
+  - [x] `README.md` badges and links
   - [ ] `pyproject.toml` `[project.urls]` section
   - [ ] Any guide files referencing the repo URL
 - [ ] Archive old `project-guides` PyPI package

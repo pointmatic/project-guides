@@ -69,7 +69,7 @@ def init(target_dir: str, force: bool):
     guide_names = get_all_guide_names()
 
     # Copy all templates
-    click.echo(f"Initializing project-guides v{__version__}...")
+    click.echo(f"Initializing project-guide v{__version__}...")
     click.secho(f"✓ Created {target_dir}/", fg='green')
 
     for guide_name in guide_names:
@@ -103,7 +103,7 @@ def status():
     # Check if config exists
     if not config_path.exists():
         click.secho(
-            "Error: No .project-guide.yml found. Run 'project-guides init' first.",
+            "Error: No .project-guide.yml found. Run 'project-guide init' first.",
             fg='red',
             err=True
         )
@@ -118,7 +118,7 @@ def status():
 
     # Show version info
     package_version = __version__
-    click.echo(f"project-guides v{package_version} (installed: v{config.installed_version})")
+    click.echo(f"project-guide v{package_version} (installed: v{config.installed_version})")
     click.echo()
 
     # Check each guide's status
@@ -180,7 +180,7 @@ def status():
     if summary_parts:
         click.echo(", ".join(summary_parts).capitalize())
         if outdated_count > 0 or missing_count > 0:
-            click.echo("Run 'project-guides update' to sync.")
+            click.echo("Run 'project-guide update' to sync.")
     else:
         click.secho("All guides are up to date.", fg='green')
 
@@ -196,7 +196,7 @@ def update(guides: tuple, dry_run: bool, force: bool):
     # Check if config exists
     if not config_path.exists():
         click.secho(
-            "Error: No .project-guide.yml found. Run 'project-guides init' first.",
+            "Error: No .project-guide.yml found. Run 'project-guide init' first.",
             fg='red',
             err=True
         )
@@ -344,7 +344,7 @@ def override(guide_name: str, reason: str):
     # Check if config exists
     if not config_path.exists():
         click.secho(
-            "Error: No .project-guide.yml found. Run 'project-guides init' first.",
+            "Error: No .project-guide.yml found. Run 'project-guide init' first.",
             fg='red',
             err=True
         )
@@ -385,7 +385,7 @@ def unoverride(guide_name: str):
     # Check if config exists
     if not config_path.exists():
         click.secho(
-            "Error: No .project-guide.yml found. Run 'project-guides init' first.",
+            "Error: No .project-guide.yml found. Run 'project-guide init' first.",
             fg='red',
             err=True
         )
@@ -444,7 +444,7 @@ def overrides():
     help="Skip confirmation prompt",
 )
 def purge(force):
-    """Remove all project-guides files from the current project."""
+    """Remove all project-guide files from the current project."""
     try:
         config = Config.load()
     except ConfigError as e:
@@ -463,7 +463,7 @@ def purge(force):
     # Confirm unless --force
     if not force:
         click.confirm(
-            click.style("Are you sure you want to purge project-guides?", fg="red", bold=True),
+            click.style("Are you sure you want to purge project-guide?", fg="red", bold=True),
             abort=True
         )
 
@@ -491,7 +491,7 @@ def purge(force):
         sys.exit(2)
 
     click.echo()
-    click.secho("project-guides has been purged from this project.", fg="green", bold=True)
+    click.secho("project-guide has been purged from this project.", fg="green", bold=True)
 
 
 if __name__ == "__main__":
