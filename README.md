@@ -1,3 +1,15 @@
+> **This package has been renamed to [`project-guide`](https://pypi.org/project/project-guide/).**
+>
+> Install the new package:
+> ```bash
+> pip install project-guide
+> ```
+>
+> This `project-guides` package is deprecated and will no longer receive updates.
+> Installing it will automatically pull in `project-guide` as a dependency.
+
+---
+
 ![project-guides](https://raw.githubusercontent.com/pointmatic/project-guides/main/docs/site/images/project-guides-header-readme.png)
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
