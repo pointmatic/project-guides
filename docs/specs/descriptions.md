@@ -93,7 +93,7 @@ Short blurbs for landing pages and feature grids. Each card has a title and a on
 | 9 | Safe Operations | Idempotent commands and explicit consent requirements protect your project-specific customizations |
 | 10 | Lightweight | Minimal dependencies (click, pyyaml, packaging) mean fast installation and no bloat |
 | 11 | Cross-Platform | Runs on macOS, Linux, and Windows with Python 3.11+ for consistent workflows everywhere |
-| 12 | Well Tested | Comprehensive test coverage minimum of 75% ensures reliability |
+| 12 | Well Tested | Comprehensive test coverage minimum of 85% ensures reliability |
 
 ### Development Philosophy
 
@@ -101,7 +101,7 @@ Short blurbs for landing pages and feature grids. Each card has a title and a on
 |---|-------|-------------|
 | 13 | HITLoop Development | You direct features, flow, and taste. The LLM handles the typing. Human-in-the-loop collaboration at its best |
 | 14 | Flaming Agile Pace | Complete an entire production-ready backend in 6-12 hours with structured, methodical LLM collaboration |
-| 15 | Structured Workflow | The workflow enforces a focused methodology: planning, coding, debugging, etc. with approval gates for your review |
+| 15 | Structured Workflow | The workflow enforces a focused methodology: planning, coding, debugging, etc. with approval gates |
 
 ---
 

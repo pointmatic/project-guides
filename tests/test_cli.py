@@ -13,12 +13,14 @@
 # limitations under the License.
 
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
 
 from project_guide.cli import main
 from project_guide.config import Config
+from project_guide.exceptions import SyncError
 from project_guide.version import __version__
 
 
@@ -367,3 +369,372 @@ def test_update_respects_overrides(runner, tmp_path):
         assert "Skipped (overridden):" in result.output
         assert "debug-guide.md" in result.output
         assert "Custom content" in result.output
+
+
+# --- Story I.g: Coverage expansion tests ---
+
+
+def test_migrate_config_renames_old_file(runner, tmp_path):
+    """Test that _migrate_config_if_needed renames .project-guides.yml."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        # Create old config file
+        old_path = Path(".project-guides.yml")
+        old_path.write_text("version: '1.0'\ninstalled_version: '1.0.0'\ntarget_dir: docs/guides\n")
+
+        # Any CLI command triggers migration
+        runner.invoke(main, ['status'])
+
+        assert not old_path.exists()
+        assert Path(".project-guide.yml").exists()
+
+
+def test_init_skips_existing_guide_without_force(runner, tmp_path):
+    """Test init skips guides that already exist without --force."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        # Pre-create the guides directory and one guide
+        Path("docs/guides").mkdir(parents=True)
+        Path("docs/guides/project-guide.md").write_text("My custom content")
+
+        result = runner.invoke(main, ['init'])
+
+        assert result.exit_code == 0
+        assert "Skipped" in result.output
+        # The pre-existing file should not be overwritten
+        assert Path("docs/guides/project-guide.md").read_text() == "My custom content"
+
+
+def test_init_sync_error_exits_with_code_2(runner, tmp_path):
+    """Test init exits with code 2 when copy_guide raises SyncError."""
+    with runner.isolated_filesystem(temp_dir=tmp_path), \
+            patch("project_guide.cli.copy_guide", side_effect=SyncError("Permission denied")):
+        result = runner.invoke(main, ['init'])
+
+        assert result.exit_code == 2
+        assert "Permission denied" in result.output
+
+
+def test_status_with_corrupt_config(runner, tmp_path):
+    """Test status with corrupt config file exits with code 3."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        Path(".project-guide.yml").write_text("not: valid: yaml: [[[")
+
+        result = runner.invoke(main, ['status'])
+
+        assert result.exit_code == 3
+
+
+def test_status_with_missing_guide_file(runner, tmp_path):
+    """Test status shows missing indicator when guide file is deleted."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # Delete a guide file
+        Path("docs/guides/debug-guide.md").unlink()
+
+        result = runner.invoke(main, ['status'])
+
+        assert result.exit_code == 0
+        assert "missing" in result.output
+        assert "guide" in result.output.lower()
+
+
+def test_status_with_modified_guide(runner, tmp_path):
+    """Test status shows modified indicator when guide content differs."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # Modify a guide
+        Path("docs/guides/debug-guide.md").write_text("User-modified content")
+
+        result = runner.invoke(main, ['status'])
+
+        assert result.exit_code == 0
+        assert "modified" in result.output
+
+
+def test_update_with_missing_config(runner, tmp_path):
+    """Test update with no config file exits with code 1."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(main, ['update'])
+
+        assert result.exit_code == 1
+        assert "No .project-guide.yml found" in result.output
+
+
+def test_update_with_corrupt_config(runner, tmp_path):
+    """Test update with corrupt config exits with code 3."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        Path(".project-guide.yml").write_text("not: valid: yaml: [[[")
+
+        result = runner.invoke(main, ['update'])
+
+        assert result.exit_code == 3
+
+
+def test_update_with_invalid_guide_name(runner, tmp_path):
+    """Test update with non-existent guide name exits with code 1."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        result = runner.invoke(main, ['update', '--guides', 'fake-guide.md'])
+
+        assert result.exit_code == 1
+        assert "Guide 'fake-guide.md' not found" in result.output
+        assert "Available guides:" in result.output
+
+
+def test_update_sync_error_exits_with_code_2(runner, tmp_path):
+    """Test update exits with code 2 when sync_guides raises SyncError."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        config = Config.load(".project-guide.yml")
+        config.installed_version = "0.9.0"
+        config.save(".project-guide.yml")
+
+        with patch("project_guide.cli.sync_guides", side_effect=SyncError("Disk full")):
+            result = runner.invoke(main, ['update'])
+
+            assert result.exit_code == 2
+            assert "Disk full" in result.output
+
+
+def test_update_modified_file_user_approves(runner, tmp_path):
+    """Test update with modified file when user confirms backup and overwrite."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # Modify a guide so it's detected as modified
+        Path("docs/guides/debug-guide.md").write_text("User-modified content")
+
+        # User says yes to the prompt
+        result = runner.invoke(main, ['update'], input="y\n")
+
+        assert result.exit_code == 0
+        assert "Updated (approved by user)" in result.output
+        assert "debug-guide.md" in result.output
+
+
+def test_update_modified_file_user_declines(runner, tmp_path):
+    """Test update with modified file when user declines."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # Modify a guide
+        Path("docs/guides/debug-guide.md").write_text("User-modified content")
+
+        # User says no to the prompt
+        result = runner.invoke(main, ['update'], input="n\n")
+
+        assert result.exit_code == 0
+        assert "Skipped (user declined)" in result.output
+
+
+def test_update_dry_run_with_modified_file(runner, tmp_path):
+    """Test update --dry-run shows modified files without changing them."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        Path("docs/guides/debug-guide.md").write_text("User-modified content")
+        original = Path("docs/guides/debug-guide.md").read_text()
+
+        result = runner.invoke(main, ['update', '--dry-run'])
+
+        assert result.exit_code == 0
+        assert "would prompt" in result.output.lower()
+        # File should not have changed
+        assert Path("docs/guides/debug-guide.md").read_text() == original
+
+
+def test_update_dry_run_with_missing_files(runner, tmp_path):
+    """Test update --dry-run shows missing files as 'Would create'."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # Delete a guide and simulate older version
+        Path("docs/guides/debug-guide.md").unlink()
+        config = Config.load(".project-guide.yml")
+        config.installed_version = "0.9.0"
+        config.save(".project-guide.yml")
+
+        result = runner.invoke(main, ['update', '--dry-run'])
+
+        assert result.exit_code == 0
+        assert "Would create" in result.output
+
+
+def test_update_all_declined_message(runner, tmp_path):
+    """Test update message when all modified guides are declined."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # Modify all guides so they all appear as modified
+        guides_dir = Path("docs/guides")
+        for guide in guides_dir.rglob("*.md"):
+            guide.write_text("Modified content")
+
+        # Decline all prompts
+        result = runner.invoke(main, ['update'], input="n\nn\nn\nn\nn\nn\nn\nn\n")
+
+        assert result.exit_code == 0
+        assert "No guides updated" in result.output or "declined" in result.output
+
+
+def test_update_all_overridden_message(runner, tmp_path):
+    """Test update message when all guides are overridden."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        config = Config.load(".project-guide.yml")
+        config.installed_version = "0.9.0"
+        from project_guide.sync import get_all_guide_names
+        for guide in get_all_guide_names():
+            config.add_override(guide, "Custom", "0.9.0")
+        config.save(".project-guide.yml")
+
+        result = runner.invoke(main, ['update'])
+
+        assert result.exit_code == 0
+        assert "overridden" in result.output.lower()
+
+
+def test_override_with_missing_config(runner, tmp_path):
+    """Test override with no config file exits with code 1."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(main, ['override', 'debug-guide.md', 'reason'])
+
+        assert result.exit_code == 1
+        assert "No .project-guide.yml found" in result.output
+
+
+def test_override_with_corrupt_config(runner, tmp_path):
+    """Test override with corrupt config exits with code 3."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        Path(".project-guide.yml").write_text("not: valid: yaml: [[[")
+
+        result = runner.invoke(main, ['override', 'debug-guide.md', 'reason'])
+
+        assert result.exit_code == 3
+
+
+def test_unoverride_with_missing_config(runner, tmp_path):
+    """Test unoverride with no config file exits with code 1."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(main, ['unoverride', 'debug-guide.md'])
+
+        assert result.exit_code == 1
+        assert "No .project-guide.yml found" in result.output
+
+
+def test_unoverride_with_corrupt_config(runner, tmp_path):
+    """Test unoverride with corrupt config exits with code 3."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        Path(".project-guide.yml").write_text("not: valid: yaml: [[[")
+
+        result = runner.invoke(main, ['unoverride', 'debug-guide.md'])
+
+        assert result.exit_code == 3
+
+
+def test_overrides_with_corrupt_config(runner, tmp_path):
+    """Test overrides command with corrupt config exits with code 3."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        Path(".project-guide.yml").write_text("not: valid: yaml: [[[")
+
+        result = runner.invoke(main, ['overrides'])
+
+        assert result.exit_code == 3
+
+
+def test_purge_missing_guides_directory(runner, tmp_path):
+    """Test purge when guides directory does not exist."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # Remove guides directory before purge
+        import shutil
+        shutil.rmtree("docs/guides")
+
+        result = runner.invoke(main, ['purge', '--force'])
+
+        assert result.exit_code == 0
+        assert "not found (skipped)" in result.output
+        assert not Path(".project-guide.yml").exists()
+
+
+def test_update_modified_file_apply_sync_error(runner, tmp_path):
+    """Test update when apply_guide_update raises SyncError during user-approved update."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        Path("docs/guides/debug-guide.md").write_text("User-modified content")
+
+        with patch("project_guide.cli.apply_guide_update", side_effect=SyncError("Write failed")):
+            result = runner.invoke(main, ['update'], input="y\n")
+
+            assert result.exit_code == 0
+            assert "Error updating" in result.output
+
+
+def test_update_dry_run_no_changes(runner, tmp_path):
+    """Test update --dry-run when all guides are current shows no updates needed."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        result = runner.invoke(main, ['update', '--dry-run'])
+
+        assert result.exit_code == 0
+        assert "No updates needed" in result.output
+
+
+def test_update_with_missing_file_creates_it(runner, tmp_path):
+    """Test update creates missing files and reports them."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # Delete a guide and set older version
+        Path("docs/guides/debug-guide.md").unlink()
+        config = Config.load(".project-guide.yml")
+        config.installed_version = "0.9.0"
+        config.save(".project-guide.yml")
+
+        result = runner.invoke(main, ['update'])
+
+        assert result.exit_code == 0
+        assert "Created" in result.output or "created" in result.output
+        assert Path("docs/guides/debug-guide.md").exists()
+
+
+def test_purge_with_corrupt_config(runner, tmp_path):
+    """Test purge with corrupt config exits with code 3."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        Path(".project-guide.yml").write_text("not: valid: yaml: [[[")
+
+        result = runner.invoke(main, ['purge', '--force'])
+
+        assert result.exit_code == 3
+
+
+def test_purge_with_confirmation_prompt(runner, tmp_path):
+    """Test purge without --force asks for confirmation."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # User confirms
+        result = runner.invoke(main, ['purge'], input="y\n")
+
+        assert result.exit_code == 0
+        assert "purged" in result.output.lower()
+        assert not Path(".project-guide.yml").exists()
+
+
+def test_purge_missing_config_after_dir_removal(runner, tmp_path):
+    """Test purge when config file is already gone."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        result = runner.invoke(main, ['purge', '--force'])
+
+        assert result.exit_code == 0
+        assert not Path(".project-guide.yml").exists()
+        assert not Path("docs/guides").exists()

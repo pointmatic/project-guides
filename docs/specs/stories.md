@@ -103,11 +103,63 @@ Admin tasks with no code changes. No version bump.
 - [x] Update `mkdocs.yml` site URL if applicable
 - [x] Verify: all links resolve correctly
 
-### Story I.f: Update README, landing page, and descriptions [Planned]
+### Story I.f: Update README, landing page, and descriptions [Done]
 - [x] Update `docs/specs/descriptions.md` to reflect new package name and concepts (guides -> guide/prompts)
 - [x] Update `README.md` based on `docs/specs/description.md`
 - [x] Update landing page based on `docs/specs/description.md`
 - [x] Add Codecov badge to `README.md` and set minimum coverage to 75%
+
+### Story I.g: v1.5.2 Increase Test Coverage to 85% [Planned]
+
+Expand test coverage from 79% to 85%+ by filling gaps in `cli.py` (currently 72%, 84 missed statements). Focus on error paths, edge cases, and untested command flows. Raise the `--cov-fail-under` threshold to 85%.
+
+**cli.py — config migration (lines 37–38):**
+- [ ] Test `_migrate_config_if_needed`: old `.project-guides.yml` exists, `.project-guide.yml` does not → renames and prints notice
+
+**cli.py — `init` error paths (lines 79–84):**
+- [ ] Test `init` when a guide file already exists without `--force` (FileExistsError path — `⚠ Skipped` message)
+- [ ] Test `init` when `copy_guide` raises `SyncError` (e.g., permission denied) → exits with code 2
+
+**cli.py — `status` edge cases (lines 115–117, 147–148, 157–161, 178):**
+- [ ] Test `status` with corrupt/invalid config file → `ConfigError`, exits with code 3
+- [ ] Test `status` with a missing guide file on disk → shows `✗ (missing)` and missing count
+- [ ] Test `status` with a locally modified guide (content differs from template) → shows `⚠ (modified)`
+- [ ] Test `status` summary includes missing count when guides are missing
+
+**cli.py — `update` error paths (lines 198–203, 208–210, 220–226, 235–237):**
+- [ ] Test `update` with no config file → error message, exits with code 1
+- [ ] Test `update` with corrupt config → `ConfigError`, exits with code 3
+- [ ] Test `update --guides fake-guide.md` → error with available guides list, exits with code 1
+- [ ] Test `update` when `sync_guides` raises `SyncError` → exits with code 2
+
+**cli.py — `update` modified-file prompts (lines 245–259, 269–282):**
+- [ ] Test `update` with locally modified file, user confirms → backup created, file updated, shows "Updated (approved by user)"
+- [ ] Test `update` with locally modified file, user declines → shows "Skipped (user declined)"
+- [ ] Test `update --dry-run` with locally modified file → shows "Modified (would prompt)" without changing files
+
+**cli.py — `update` summary variations (lines 310–334):**
+- [ ] Test `update --dry-run` summary with missing files → shows "Would create"
+- [ ] Test `update` when all guides declined → "No guides updated (all modifications declined)"
+- [ ] Test `update` when all guides overridden (no `--force`) → "All guides are overridden. Use --force to update anyway."
+
+**cli.py — `override`/`unoverride` missing config (lines 346–358, 387–399):**
+- [ ] Test `override` with no config file → error, exits with code 1
+- [ ] Test `override` with corrupt config → exits with code 3
+- [ ] Test `unoverride` with no config file → error, exits with code 1
+- [ ] Test `unoverride` with corrupt config → exits with code 3
+
+**cli.py — `overrides` error path (lines 422–424):**
+- [ ] Test `overrides` with corrupt config → exits with code 3
+
+**cli.py — `purge` edge cases (lines 478–491):**
+- [ ] Test `purge` when guides directory does not exist → shows "not found (skipped)"
+- [ ] Test `purge` when config file does not exist after dir removal → shows "not found (skipped)"
+
+**Raise coverage threshold:**
+- [ ] Update `pyproject.toml`: change `--cov-fail-under=75` to `--cov-fail-under=85`
+- [ ] Verify: full test suite passes with 85%+ coverage
+- [ ] Bump `version.py` and `pyproject.toml` to `1.5.2`
+- [ ] Update `CHANGELOG.md`
 
 ---
 
