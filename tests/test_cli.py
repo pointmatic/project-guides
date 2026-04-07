@@ -348,7 +348,7 @@ def test_update_with_force_creates_backups(runner, tmp_path):
         assert "Successfully updated" in result.output
 
         # Verify backup was created
-        backup_files = list(Path("docs/project-guide").glob("templates/modes/debug-mode.md.bak.*"))
+        backup_files = list(Path("docs/project-guide/templates/modes").glob("debug-mode.md.bak.*"))
         assert len(backup_files) == 1
 
 

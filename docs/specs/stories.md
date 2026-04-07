@@ -189,48 +189,48 @@ Future modes (deferred): `code_production`, `audit_security`, `audit_architectur
 
 Migration: No automatic migration of old `docs/guides/` content. Users can apply a future `refactor` mode to migrate.
 
-### Story J.a: v2.0.0 End-to-End Spike — Metadata, Rendering, and Mode Command [Planned]
+### Story J.a: v2.0.0 End-to-End Spike — Metadata, Rendering, and Mode Command [Done]
 
 Wire the full stack end-to-end with two modes (`default`, `plan_concept`). This validates metadata parsing, Jinja2 rendering, the `mode` command, config schema v2.0, and the new directory structure. No remaining modes, no sync/update changes — just prove the critical path works.
 
-- [ ] Add `jinja2>=3.1` to runtime dependencies in `pyproject.toml`
-- [ ] Add `MetadataError` and `RenderError` to `exceptions.py`
-- [ ] Create `metadata.py`
-  - [ ] Load and validate `project-guide-metadata.yml`
-  - [ ] Resolve `common` block variables (two-pass: resolve `{{var}}` references in all fields against `common` values)
-  - [ ] Look up a mode by name, returning its `ModeDefinition` (template path, sequence/cycle, next_mode, artifacts, files_exist)
-  - [ ] List all available mode names
-- [ ] Create `render.py`
-  - [ ] Configure Jinja2 environment with the project's template directory as the loader path
-  - [ ] Render `go-project-guide.md` by: loading the entry point template, injecting the current mode's template via `{% include %}`, passing metadata variables as Jinja2 context
-  - [ ] Handle the `_header-sequence.md` / `_header-cycle.md` inclusion within mode templates
-  - [ ] Write rendered output to the target path
-- [ ] Update `config.py`
-  - [ ] Add `current_mode: str = "default"` to `Config` dataclass
-  - [ ] Bump config schema version to `"2.0"`
-  - [ ] Migrate v1.0 configs on load: add `current_mode: "default"` if missing
-  - [ ] Change default `target_dir` to `"docs/project-guide"` for new projects
-- [ ] Update `init` command in `cli.py`
-  - [ ] Create new directory structure: `docs/project-guide/templates/modes/`, `docs/project-guide/templates/artifacts/`
-  - [ ] Copy `project-guide-metadata.yml`, header partials, `default-mode.md`, and `plan-concept-mode.md` + its artifact template
-  - [ ] Render `go-project-guide.md` in `default` mode
-  - [ ] Create `.project-guide.yml` with `current_mode: "default"` and `target_dir: "docs/project-guide"`
-  - [ ] Add `go-project-guide.md` to `.gitignore` if not already present
-- [ ] Add `mode` command to `cli.py`
-  - [ ] `project-guide mode <name>`: validate mode name against metadata, update `current_mode` in config, render `go-project-guide.md`, print confirmation
-  - [ ] `project-guide mode` (no arg): print current mode and list available modes
-  - [ ] Error on invalid mode name with list of valid options
-- [ ] Convert template syntax: replace `{{template "path"}}` in mode templates with Jinja2 `{% include "path" %}`
-- [ ] Finalize `default-mode.md` and `plan-concept-mode.md` templates (already hand-drafted, adjust as needed during spike)
-- [ ] Write tests for `metadata.py`, `render.py`, `mode` command, updated `init`, and config v2.0 migration
-- [ ] Bump `version.py` and `pyproject.toml` to `2.0.0`
-- [ ] Update `CHANGELOG.md`
-- [ ] Verify: `project-guide init` creates new directory structure and renders `go-project-guide.md`
-- [ ] Verify: `project-guide mode plan_concept` switches mode and re-renders `go-project-guide.md` with plan_concept content
-- [ ] Verify: `project-guide mode` (no arg) lists available modes with current mode highlighted
-- [ ] Verify: rendered `go-project-guide.md` includes `_header-common.md` + `_header-sequence.md` + plan-concept steps
-- [ ] Verify: old v1.0 config loads without error (migration adds `current_mode: "default"`)
-- [ ] Verify: artifact templates (`templates/artifacts/concept.md`) are copied but NOT Jinja2-rendered
+- [x] Add `jinja2>=3.1` to runtime dependencies in `pyproject.toml`
+- [x] Add `MetadataError` and `RenderError` to `exceptions.py`
+- [x] Create `metadata.py`
+  - [x] Load and validate `project-guide-metadata.yml`
+  - [x] Resolve `common` block variables (two-pass: resolve `{{var}}` references in all fields against `common` values)
+  - [x] Look up a mode by name, returning its `ModeDefinition` (template path, sequence/cycle, next_mode, artifacts, files_exist)
+  - [x] List all available mode names
+- [x] Create `render.py`
+  - [x] Configure Jinja2 environment with the project's template directory as the loader path
+  - [x] Render `go-project-guide.md` by: loading the entry point template, injecting the current mode's template via `{% include %}`, passing metadata variables as Jinja2 context
+  - [x] Handle the `_header-sequence.md` / `_header-cycle.md` inclusion within mode templates
+  - [x] Write rendered output to the target path
+- [x] Update `config.py`
+  - [x] Add `current_mode: str = "default"` to `Config` dataclass
+  - [x] Bump config schema version to `"2.0"`
+  - [x] Migrate v1.0 configs on load: add `current_mode: "default"` if missing
+  - [x] Change default `target_dir` to `"docs/project-guide"` for new projects
+- [x] Update `init` command in `cli.py`
+  - [x] Create new directory structure: `docs/project-guide/templates/modes/`, `docs/project-guide/templates/artifacts/`
+  - [x] Copy `project-guide-metadata.yml`, header partials, `default-mode.md`, and `plan-concept-mode.md` + its artifact template
+  - [x] Render `go-project-guide.md` in `default` mode
+  - [x] Create `.project-guide.yml` with `current_mode: "default"` and `target_dir: "docs/project-guide"`
+  - [x] Add `go-project-guide.md` to `.gitignore` if not already present
+- [x] Add `mode` command to `cli.py`
+  - [x] `project-guide mode <name>`: validate mode name against metadata, update `current_mode` in config, render `go-project-guide.md`, print confirmation
+  - [x] `project-guide mode` (no arg): print current mode and list available modes
+  - [x] Error on invalid mode name with list of valid options
+- [x] Convert template syntax: replace `{{template "path"}}` in mode templates with Jinja2 `{% include "path" %}`
+- [x] Finalize `default-mode.md` and `plan-concept-mode.md` templates (already hand-drafted, adjust as needed during spike)
+- [x] Write tests for `metadata.py`, `render.py`, `mode` command, updated `init`, and config v2.0 migration
+- [x] Bump `version.py` and `pyproject.toml` to `2.0.0`
+- [x] Update `CHANGELOG.md`
+- [x] Verify: `project-guide init` creates new directory structure and renders `go-project-guide.md`
+- [x] Verify: `project-guide mode plan_concept` switches mode and re-renders `go-project-guide.md` with plan_concept content
+- [x] Verify: `project-guide mode` (no arg) lists available modes with current mode highlighted
+- [x] Verify: rendered `go-project-guide.md` includes `_header-common.md` + `_header-sequence.md` + plan-concept steps
+- [x] Verify: old v1.0 config loads without error (migration adds `current_mode: "default"`)
+- [x] Verify: artifact templates (`templates/artifacts/concept.md`) are copied but NOT Jinja2-rendered
 
 ### Story J.b: v2.0.1 Update Status Command for Modes [Planned]
 

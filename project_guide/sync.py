@@ -46,13 +46,17 @@ _EXCLUDED_FROM_SYNC = {"go-project-guide.md"}
 
 
 def get_all_guide_names() -> list[str]:
-    """Get list of all available guide names (excludes rendered artifacts)."""
+    """Get list of all available guide names (excludes rendered artifacts).
+
+    Always returns forward-slash paths for cross-platform consistency.
+    """
     root = _get_package_template_root()
     guide_names = []
 
     for pattern in ("*.md", "*.yml"):
         for path in sorted(root.rglob(pattern)):
-            rel = str(path.relative_to(root))
+            # Use forward slashes for cross-platform consistency
+            rel = path.relative_to(root).as_posix()
             if rel not in _EXCLUDED_FROM_SYNC:
                 guide_names.append(rel)
 

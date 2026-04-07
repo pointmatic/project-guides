@@ -71,7 +71,7 @@ def test_full_init_override_update_workflow(runner, tmp_path):
         assert "Updated" in result.output or "Already current:" in result.output
 
         # Verify backup was created
-        backup_files = list(Path("docs/project-guide").glob("templates/modes/debug-mode.md.bak.*"))
+        backup_files = list(Path("docs/project-guide/templates/modes").glob("debug-mode.md.bak.*"))
         assert len(backup_files) >= 1
 
         # Step 7: Unoverride
@@ -135,8 +135,8 @@ def test_force_update_creates_backups(runner, tmp_path):
         assert result.exit_code == 0
 
         # Verify backups were created for overridden guides
-        debug_backups = list(Path("docs/project-guide").glob("templates/modes/debug-mode.md.bak.*"))
-        project_backups = list(Path("docs/project-guide").glob("templates/modes/plan-concept-mode.md.bak.*"))
+        debug_backups = list(Path("docs/project-guide/templates/modes").glob("debug-mode.md.bak.*"))
+        project_backups = list(Path("docs/project-guide/templates/modes").glob("plan-concept-mode.md.bak.*"))
 
         assert len(debug_backups) >= 1
         assert len(project_backups) >= 1
