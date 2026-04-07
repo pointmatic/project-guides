@@ -106,8 +106,12 @@ def test_status_with_all_guides_current(runner, tmp_path):
 
         assert result.exit_code == 0
         assert f"project-guide v{__version__}" in result.output
+        # Mode info
+        assert "Mode:" in result.output
+        assert "plan_concept" in result.output
+        assert "Guide:" in result.output
+        # Guide sync status
         assert "Guides status:" in result.output
-        # go-project-guide.md shows as modified since it's a rendered artifact
         assert "current" in result.output
 
 
@@ -128,6 +132,32 @@ def test_status_with_outdated_guides(runner, tmp_path):
         assert result.exit_code == 0
         assert "update available" in result.output
         assert "Run 'project-guide update' to sync" in result.output
+
+
+def test_status_shows_mode_and_prerequisites(runner, tmp_path):
+    """Test status shows current mode, description, and prerequisite status."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        result = runner.invoke(main, ['status'])
+
+        assert result.exit_code == 0
+        assert "Mode:  plan_concept" in result.output
+        assert "Generate a high-level concept" in result.output
+        assert "go-project-guide.md" in result.output
+
+
+def test_status_after_mode_change(runner, tmp_path):
+    """Test status reflects the active mode after switching."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+        runner.invoke(main, ['mode', 'code_velocity'])
+
+        result = runner.invoke(main, ['status'])
+
+        assert result.exit_code == 0
+        assert "Mode:  code_velocity" in result.output
+        assert "Generate code with velocity" in result.output
 
 
 def test_status_with_overridden_guides(runner, tmp_path):

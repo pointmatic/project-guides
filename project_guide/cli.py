@@ -253,9 +253,37 @@ def status():
     click.echo(f"project-guide v{package_version} (installed: v{config.installed_version})")
     click.echo()
 
+    # Show mode info
+    target_dir = Path(config.target_dir)
+    metadata_path = target_dir / "project-guide-metadata.yml"
+    try:
+        metadata = load_metadata(metadata_path)
+        mode = metadata.get_mode(config.current_mode)
+        click.echo(f"Mode:  {mode.name}")
+        click.echo(f"       {mode.info}")
+        click.echo(f"Guide: {target_dir / 'go-project-guide.md'}")
+
+        # Show prerequisite status
+        if mode.files_exist:
+            met = [f for f in mode.files_exist if Path(f).exists()]
+            missing_prereqs = [f for f in mode.files_exist if not Path(f).exists()]
+            if missing_prereqs:
+                click.echo()
+                click.secho("Prerequisites:", fg='yellow')
+                for f in met:
+                    click.secho(f"  ✓ {f}", fg='green')
+                for f in missing_prereqs:
+                    click.secho(f"  ✗ {f}", fg='yellow')
+            else:
+                click.echo()
+                click.secho("Prerequisites: all met", fg='green')
+    except (MetadataError, FileNotFoundError):
+        click.echo(f"Mode:  {config.current_mode}")
+
+    click.echo()
+
     # Check each guide's status
     guide_names = get_all_guide_names()
-    target_dir = Path(config.target_dir)
 
     current_count = 0
     outdated_count = 0

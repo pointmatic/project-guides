@@ -232,19 +232,19 @@ Wire the full stack end-to-end with two modes (`default`, `plan_concept`). This 
 - [x] Verify: old v1.0 config loads without error (migration adds `current_mode: "default"`)
 - [x] Verify: artifact templates (`templates/artifacts/concept.md`) are copied but NOT Jinja2-rendered
 
-### Story J.b: v2.0.1 Update Status Command for Modes [Planned]
+### Story J.b: v2.0.1 Update Status Command for Modes [Done]
 
 Update `status` to reflect the mode system. Show current mode, mode description, and prerequisite file status.
 
-- [ ] Update `status` command in `cli.py`
-  - [ ] Display current mode name and description (from metadata)
-  - [ ] Display `go-project-guide.md` path
-  - [ ] Show prerequisite status for current mode (`files_exist` entries: present/missing)
-  - [ ] Continue to show guide sync status (version, overrides) for template files
-- [ ] Update `test_cli.py` for updated `status` output
-- [ ] Bump `version.py` and `pyproject.toml` to `2.0.1`
-- [ ] Update `CHANGELOG.md`
-- [ ] Verify: `project-guide status` shows mode name, description, and prerequisite status
+- [x] Update `status` command in `cli.py`
+  - [x] Display current mode name and description (from metadata)
+  - [x] Display `go-project-guide.md` path
+  - [x] Show prerequisite status for current mode (`files_exist` entries: present/missing)
+  - [x] Continue to show guide sync status (version, overrides) for template files
+- [x] Update `test_cli.py` for updated `status` output
+- [x] Bump `version.py` and `pyproject.toml` to `2.0.1`
+- [x] Update `CHANGELOG.md`
+- [x] Verify: `project-guide status` shows mode name, description, and prerequisite status
 
 ### Story J.c: v2.0.2 Update Sync/Update for New Directory Structure [Planned]
 

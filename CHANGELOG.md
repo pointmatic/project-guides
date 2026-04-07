@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-04-07
+
+### Changed
+- `status` command now shows current mode name, description, guide path, and prerequisite status before guide sync details
+- Windows cross-platform fix: guide names in `sync.py` always use forward slashes via `as_posix()`
+
 ## [2.0.0] - 2026-04-07
 
 ### Added
