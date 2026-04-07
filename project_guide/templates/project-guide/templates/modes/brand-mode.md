@@ -1,19 +1,22 @@
-# Descriptions Guide — Generating Project Descriptions
+# Brand Mode — {info}
 
-This guide provides instructions for creating a `docs/specs/descriptions.md` file that serves as the canonical source of truth for all descriptive language used across a project.
+### Description
+
+{description}
 
 ---
 
 ## Purpose
 
-The `descriptions.md` file centralizes all project descriptions, taglines, and marketing copy in one location. This ensures consistency across:
+The `{filename}` file centralizes all project descriptions, taglines, marketing copy and links to branded assets in one place. This promotes consistency across:
 - README.md
-- Landing page (docs/index.html)
+- Landing page ({landing_page_path})
+- MkDocs documentation
 - Package metadata (pyproject.toml, package.json)
 - Feature documentation (features.md)
-- GitHub repository settings
+- GitHub repository and other app/package publication channels
 
-**Benefits:**
+### Benefits
 - Single source of truth for all project descriptions
 - Consistency across all consumer files
 - Easy to update descriptions project-wide
@@ -21,15 +24,35 @@ The `descriptions.md` file centralizes all project descriptions, taglines, and m
 
 ---
 
+## Process
+
 ## When to Create
 
-Create `descriptions.md` as an **early step** in the documentation setup phase, specifically:
+Create `{file_name}` as an **early step** in the documentation setup phase, specifically:
 
 1. **After** the project has core functionality implemented
 2. **Before** creating the landing page or final README
 3. **During** the documentation phase (typically Phase H or F)
 
 This allows you to finalize descriptions once and disseminate them to all consumer files.
+
+
+### Prerequisites
+
+- TBD
+
+### Steps
+1. TBD
+
+### Output
+- `{project_guide_path}/brand-descriptions.md`
+
+### Done Criteria
+- `docs/specs/brand-descriptions.md` is created and filled with appropriate content
+- All consumer files (README.md, docs/index.html, pyproject.toml, features.md) use the canonical descriptions
+- Descriptions are consistent across all consumer files
+
+---
 
 ---
 

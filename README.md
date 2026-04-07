@@ -17,9 +17,9 @@ The `go-project-guide` prompt provides the LLM with a structured workflow:
 - Handles the typing so you can stay focused on the big picture
 
 ### How It Works
-You set the project mode (plan, code, debug, etc.) 
 - Install project-guide in any repository
 - Initialize the Project-Guide system. 
+- (optional) Set the project mode (plan, code, debug, etc.) 
 - Tell your LLM to read the `go-project-guide.md` (in your IDE, or however you prefer).
 
 ### Human-in-the-Loop Development

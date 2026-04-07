@@ -166,140 +166,167 @@ Expand test coverage from 79% to 85%+ by filling gaps in `cli.py` (currently 72%
 
 ---
 
-## Phase J: Support Modes
+## Phase J: Mode-Driven Template System (v2.0.0)
 
-Add a `development_mode` system: a `mode` CLI command sets the active mode in `.project-guide.yml`, and creates a `project-guide.md` symlink in `docs/guides/` pointing to the relevant focused guide for that mode. The LLM always reads the same path (`docs/guides/project-guide.md`) regardless of mode.
+Replace the static file-sync architecture with a dynamic, mode-driven template system using Jinja2. The LLM reads a single rendered `go-project-guide.md` that is regenerated each time the developer changes modes via `project-guide mode <name>`. See `phase-j-modes-plan.md` for full architectural details.
 
-Foundation modes (implemented this phase): `plan_concept`, `plan_features`, `plan_tech_spec`, `plan_stories`, `code_velocity`, `code_test_first`, `debug`.
+**Implementation strategy:** Spike first with `default` + `plan_concept` modes only, validating the full rendering pipeline end-to-end before adding remaining modes.
 
-Future modes (deferred): `code_production`, `audit_security`, `audit_architecture`, `audit_performance`, `audit_best_practices`, `audit_modularity`, `audit_patterns`, `refactor`.
+Foundation modes:
+- `default`: Determine which mode to use (generated on init)
+- `plan_concept`: Generate a high-level concept (problem and solution space)
+- `plan_features`: Generate feature requirements
+- `plan_tech_spec`: Generate a technical specification
+- `plan_stories`: Generate user stories
+- `plan_phase`: Generate a feature phase (mini-concept + features + tech details)
+- `code_velocity`: Generate code with velocity
+- `code_test_first`: Generate code with a test-first approach
+- `debug`: Debug code with a test-first approach
+- `document_brand`: Develop branding for the project
+- `document_landing`: Generate a GitHub landing page and MkDocs documentation
 
-### Story J.a: v1.6.0 Add Mode Config Fields [Planned]
+Future modes (deferred): `code_production`, `audit_security`, `audit_architecture`, `audit_performance`, `audit_best_practices`, `audit_modularity`, `audit_patterns`, `refactor_plan`, `refactor_document`.
 
-Extend `.project-guide.yml` with `development_mode` and `cli_menu` fields. Update the `Config` dataclass and the `status` command to display the current mode.
+Migration: No automatic migration of old `docs/guides/` content. Users can apply a future `refactor` mode to migrate.
 
-- [ ] Update `project_guides/templates/.project-guide.yml.template`
-  - [ ] Add `development_mode: "plan_concept"`
-  - [ ] Add `cli_menu: "compact"`
-- [ ] Update `Config` dataclass in `config.py`
-  - [ ] Add `development_mode: str = "plan_concept"`
-  - [ ] Add `cli_menu: str = "compact"` (valid values: `"compact"`, `"expanded"`, `"none"`)
-  - [ ] Ensure new fields serialize/deserialize correctly with existing YAML logic
-- [ ] Update `status` command in `cli.py` to print current mode (e.g., `Mode: plan_concept`)
-- [ ] Update config migration logic (Story I.b) to write defaults for new fields when absent
-- [ ] Update `test_config.py` for new fields
-- [ ] Update `test_cli.py` for updated `status` output
-- [ ] Bump `version.py` and `pyproject.toml` to `1.6.0`
-- [ ] Update `CHANGELOG.md`
-- [ ] Verify: `project-guide status` shows `Mode: plan_concept`
-- [ ] Verify: old configs missing the new fields load without error (defaults apply)
+### Story J.a: v2.0.0 End-to-End Spike — Metadata, Rendering, and Mode Command [Planned]
 
-### Story J.b: v1.6.1 Create Foundation Mode Guide Files [Planned]
+Wire the full stack end-to-end with two modes (`default`, `plan_concept`). This validates metadata parsing, Jinja2 rendering, the `mode` command, config schema v2.0, and the new directory structure. No remaining modes, no sync/update changes — just prove the critical path works.
 
-Write the focused, context-efficient guide files for each foundation mode. These live at `project_guides/templates/guides/modes/` and are installed into `docs/guides/modes/` in the target project.
-
-- [ ] Create `project_guides/templates/guides/modes/` directory
-- [ ] Write guide file for each foundation mode (see content notes below)
-  - [ ] `plan-concept.md` — guide for initial concept/ideation: what to ask, how to document `docs/specs/concept.md`, when done
-  - [ ] `plan-features.md` — guide for writing `docs/specs/features.md`: required sections, approval gate
-  - [ ] `plan-tech-spec.md` — guide for writing `docs/specs/tech-spec.md`: required sections, filename conventions, approval gate
-  - [ ] `plan-stories.md` — guide for writing `docs/specs/stories.md`: phase structure, story format, CI/CD question, approval gate
-  - [ ] `code-velocity.md` — guide for velocity coding: commit to main, version-per-story, HITLoop, checklist workflow
-  - [ ] `code-test-first.md` — guide for TDD workflow: failing test first, red-green-refactor, test naming conventions
-  - [ ] `debug.md` — guide for debugging: reproduce → isolate → failing test → fix → verify
-- [ ] Each guide file must be self-contained: a fresh LLM reading it has everything needed for that mode
-- [ ] Each guide file must be concise: ruthlessly exclude anything not relevant to that mode
-- [ ] Update `sync.py` guide discovery to include `modes/` subdirectory files
-- [ ] Bump `version.py` and `pyproject.toml` to `1.6.1`
-- [ ] Update `CHANGELOG.md`
-- [ ] Verify: `project-guide update` installs mode guides into `docs/guides/modes/`
-
-### Story J.c: v1.6.2 Add `mode` Command (Direct Arg) [Planned]
-
-Add `project-guide mode <arg>` to set the active mode. Accepts full mode names (`code_velocity`) and abbreviated key sequences (`cv`). Updates the config and recreates the `docs/guides/project-guide.md` symlink.
-
+- [ ] Add `jinja2>=3.1` to runtime dependencies in `pyproject.toml`
+- [ ] Add `MetadataError` and `RenderError` to `exceptions.py`
+- [ ] Create `metadata.py`
+  - [ ] Load and validate `project-guide-metadata.yml`
+  - [ ] Resolve `common` block variables (two-pass: resolve `{{var}}` references in all fields against `common` values)
+  - [ ] Look up a mode by name, returning its `ModeDefinition` (template path, sequence/cycle, next_mode, artifacts, files_exist)
+  - [ ] List all available mode names
+- [ ] Create `render.py`
+  - [ ] Configure Jinja2 environment with the project's template directory as the loader path
+  - [ ] Render `go-project-guide.md` by: loading the entry point template, injecting the current mode's template via `{% include %}`, passing metadata variables as Jinja2 context
+  - [ ] Handle the `_header-sequence.md` / `_header-cycle.md` inclusion within mode templates
+  - [ ] Write rendered output to the target path
+- [ ] Update `config.py`
+  - [ ] Add `current_mode: str = "default"` to `Config` dataclass
+  - [ ] Bump config schema version to `"2.0"`
+  - [ ] Migrate v1.0 configs on load: add `current_mode: "default"` if missing
+  - [ ] Change default `target_dir` to `"docs/project-guide"` for new projects
+- [ ] Update `init` command in `cli.py`
+  - [ ] Create new directory structure: `docs/project-guide/templates/modes/`, `docs/project-guide/templates/artifacts/`
+  - [ ] Copy `project-guide-metadata.yml`, header partials, `default-mode.md`, and `plan-concept-mode.md` + its artifact template
+  - [ ] Render `go-project-guide.md` in `default` mode
+  - [ ] Create `.project-guide.yml` with `current_mode: "default"` and `target_dir: "docs/project-guide"`
+  - [ ] Add `go-project-guide.md` to `.gitignore` if not already present
 - [ ] Add `mode` command to `cli.py`
-  - [ ] `@main.command()` with optional `arg` parameter
-  - [ ] Define the mode registry: dict mapping full names and abbreviations to guide filenames
-    ```python
-    MODES = {
-        "plan_concept":    ("pc", "modes/plan-concept.md"),
-        "plan_features":   ("pf", "modes/plan-features.md"),
-        "plan_tech_spec":  ("pt", "modes/plan-tech-spec.md"),
-        "plan_stories":    ("ps", "modes/plan-stories.md"),
-        "code_velocity":   ("cv", "modes/code-velocity.md"),
-        "code_test_first": ("ct", "modes/code-test-first.md"),
-        "debug":           ("b",  "modes/debug.md"),
-    }
-    ```
-  - [ ] Resolve arg: try full name first, then abbreviation; error with list of valid values if unrecognized
-  - [ ] Update `development_mode` in `.project-guide.yml`
-  - [ ] Create or update symlink: `<target_dir>/project-guide.md` → `modes/<guide-file>.md` (relative symlink)
-  - [ ] Print confirmation: `"Mode set: code_velocity\nGuide: docs/guides/project-guide.md → modes/code-velocity.md"`
-  - [ ] If `cli_menu: "none"` and no arg provided, print error: `"No mode specified. Run with a mode name or abbreviation."`
-- [ ] Add `project-guide.md` to `.gitignore` template (it is a generated symlink, not source)
-- [ ] Update `test_cli.py` for all `mode` command cases
-- [ ] Bump `version.py` and `pyproject.toml` to `1.6.2`
+  - [ ] `project-guide mode <name>`: validate mode name against metadata, update `current_mode` in config, render `go-project-guide.md`, print confirmation
+  - [ ] `project-guide mode` (no arg): print current mode and list available modes
+  - [ ] Error on invalid mode name with list of valid options
+- [ ] Convert template syntax: replace `{{template "path"}}` in mode templates with Jinja2 `{% include "path" %}`
+- [ ] Finalize `default-mode.md` and `plan-concept-mode.md` templates (already hand-drafted, adjust as needed during spike)
+- [ ] Write tests for `metadata.py`, `render.py`, `mode` command, updated `init`, and config v2.0 migration
+- [ ] Bump `version.py` and `pyproject.toml` to `2.0.0`
 - [ ] Update `CHANGELOG.md`
-- [ ] Verify: `project-guide mode cv` sets mode and creates symlink
-- [ ] Verify: `project-guide mode code_velocity` has identical effect
-- [ ] Verify: `project-guide mode xyz` prints error with valid options
-- [ ] Verify: symlink target is relative (not absolute path)
+- [ ] Verify: `project-guide init` creates new directory structure and renders `go-project-guide.md`
+- [ ] Verify: `project-guide mode plan_concept` switches mode and re-renders `go-project-guide.md` with plan_concept content
+- [ ] Verify: `project-guide mode` (no arg) lists available modes with current mode highlighted
+- [ ] Verify: rendered `go-project-guide.md` includes `_header-common.md` + `_header-sequence.md` + plan-concept steps
+- [ ] Verify: old v1.0 config loads without error (migration adds `current_mode: "default"`)
+- [ ] Verify: artifact templates (`templates/artifacts/concept.md`) are copied but NOT Jinja2-rendered
 
-### Story J.d: v1.6.3 Add Interactive Mode Menu [Planned]
+### Story J.b: v2.0.1 Update Status Command for Modes [Planned]
 
-When `project-guide mode` is called with no argument and `cli_menu` is not `"none"`, display an interactive two-level menu. Supports `compact` and `expanded` styles.
+Update `status` to reflect the mode system. Show current mode, mode description, and prerequisite file status.
 
-- [ ] Implement interactive menu in `cli.py` (or extract to `menu.py`)
-  - [ ] Menu tree structure (leaf modes bold, parent nodes marked `→`)
-    ```
-    Top level:  [p]lan →  [c]ode →  [b]debug
-    Plan:       [c]oncept  [f]eatures  [t]ech spec  [s]tories
-    Code:       [v]elocity  [t]est first
-    ```
-  - [ ] `compact` style — single line per level:
-    ```
-    Select a mode: [[p]lan → [c]ode → [b]debug]
-    ```
-  - [ ] `expanded` style — one option per line with description:
-    ```
-    Select a mode:
-      [p] Plan       →
-      [c] Code       →
-      [b] Debug
-    ```
-  - [ ] Read single keypress (no Enter required) using `sys.stdin` raw mode or `click.getchar()`
-  - [ ] Single-char input for leaf modes (`b` → sets `debug` immediately)
-  - [ ] Two-char input for two-level modes (`p` → show Plan submenu → `f` → sets `plan_features`)
-  - [ ] Invalid key at any level reprints the menu
-  - [ ] `Ctrl-C` / `Escape` exits without changing mode
-- [ ] Update `test_cli.py` — mock `click.getchar()` for menu navigation tests
-- [ ] Bump `version.py` and `pyproject.toml` to `1.6.3`
+- [ ] Update `status` command in `cli.py`
+  - [ ] Display current mode name and description (from metadata)
+  - [ ] Display `go-project-guide.md` path
+  - [ ] Show prerequisite status for current mode (`files_exist` entries: present/missing)
+  - [ ] Continue to show guide sync status (version, overrides) for template files
+- [ ] Update `test_cli.py` for updated `status` output
+- [ ] Bump `version.py` and `pyproject.toml` to `2.0.1`
 - [ ] Update `CHANGELOG.md`
-- [ ] Verify: `project-guide mode` (no arg, compact) shows single-line menu
-- [ ] Verify: `project-guide mode` (no arg, expanded) shows multi-line menu
-- [ ] Verify: navigating `p` → `f` sets `plan_features` and creates correct symlink
-- [ ] Verify: `cli_menu: none` with no arg prints error, no menu shown
+- [ ] Verify: `project-guide status` shows mode name, description, and prerequisite status
 
-### Story J.e: v1.6.4 Enhance `status` with Current Story [Planned]
+### Story J.c: v2.0.2 Update Sync/Update for New Directory Structure [Planned]
 
-Extend `project-guide status` to search `stories.md` for in-progress and next planned stories, giving the LLM (and developer) immediate orientation.
+Adapt the sync/override system to operate on the new template directory structure. After any update that touches mode templates or header partials, re-render `go-project-guide.md`.
 
-- [ ] Add story detection logic to `cli.py` or extract to `stories.py`
-  - [ ] Look for `stories.md` at `docs/specs/stories.md` (relative to project root)
-  - [ ] Scan for stories marked `[In Progress]` — print each one found
-  - [ ] Scan for first story marked `[Planned]` — print as "Next"
-  - [ ] If `stories.md` not found, silently skip (no error)
-  - [ ] Story line format to match: `### Story <ID>: <optional-version> <Title> [In Progress]`
-- [ ] Update `status` output format:
-  ```
-  Mode:        code_velocity
-  Guide:       docs/guides/project-guide.md → modes/code-velocity.md
-  In Progress: Story J.d: v1.6.3 Add Interactive Mode Menu
-  Next:        Story J.e: v1.6.4 Enhance status with Current Story
-  ```
-- [ ] Update `test_cli.py` with fixture `stories.md` files covering: no file, no in-progress, one in-progress, multiple in-progress
-- [ ] Bump `version.py` and `pyproject.toml` to `1.6.4`
+- [ ] Update guide discovery in `sync.py` (`get_all_guide_names()`) to scan `templates/modes/*.md`, `templates/artifacts/*.md`, `project-guide-metadata.yml`
+  - [ ] Remove old `guides/` directory references
+- [ ] Update `update` command: after syncing template files, re-render `go-project-guide.md` for the current mode
+- [ ] Override/unoverride work on template-relative paths (e.g., `override templates/modes/plan-concept-mode.md "Custom concept workflow"`)
+- [ ] Update `purge` to remove `docs/project-guide/` instead of `docs/guides/`
+- [ ] Write tests for updated sync discovery, update-then-render flow, and override on new paths
+- [ ] Bump `version.py` and `pyproject.toml` to `2.0.2`
 - [ ] Update `CHANGELOG.md`
-- [ ] Verify: `project-guide status` in a project with `stories.md` shows correct stories
-- [ ] Verify: `project-guide status` in a project without `stories.md` shows no error
+- [ ] Verify: `project-guide update` syncs new template files and re-renders `go-project-guide.md`
+- [ ] Verify: `project-guide override templates/modes/plan-concept-mode.md "reason"` works correctly
+
+### Story J.d: v2.0.3 Add Planning Mode Templates [Planned]
+
+Add the remaining planning mode templates: `plan_features`, `plan_tech_spec`, `plan_stories`, `plan_phase`. Each must include the appropriate header partial and be self-contained.
+
+- [ ] Finalize `plan-features-mode.md` — migrate content from old `go-project-guide.md` Step 1 (Features Document)
+- [ ] Finalize `plan-tech-spec-mode.md` — migrate content from old Step 2 (Technical Specification)
+- [ ] Finalize `plan-stories-mode.md` — migrate content from old Step 3 (Stories Document)
+- [ ] Finalize `plan-phase-mode.md` — combined concept/features/tech-spec for adding a new phase to an existing project
+- [ ] Create artifact templates for each mode where applicable (`features.md`, `tech-spec.md`, `stories.md`)
+- [ ] Each mode template includes `{% include "_header-sequence.md" %}` with `next_mode` populated
+- [ ] Update `init` to copy all planning templates
+- [ ] Verify: `project-guide mode plan_features` renders correctly and includes next_mode prompt to `plan_tech_spec`
+- [ ] Verify: each planning mode's rendered output is self-contained for an LLM to follow
+- [ ] Bump `version.py` and `pyproject.toml` to `2.0.3`
+- [ ] Update `CHANGELOG.md`
+
+### Story J.e: v2.0.4 Add Code and Debug Mode Templates [Planned]
+
+Add `code_velocity`, `code_test_first`, and `debug` mode templates. Migrate relevant content from old `go-project-guide.md` Step 4 and `best-practices-guide.md`.
+
+- [ ] Finalize `code-velocity-mode.md` — velocity coding workflow: commit to main, version-per-story, HITLoop cycle, checklist approach
+- [ ] Finalize `code-test-first-mode.md` — TDD workflow: failing test first, red-green-refactor
+- [ ] Finalize `debug-mode.md` — reproduce, isolate, failing test, fix, verify
+- [ ] Each mode template includes `{% include "_header-cycle.md" %}`
+- [ ] Migrate relevant best practices from `best-practices-guide.md` into the appropriate mode templates
+- [ ] Update `init` to copy code and debug templates
+- [ ] Verify: `project-guide mode code_velocity` renders correctly with cycle header
+- [ ] Verify: `project-guide mode debug` renders correctly
+- [ ] Bump `version.py` and `pyproject.toml` to `2.0.4`
+- [ ] Update `CHANGELOG.md`
+
+### Story J.f: v2.0.5 Add Document Mode Templates [Planned]
+
+Add `document_brand` and `document_landing` mode templates.
+
+- [ ] Finalize `brand-mode.md` — adapted from old `descriptions-guide.md`, generate `docs/specs/brand-descriptions.md`
+- [ ] Finalize `document-mode.md` — generate GitHub landing page (`docs/site/index.html`) and MkDocs documentation
+- [ ] Each mode template includes `{% include "_header-sequence.md" %}`
+- [ ] Create artifact templates where applicable
+- [ ] Update `init` to copy document templates
+- [ ] Verify: `project-guide mode document_brand` renders correctly
+- [ ] Verify: `project-guide mode document_landing` renders correctly
+- [ ] Bump `version.py` and `pyproject.toml` to `2.0.5`
+- [ ] Update `CHANGELOG.md`
+
+### Story J.g: v2.0.6 Migrate Monolithic Entry Point Content [Planned]
+
+The old `go-project-guide.md` entry point template contains Steps 0-4 as a monolithic document. Now that all mode templates exist, reduce the entry point to a thin shell that includes `_header-common.md` and the active mode template. Move Step 0 (Project Setup) content into `_header-common.md` or `default-mode.md`.
+
+- [ ] Slim down `go-project-guide.md` entry point template to: common header + mode inclusion only
+- [ ] Move Step 0 content (License, Copyright Headers, Badges, CHANGELOG) into `_header-common.md` or `default-mode.md` as appropriate
+- [ ] Remove old static guide files that are now fully absorbed into mode templates (`best-practices-guide.md`, etc.)
+- [ ] Update `init` to no longer copy removed static guides
+- [ ] Verify: all modes render complete, self-contained output from the slimmed entry point
+- [ ] Verify: no content was lost in the migration
+- [ ] Bump `version.py` and `pyproject.toml` to `2.0.6`
+- [ ] Update `CHANGELOG.md`
+
+### Story J.h: v2.0.7 Test Coverage and Documentation [Planned]
+
+Ensure test coverage remains at 85%+ after all Phase J changes. Update README and user-facing documentation to reflect the mode system.
+
+- [ ] Review test coverage for all new modules (`metadata.py`, `render.py`) and updated modules (`cli.py`, `config.py`, `sync.py`)
+- [ ] Add missing tests to maintain 85%+ coverage
+- [ ] Update `README.md` with mode system usage examples (`project-guide mode plan_concept`, etc.)
+- [ ] Update landing page if applicable
+- [ ] Final pass: run full test suite, linting, type checking
+- [ ] Bump `version.py` and `pyproject.toml` to `2.0.7`
+- [ ] Update `CHANGELOG.md`

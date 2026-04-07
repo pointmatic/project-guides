@@ -1,80 +1,9 @@
-# Project Guide — LLM-Assisted Project Creation
+# Project-Guide — Calm the chaos of LLM-assisted coding
 
-This guide provides step-by-step instructions for an LLM to help a developer create a new software project from scratch. The LLM generates each document one at a time, presenting it to the developer for approval before proceeding to the next.
+{{template "project-guide/src/_header-common.md"}}
 
-## How to Use This Guide
+{{template "{{mode_src_template}}"}}
 
-**For Developers:** After installing project-guide (`pip install project-guide`) and running `project-guide init`, tell your LLM: "Read `docs/guides/project-guide.md` and start." The LLM will walk through planning documents, break work into stories, and implement each story step-by-step. You just say "proceed" after each step.
-
-**For LLMs:** This guide describes a "HITLoop" (human-in-the-loop) workflow where the developer directs and you execute. Work through each step methodically, presenting your work for approval at each gate. When the developer says "proceed" (or equivalent like "continue", "next", "go ahead"), move to the next step. If it's unclear which step comes next, ask the developer which step to tackle. Never auto-advance past approval gates—always wait for explicit confirmation.
-
----
-
-## Prerequisites
-
-Before starting, the developer must provide (or the LLM must ask):
-
-1. **A project idea** — a short description of what the project should do (a few sentences to a few paragraphs). This is often documented in a `docs/specs/concept.md` file.
-2. **Language / runtime** — e.g. Python 3.14, Node 22, Go 1.23, etc.
-3. **License preference** — e.g. Apache-2.0, MIT, MPL-2.0, GPL-3.0. If a `LICENSE` file already exists in the project root, that license prevails.
-
-The developer may optionally provide:
-
-- Preferred frameworks, libraries, or tools
-- Constraints (no UI, no database, must run offline, etc.)
-- Target audience (CLI tool, library, web app, etc.)
-
-Additionally, the LLM should ask the developer the following question **after the tech spec is approved but before writing the stories document**:
-
-> **Will this project need CI/CD automation?** For example: GitHub Actions for linting/testing on every push, dynamic code coverage badges (Codecov/Coveralls), and/or automated publishing to a package registry (PyPI, npm, etc.) on tagged releases?
-
-If the answer is yes, the stories document should include a dedicated phase (typically the last phase) covering:
-
-- **CI workflow** — GitHub Actions (or equivalent) running lint, type-check, and tests on push/PR, with a Python/Node/etc. version matrix.
-- **Coverage reporting** — uploading coverage to a service like Codecov and adding a dynamic badge to the README.
-- **Release automation** — publishing to the package registry on version tags, preferably using trusted publishing (OIDC) to avoid storing API tokens.
-
-If the answer is no, skip this phase entirely.
-
-### Development Mode: Velocity vs. Production
-
-Projects naturally transition from **velocity mode** (rapid iteration) to **production mode** (stability and security). Recognize this shift and adjust practices accordingly:
-
-**Velocity Mode** (Phases A-F typically):
-- Direct commits to main branch
-- Minimal process overhead
-- Focus on feature completion
-- Version bumps per story (v0.1.0 → v0.2.0 → v0.3.0)
-
-**Production Mode** (typically starts with CI/CD phase):
-- Branch protection enabled (PRs required)
-- CI checks mandatory before merge
-- Security hardening (Dependabot, SECURITY.md, CONTRIBUTING.md)
-- Bundled releases with multiple stories (v0.8.0 includes Stories J.a-J.d)
-
-**When to switch:** After core functionality is complete and CI/CD is configured.
-
-**Production Mode Transition Checklist:**
-- Enable branch protection (require PR reviews, require status checks to pass)
-- Create `CONTRIBUTING.md` (development setup, code style, PR process, release process)
-- Create `SECURITY.md` (vulnerability reporting instructions)
-- Create `.github/dependabot.yml` (automated dependency updates for pip and github-actions)
-- Configure trusted publishers for package registries (PyPI, npm, etc.)
-- Switch to PR-based workflow (no more direct commits to main branch)
-
----
-
-## Workflow Overview
-
-The LLM creates or improves the following documents **in order**, waiting for developer approval after each one:
-
-| Step | Document | Purpose |
-|------|----------|---------|
-| 1 | `docs/specs/features.md` | What the project does (requirements, not implementation) |
-| 2 | `docs/specs/tech-spec.md` | How the project is built (architecture, modules, dependencies) |
-| 3 | `docs/specs/stories.md` | Step-by-step implementation plan (phases, stories, checklists) |
-
-After all three documents are approved, the LLM proceeds to scaffold the project and implement stories one by one.
 
 ---
 
