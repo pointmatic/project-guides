@@ -35,14 +35,14 @@ def test_full_init_override_update_workflow(runner, tmp_path):
         result = runner.invoke(main, ['init'])
         assert result.exit_code == 0
         assert Path(".project-guide.yml").exists()
-        assert Path("docs/guides/project-guide.md").exists()
+        assert Path("docs/project-guide/project-guide-metadata.yml").exists()
 
         # Step 2: Override a guide
-        result = runner.invoke(main, ['override', 'debug-guide.md', 'Custom debugging workflow'])
+        result = runner.invoke(main, ['override', 'templates/modes/debug-mode.md', 'Custom debugging workflow'])
         assert result.exit_code == 0
 
         config = Config.load(".project-guide.yml")
-        assert config.is_overridden("debug-guide.md")
+        assert config.is_overridden("templates/modes/debug-mode.md")
 
         # Step 3: Check status
         result = runner.invoke(main, ['status'])
@@ -58,7 +58,7 @@ def test_full_init_override_update_workflow(runner, tmp_path):
         result = runner.invoke(main, ['update'])
         assert result.exit_code == 0
         assert "Skipped (overridden)" in result.output or "Updated" in result.output
-        assert "debug-guide.md" in result.output
+        assert "templates/modes/debug-mode.md" in result.output
 
         # Step 6: Force update (should create backup and update overridden guide)
         # Reset version again to trigger update
@@ -71,15 +71,15 @@ def test_full_init_override_update_workflow(runner, tmp_path):
         assert "Updated" in result.output or "Already current:" in result.output
 
         # Verify backup was created
-        backup_files = list(Path("docs/guides").glob("debug-guide.md.bak.*"))
+        backup_files = list(Path("docs/project-guide").glob("templates/modes/debug-mode.md.bak.*"))
         assert len(backup_files) >= 1
 
         # Step 7: Unoverride
-        result = runner.invoke(main, ['unoverride', 'debug-guide.md'])
+        result = runner.invoke(main, ['unoverride', 'templates/modes/debug-mode.md'])
         assert result.exit_code == 0
 
         config = Config.load(".project-guide.yml")
-        assert not config.is_overridden("debug-guide.md")
+        assert not config.is_overridden("templates/modes/debug-mode.md")
 
 
 def test_version_upgrade_scenario(runner, tmp_path):
@@ -108,10 +108,10 @@ def test_version_upgrade_scenario(runner, tmp_path):
         config = Config.load(".project-guide.yml")
         assert config.installed_version == __version__
 
-        # Status should now show all current
+        # Status should now show guides as current
         result = runner.invoke(main, ['status'])
         assert result.exit_code == 0
-        assert "All guides are up to date" in result.output
+        assert "current" in result.output
 
 
 def test_force_update_creates_backups(runner, tmp_path):
@@ -122,8 +122,8 @@ def test_force_update_creates_backups(runner, tmp_path):
         assert result.exit_code == 0
 
         # Override multiple guides
-        runner.invoke(main, ['override', 'debug-guide.md', 'Custom debug'])
-        runner.invoke(main, ['override', 'project-guide.md', 'Custom project'])
+        runner.invoke(main, ['override', 'templates/modes/debug-mode.md', 'Custom debug'])
+        runner.invoke(main, ['override', 'templates/modes/plan-concept-mode.md', 'Custom project'])
 
         # Modify installed version
         config = Config.load(".project-guide.yml")
@@ -135,8 +135,8 @@ def test_force_update_creates_backups(runner, tmp_path):
         assert result.exit_code == 0
 
         # Verify backups were created for overridden guides
-        debug_backups = list(Path("docs/guides").glob("debug-guide.md.bak.*"))
-        project_backups = list(Path("docs/guides").glob("project-guide.md.bak.*"))
+        debug_backups = list(Path("docs/project-guide").glob("templates/modes/debug-mode.md.bak.*"))
+        project_backups = list(Path("docs/project-guide").glob("templates/modes/plan-concept-mode.md.bak.*"))
 
         assert len(debug_backups) >= 1
         assert len(project_backups) >= 1
@@ -158,11 +158,11 @@ def test_multiple_projects_in_isolation(runner, tmp_path):
         result = runner.invoke(main, ['init', '--target-dir', 'guides'])
         assert result.exit_code == 0
 
-        runner.invoke(main, ['override', 'debug-guide.md', 'Project 1 custom'])
+        runner.invoke(main, ['override', 'templates/modes/debug-mode.md', 'Project 1 custom'])
 
         config1 = Config.load(".project-guide.yml")
         assert config1.target_dir == "guides"
-        assert config1.is_overridden("debug-guide.md")
+        assert config1.is_overridden("templates/modes/debug-mode.md")
 
         # Project 2
         project2 = tmp_path / "project2"
@@ -172,21 +172,21 @@ def test_multiple_projects_in_isolation(runner, tmp_path):
         result = runner.invoke(main, ['init', '--target-dir', 'documentation'])
         assert result.exit_code == 0
 
-        runner.invoke(main, ['override', 'project-guide.md', 'Project 2 custom'])
+        runner.invoke(main, ['override', 'templates/modes/plan-concept-mode.md', 'Project 2 custom'])
 
         config2 = Config.load(".project-guide.yml")
         assert config2.target_dir == "documentation"
-        assert config2.is_overridden("project-guide.md")
-        assert not config2.is_overridden("debug-guide.md")
+        assert config2.is_overridden("templates/modes/plan-concept-mode.md")
+        assert not config2.is_overridden("templates/modes/debug-mode.md")
 
         # Verify projects are independent by checking files directly
         config1_check = Config.load(str(project1 / ".project-guide.yml"))
-        assert config1_check.is_overridden("debug-guide.md")
-        assert not config1_check.is_overridden("project-guide.md")
+        assert config1_check.is_overridden("templates/modes/debug-mode.md")
+        assert not config1_check.is_overridden("templates/modes/plan-concept-mode.md")
 
         config2_check = Config.load(str(project2 / ".project-guide.yml"))
-        assert config2_check.is_overridden("project-guide.md")
-        assert not config2_check.is_overridden("debug-guide.md")
+        assert config2_check.is_overridden("templates/modes/plan-concept-mode.md")
+        assert not config2_check.is_overridden("templates/modes/debug-mode.md")
     finally:
         os.chdir(original_dir)
 
@@ -199,7 +199,7 @@ def test_dry_run_doesnt_modify_files(runner, tmp_path):
         assert result.exit_code == 0
 
         # Modify a guide file
-        guide_path = Path("docs/guides/debug-guide.md")
+        guide_path = Path("docs/project-guide/templates/modes/debug-mode.md")
         guide_path.read_text(encoding="utf-8")
         guide_path.write_text("MODIFIED CONTENT", encoding="utf-8")
 
@@ -235,10 +235,10 @@ def test_specific_guide_update(runner, tmp_path):
         config.save(".project-guide.yml")
 
         # Update only specific guides
-        result = runner.invoke(main, ['update', '--guides', 'debug-guide.md', '--guides', 'project-guide.md'])
+        result = runner.invoke(main, ['update', '--guides', 'templates/modes/debug-mode.md', '--guides', 'templates/modes/plan-concept-mode.md'])
         assert result.exit_code == 0
-        assert "debug-guide.md" in result.output
-        assert "project-guide.md" in result.output
+        assert "templates/modes/debug-mode.md" in result.output
+        assert "templates/modes/plan-concept-mode.md" in result.output
 
         # Verify config was updated
         config = Config.load(".project-guide.yml")

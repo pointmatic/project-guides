@@ -1,8 +1,8 @@
 # Project-Guide — Calm the chaos of LLM-assisted coding
 
-{{template "project-guide/src/_header-common.md"}}
+{% include "modes/_header-common.md" %}
 
-{{template "{{mode_src_template}}"}}
+{% include mode_template %}
 
 
 ---

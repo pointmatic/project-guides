@@ -12,17 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import importlib.resources
+import shutil
 import sys
 from pathlib import Path
 
 import click
 
 from project_guide.config import Config
-from project_guide.exceptions import ConfigError, SyncError
+from project_guide.exceptions import ConfigError, MetadataError, RenderError, SyncError
+from project_guide.metadata import load_metadata
+from project_guide.render import render_go_project_guide
 from project_guide.sync import (
     apply_guide_update,
     compare_versions,
-    copy_guide,
     get_all_guide_names,
     sync_guides,
 )
@@ -45,11 +48,42 @@ def main():
     _migrate_config_if_needed()
 
 
+def _get_package_template_dir() -> Path:
+    """Get the path to the bundled project-guide templates in the package."""
+    with importlib.resources.as_file(
+        importlib.resources.files("project_guide.templates").joinpath("project-guide")
+    ) as path:
+        return Path(path)
+
+
+def _copy_template_tree(src_dir: Path, dest_dir: Path, force: bool = False) -> int:
+    """
+    Copy a template directory tree to the target, preserving structure.
+    Returns the number of files copied.
+    """
+    count = 0
+    for src_file in sorted(src_dir.rglob("*")):
+        if not src_file.is_file():
+            continue
+        rel_path = src_file.relative_to(src_dir)
+        dest_file = dest_dir / rel_path
+
+        if dest_file.exists() and not force:
+            click.secho(f"⚠ Skipped {rel_path} (already exists)", fg='yellow')
+            continue
+
+        dest_file.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src_file, dest_file)
+        click.secho(f"✓ Installed {rel_path}", fg='green')
+        count += 1
+    return count
+
+
 @main.command()
-@click.option('--target-dir', default='docs/guides', help='Target directory for guides')
+@click.option('--target-dir', default='docs/project-guide', help='Target directory for guides')
 @click.option('--force', is_flag=True, help='Overwrite existing files')
 def init(target_dir: str, force: bool):
-    """Initialize guides in a new project."""
+    """Initialize project-guide in a new project."""
     config_path = Path(".project-guide.yml")
 
     # Check if config already exists
@@ -61,38 +95,136 @@ def init(target_dir: str, force: bool):
         )
         raise click.Abort()
 
-    # Create target directory
-    target_path = Path(target_dir)
-    target_path.mkdir(parents=True, exist_ok=True)
-
-    # Get all guide names
-    guide_names = get_all_guide_names()
-
-    # Copy all templates
     click.echo(f"Initializing project-guide v{__version__}...")
+
+    # Copy template tree from package to target
+    pkg_template_dir = _get_package_template_dir()
+    target_path = Path(target_dir)
+
+    try:
+        count = _copy_template_tree(pkg_template_dir, target_path, force=force)
+    except (OSError, SyncError) as e:
+        click.secho(f"Error: {e}", fg='red', err=True)
+        sys.exit(2)
+
     click.secho(f"✓ Created {target_dir}/", fg='green')
 
-    for guide_name in guide_names:
-        try:
-            copy_guide(guide_name, target_path, force=force)
-            click.secho(f"✓ Installed {guide_name}", fg='green')
-        except FileExistsError:
-            if not force:
-                click.secho(f"⚠ Skipped {guide_name} (already exists)", fg='yellow')
-        except SyncError as e:
-            click.secho(f"Error: {e}", fg='red', err=True)
-            sys.exit(2)  # File I/O error exit code
+    # Load metadata and render go-project-guide.md in default mode
+    metadata_path = target_path / "project-guide-metadata.yml"
+    try:
+        metadata = load_metadata(metadata_path)
+        mode = metadata.get_mode("plan_concept")
+        output_path = target_path / "go-project-guide.md"
+        render_go_project_guide(target_path, mode, metadata, output_path)
+        click.secho("✓ Rendered go-project-guide.md (mode: plan_concept)", fg='green')
+    except (MetadataError, RenderError) as e:
+        click.secho(f"Warning: Could not render go-project-guide.md: {e}", fg='yellow')
+
+    # Add go-project-guide.md to .gitignore if not already present
+    _ensure_gitignore_entry(target_dir)
 
     # Create config file
     config = Config(
-        version="1.0",
+        version="2.0",
         installed_version=__version__,
-        target_dir=target_dir
+        target_dir=target_dir,
+        current_mode="plan_concept",
     )
     config.save(str(config_path))
     click.secho(f"✓ Created {config_path}", fg='green')
 
-    click.echo(f"\nSuccessfully initialized {len(guide_names)} guides.")
+    click.echo(f"\nSuccessfully initialized {count} files.")
+
+
+def _ensure_gitignore_entry(target_dir: str) -> None:
+    """Add go-project-guide.md to .gitignore if not already present."""
+    gitignore_path = Path(".gitignore")
+    entry = f"{target_dir}/go-project-guide.md"
+
+    if gitignore_path.exists():
+        content = gitignore_path.read_text()
+        if entry in content:
+            return
+        if not content.endswith("\n"):
+            content += "\n"
+        content += f"{entry}\n"
+        gitignore_path.write_text(content)
+    else:
+        gitignore_path.write_text(f"{entry}\n")
+
+
+@main.command(name="mode")
+@click.argument("mode_name", required=False)
+def set_mode(mode_name: str | None):
+    """Set or show the active development mode."""
+    config_path = Path(".project-guide.yml")
+
+    if not config_path.exists():
+        click.secho(
+            "Error: No .project-guide.yml found. Run 'project-guide init' first.",
+            fg='red',
+            err=True
+        )
+        raise click.Abort()
+
+    try:
+        config = Config.load(str(config_path))
+    except ConfigError as e:
+        click.secho(f"Error: {e}", fg='red', err=True)
+        sys.exit(3)
+
+    # Load metadata
+    metadata_path = Path(config.target_dir) / "project-guide-metadata.yml"
+    try:
+        metadata = load_metadata(metadata_path)
+    except MetadataError as e:
+        click.secho(f"Error: {e}", fg='red', err=True)
+        sys.exit(3)
+
+    # No argument: show current mode and list available modes
+    if not mode_name:
+        click.echo(f"Current mode: {config.current_mode}")
+        click.echo()
+        click.echo("Available modes:")
+        for m in metadata.modes:
+            marker = "→" if m.name == config.current_mode else " "
+            click.echo(f"  {marker} {m.name:25} {m.info}")
+        return
+
+    # Validate mode name
+    try:
+        mode = metadata.get_mode(mode_name)
+    except MetadataError:
+        click.secho(f"Error: Unknown mode '{mode_name}'.", fg='red', err=True)
+        click.echo("Available modes:")
+        for m in metadata.modes:
+            click.echo(f"  {m.name:25} {m.info}")
+        sys.exit(1)
+
+    # Render go-project-guide.md
+    target_dir = Path(config.target_dir)
+    output_path = target_dir / "go-project-guide.md"
+    try:
+        render_go_project_guide(target_dir, mode, metadata, output_path)
+    except RenderError as e:
+        click.secho(f"Error rendering: {e}", fg='red', err=True)
+        sys.exit(2)
+
+    # Update config
+    config.current_mode = mode.name
+    config.save(str(config_path))
+
+    click.secho(f"✓ Mode set: {mode.name}", fg='green')
+    click.echo(f"  {mode.info}")
+    click.echo(f"  Guide: {output_path}")
+
+    # Show prerequisite warnings
+    missing_prereqs = [f for f in mode.files_exist if not Path(f).exists()]
+    if missing_prereqs:
+        click.echo()
+        click.secho("  Prerequisites not yet met:", fg='yellow')
+        for f in missing_prereqs:
+            click.secho(f"    ✗ {f}", fg='yellow')
 
 
 @main.command()

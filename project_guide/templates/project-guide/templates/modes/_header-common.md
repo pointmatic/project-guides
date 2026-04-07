@@ -20,7 +20,7 @@ For efficiency, when you change modes, start a new LLM conversation.
 ### For LLMs
 
 **Modes**
-This Project-Guide offers a human-in-the-loop workflow for you to follow that can be dynamically reconfigured based on the project `mode`. Each `mode` defines a focused {sequence_or_cycle} of steps to guide you (the LLM) to help generate artifacts for some facet in the project lifecycle. This document is customized for {{mode}}.
+This Project-Guide offers a human-in-the-loop workflow for you to follow that can be dynamically reconfigured based on the project `mode`. Each `mode` defines a focused {{ sequence_or_cycle }} of steps to guide you (the LLM) to help generate artifacts for some facet in the project lifecycle. This document is customized for {{ mode_name }}.
 
 **Approval Gate**
 When you have completed the steps, pause for the developer to review, correct, redirect, or ask questions about your work.  

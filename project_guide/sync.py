@@ -25,49 +25,36 @@ from project_guide.exceptions import GuideNotFoundError, SyncError
 from project_guide.version import __version__
 
 
+def _get_package_template_root() -> Path:
+    """Get the root path to bundled project-guide templates."""
+    with importlib.resources.as_file(
+        importlib.resources.files("project_guide.templates").joinpath("project-guide")
+    ) as path:
+        return Path(path)
+
+
 def get_template_path(guide_name: str) -> Path:
     """Get path to bundled template for a guide."""
-    # Check for subdirectories first (before calling is_resource which doesn't accept paths)
-    if "/" in guide_name or "\\" in guide_name:
-        # For files in subdirectories like developer/
-        parts = guide_name.replace("\\", "/").split("/")
-        if len(parts) == 2 and parts[0] == "developer":
-            with importlib.resources.as_file(
-                importlib.resources.files("project_guide.templates.guides.developer").joinpath(parts[1])
-            ) as path:
-                return Path(path)
-    else:
-        # For files in the main guides directory (no path separators)
-        try:
-            with importlib.resources.as_file(
-                importlib.resources.files("project_guide.templates.guides").joinpath(guide_name)
-            ) as path:
-                if path.exists():
-                    return Path(path)
-        except (FileNotFoundError, AttributeError):
-            pass
-
+    root = _get_package_template_root()
+    candidate = root / guide_name
+    if candidate.exists():
+        return candidate
     raise GuideNotFoundError(guide_name, get_all_guide_names())
 
 
+_EXCLUDED_FROM_SYNC = {"go-project-guide.md"}
+
+
 def get_all_guide_names() -> list[str]:
-    """Get list of all available guide names."""
+    """Get list of all available guide names (excludes rendered artifacts)."""
+    root = _get_package_template_root()
     guide_names = []
 
-    # Get files from main guides directory
-    guides_files = importlib.resources.files("project_guide.templates.guides")
-    for item in guides_files.iterdir():
-        if item.is_file() and item.name.endswith(".md"):
-            guide_names.append(item.name)
-
-    # Get files from developer subdirectory
-    try:
-        developer_files = importlib.resources.files("project_guide.templates.guides.developer")
-        for item in developer_files.iterdir():
-            if item.is_file() and item.name.endswith(".md"):
-                guide_names.append(f"developer/{item.name}")
-    except (AttributeError, FileNotFoundError):
-        pass
+    for pattern in ("*.md", "*.yml"):
+        for path in sorted(root.rglob(pattern)):
+            rel = str(path.relative_to(root))
+            if rel not in _EXCLUDED_FROM_SYNC:
+                guide_names.append(rel)
 
     return sorted(guide_names)
 

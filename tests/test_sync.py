@@ -32,15 +32,13 @@ from project_guide.version import __version__
 
 def test_get_template_path_returns_valid_paths():
     """Test that get_template_path returns valid paths for existing templates."""
-    # Test main guide
-    path = get_template_path("project-guide.md")
+    path = get_template_path("README.md")
     assert isinstance(path, Path)
-    assert path.name == "project-guide.md"
+    assert path.name == "README.md"
 
-    # Test another guide
-    path = get_template_path("debug-guide.md")
+    path = get_template_path("templates/modes/plan-concept-mode.md")
     assert isinstance(path, Path)
-    assert path.name == "debug-guide.md"
+    assert path.name == "plan-concept-mode.md"
 
 
 def test_get_template_path_developer_guide():
@@ -63,15 +61,19 @@ def test_get_all_guide_names_returns_all_guides():
     # Should be a list
     assert isinstance(guide_names, list)
 
-    # Should contain main guides
-    assert "project-guide.md" in guide_names
+    # Should contain main files
+    assert "README.md" in guide_names
     assert "best-practices-guide.md" in guide_names
-    assert "debug-guide.md" in guide_names
-    assert "documentation-setup-guide.md" in guide_names
+
+    # Should contain mode templates
+    assert "templates/modes/plan-concept-mode.md" in guide_names
+    assert "templates/modes/debug-mode.md" in guide_names
 
     # Should contain developer guides
     assert "developer/codecov-setup-guide.md" in guide_names
-    assert "developer/production-mode.md" in guide_names
+
+    # Should NOT contain rendered artifacts
+    assert "go-project-guide.md" not in guide_names
 
     # Should be sorted
     assert guide_names == sorted(guide_names)
@@ -88,9 +90,9 @@ def test_copy_guide_creates_files_correctly(tmp_path):
     """Test that copy_guide creates files in the target directory."""
     target_dir = tmp_path / "guides"
 
-    copy_guide("project-guide.md", target_dir)
+    copy_guide("README.md", target_dir)
 
-    target_file = target_dir / "project-guide.md"
+    target_file = target_dir / "README.md"
     assert target_file.exists()
     assert target_file.is_file()
     assert target_file.stat().st_size > 0
@@ -112,16 +114,16 @@ def test_copy_guide_respects_force_flag(tmp_path):
     target_dir = tmp_path / "guides"
 
     # First copy should succeed
-    copy_guide("debug-guide.md", target_dir)
+    copy_guide("best-practices-guide.md", target_dir)
 
     # Second copy without force should fail
     with pytest.raises(FileExistsError, match="File already exists"):
-        copy_guide("debug-guide.md", target_dir, force=False)
+        copy_guide("best-practices-guide.md", target_dir, force=False)
 
     # Second copy with force should succeed
-    copy_guide("debug-guide.md", target_dir, force=True)
+    copy_guide("best-practices-guide.md", target_dir, force=True)
 
-    target_file = target_dir / "debug-guide.md"
+    target_file = target_dir / "best-practices-guide.md"
     assert target_file.exists()
 
 
@@ -170,24 +172,24 @@ def test_sync_guides_with_no_overrides(tmp_path):
     # Sync a subset of guides
     updated, skipped, current, missing, modified = sync_guides(
         config,
-        guides=["project-guide.md", "debug-guide.md"]
+        guides=["README.md", "best-practices-guide.md"]
     )
 
     # Files don't exist, so they should be in missing list
     assert len(missing) == 2
-    assert "project-guide.md" in missing
-    assert "debug-guide.md" in missing
+    assert "README.md" in missing
+    assert "best-practices-guide.md" in missing
     assert len(updated) == 0
     assert len(skipped) == 0
     assert len(current) == 0
 
     # Verify files were created
-    assert (tmp_path / "guides" / "project-guide.md").exists()
-    assert (tmp_path / "guides" / "debug-guide.md").exists()
+    assert (tmp_path / "guides" / "README.md").exists()
+    assert (tmp_path / "guides" / "best-practices-guide.md").exists()
 
     # Verify files were created
-    assert (tmp_path / "guides" / "project-guide.md").exists()
-    assert (tmp_path / "guides" / "debug-guide.md").exists()
+    assert (tmp_path / "guides" / "README.md").exists()
+    assert (tmp_path / "guides" / "best-practices-guide.md").exists()
 
 
 def test_sync_guides_with_overrides_skipped(tmp_path):
@@ -196,18 +198,18 @@ def test_sync_guides_with_overrides_skipped(tmp_path):
         installed_version="0.5.0",
         target_dir=str(tmp_path / "guides")
     )
-    config.add_override("debug-guide.md", "Custom content", "0.5.0")
+    config.add_override("best-practices-guide.md", "Custom content", "0.5.0")
 
     updated, skipped, current, missing, modified = sync_guides(
         config,
-        guides=["project-guide.md", "debug-guide.md"]
+        guides=["README.md", "best-practices-guide.md"]
     )
 
     assert len(updated) == 0
     assert len(skipped) == 1
-    assert "debug-guide.md" in skipped
+    assert "best-practices-guide.md" in skipped
     assert len(missing) == 1
-    assert "project-guide.md" in missing
+    assert "README.md" in missing
     assert len(current) == 0
 
 
@@ -220,21 +222,21 @@ def test_sync_guides_with_force_flag(tmp_path):
     )
 
     # Create an existing guide and mark it as overridden
-    copy_guide("debug-guide.md", target_dir)
-    config.add_override("debug-guide.md", "Custom content", "0.5.0")
+    copy_guide("best-practices-guide.md", target_dir)
+    config.add_override("best-practices-guide.md", "Custom content", "0.5.0")
 
     updated, skipped, current, missing, modified = sync_guides(
         config,
-        guides=["debug-guide.md"],
+        guides=["best-practices-guide.md"],
         force=True
     )
 
     assert len(updated) == 1
-    assert "debug-guide.md" in updated
+    assert "best-practices-guide.md" in updated
     assert len(skipped) == 0
 
     # Verify backup was created
-    backup_files = list(target_dir.glob("debug-guide.md.bak.*"))
+    backup_files = list(target_dir.glob("best-practices-guide.md.bak.*"))
     assert len(backup_files) == 1
 
 
@@ -247,17 +249,17 @@ def test_sync_guides_dry_run_mode(tmp_path):
 
     updated, skipped, current, missing, modified = sync_guides(
         config,
-        guides=["project-guide.md"],
+        guides=["README.md"],
         dry_run=True
     )
 
     # File doesn't exist, so should be in missing list
     assert len(missing) == 1
-    assert "project-guide.md" in missing
+    assert "README.md" in missing
     assert len(updated) == 0
 
     # Verify file was NOT created (dry-run mode)
-    assert not (tmp_path / "guides" / "project-guide.md").exists()
+    assert not (tmp_path / "guides" / "README.md").exists()
 
 
 def test_sync_guides_current_version(tmp_path):
@@ -271,17 +273,17 @@ def test_sync_guides_current_version(tmp_path):
     )
 
     # Create existing guide
-    copy_guide("project-guide.md", target_dir)
+    copy_guide("README.md", target_dir)
 
     updated, skipped, current, missing, modified = sync_guides(
         config,
-        guides=["project-guide.md"]
+        guides=["README.md"]
     )
 
     assert len(updated) == 0
     assert len(skipped) == 0
     assert len(current) == 1
-    assert "project-guide.md" in current
+    assert "README.md" in current
     assert len(missing) == 0
 
 
@@ -298,18 +300,18 @@ def test_sync_guides_detects_missing_files(tmp_path):
     # Don't create any files - they should be detected as missing
     updated, skipped, current, missing, modified = sync_guides(
         config,
-        guides=["project-guide.md", "debug-guide.md"]
+        guides=["README.md", "best-practices-guide.md"]
     )
 
     assert len(missing) == 2
-    assert "project-guide.md" in missing
-    assert "debug-guide.md" in missing
+    assert "README.md" in missing
+    assert "best-practices-guide.md" in missing
     assert len(updated) == 0
     assert len(current) == 0
 
     # Verify files were created
-    assert (target_dir / "project-guide.md").exists()
-    assert (target_dir / "debug-guide.md").exists()
+    assert (target_dir / "README.md").exists()
+    assert (target_dir / "best-practices-guide.md").exists()
 
 
 def test_sync_guides_detects_user_modifications(tmp_path):
@@ -323,8 +325,8 @@ def test_sync_guides_detects_user_modifications(tmp_path):
     )
 
     # Create guide and modify it
-    copy_guide("project-guide.md", target_dir)
-    guide_file = target_dir / "project-guide.md"
+    copy_guide("README.md", target_dir)
+    guide_file = target_dir / "README.md"
 
     # Modify the file content
     with open(guide_file, 'a') as f:
@@ -332,12 +334,12 @@ def test_sync_guides_detects_user_modifications(tmp_path):
 
     updated, skipped, current, missing, modified = sync_guides(
         config,
-        guides=["project-guide.md"]
+        guides=["README.md"]
     )
 
     # Modified file should be in modified list (awaiting user decision)
     assert len(modified) == 1
-    assert "project-guide.md" in modified
+    assert "README.md" in modified
     assert len(updated) == 0
     assert len(current) == 0
     assert len(missing) == 0
@@ -354,25 +356,25 @@ def test_sync_guides_force_overwrites_modified_with_backup(tmp_path):
     )
 
     # Create guide and modify it
-    copy_guide("project-guide.md", target_dir)
-    guide_file = target_dir / "project-guide.md"
+    copy_guide("README.md", target_dir)
+    guide_file = target_dir / "README.md"
 
     with open(guide_file, 'a') as f:
         f.write("\n# User added content\n")
 
     updated, skipped, current, missing, modified = sync_guides(
         config,
-        guides=["project-guide.md"],
+        guides=["README.md"],
         force=True
     )
 
     # With --force, modified file should be backed up and updated
     assert len(updated) == 1
-    assert "project-guide.md" in updated
+    assert "README.md" in updated
     assert len(modified) == 0
 
     # Verify a backup was created
-    backup_files = list(target_dir.glob("project-guide.md.bak.*"))
+    backup_files = list(target_dir.glob("README.md.bak.*"))
     assert len(backup_files) == 1
 
 
@@ -381,9 +383,9 @@ def test_file_matches_template_with_identical_content(tmp_path):
     from project_guide.sync import file_matches_template
 
     target_dir = tmp_path / "guides"
-    copy_guide("project-guide.md", target_dir)
+    copy_guide("README.md", target_dir)
 
-    assert file_matches_template(target_dir / "project-guide.md", "project-guide.md")
+    assert file_matches_template(target_dir / "README.md", "README.md")
 
 
 def test_file_matches_template_with_modified_content(tmp_path):
@@ -391,14 +393,14 @@ def test_file_matches_template_with_modified_content(tmp_path):
     from project_guide.sync import file_matches_template
 
     target_dir = tmp_path / "guides"
-    copy_guide("project-guide.md", target_dir)
+    copy_guide("README.md", target_dir)
 
     # Modify the file
-    guide_file = target_dir / "project-guide.md"
+    guide_file = target_dir / "README.md"
     with open(guide_file, 'a') as f:
         f.write("\n# Modified\n")
 
-    assert not file_matches_template(guide_file, "project-guide.md")
+    assert not file_matches_template(guide_file, "README.md")
 
 
 def test_file_matches_template_with_nonexistent_file(tmp_path):
@@ -406,4 +408,4 @@ def test_file_matches_template_with_nonexistent_file(tmp_path):
     from project_guide.sync import file_matches_template
 
     nonexistent = tmp_path / "nonexistent.md"
-    assert not file_matches_template(nonexistent, "project-guide.md")
+    assert not file_matches_template(nonexistent, "README.md")

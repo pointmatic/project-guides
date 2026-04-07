@@ -2,7 +2,7 @@
 Prompt the user to change modes. 
 
 ```bash
-project-guide mode {{next_mode}}
+project-guide mode {{ next_mode }}
 ```
 
 ---

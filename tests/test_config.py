@@ -24,9 +24,10 @@ def test_config_creation_with_defaults():
     """Test creating a config with default values."""
     config = Config()
 
-    assert config.version == "1.0"
+    assert config.version == "2.0"
     assert config.installed_version == ""
-    assert config.target_dir == "docs/guides"
+    assert config.target_dir == "docs/project-guide"
+    assert config.current_mode == "default"
     assert config.overrides == {}
 
 

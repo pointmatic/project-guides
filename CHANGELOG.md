@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-04-07
+
+### Added
+- **Mode-driven template system** — `project-guide mode <name>` sets the active development mode and renders `go-project-guide.md` via Jinja2
+- New `mode` CLI command: set mode with argument, list available modes without argument
+- New module `metadata.py` — parses `project-guide-metadata.yml`, resolves `{{var}}` placeholders, provides mode lookup
+- New module `render.py` — Jinja2 template rendering pipeline for `go-project-guide.md`
+- New runtime dependency: `jinja2>=3.1`
+- New exception types: `MetadataError`, `RenderError`
+- `go-project-guide.md` automatically added to `.gitignore` on init (it is a rendered artifact)
+- 11 foundation mode templates: `default`, `plan_concept`, `plan_features`, `plan_tech_spec`, `plan_stories`, `plan_phase`, `code_velocity`, `code_test_first`, `debug`, `document_brand`, `document_landing`
+- Artifact templates directory (`templates/artifacts/`) for LLM output formatting
+- Header partials (`_header-common.md`, `_header-sequence.md`, `_header-cycle.md`) included via Jinja2
+
+### Changed
+- **Breaking:** Default target directory changed from `docs/guides/` to `docs/project-guide/`
+- **Breaking:** Config schema version bumped to `2.0` with new `current_mode` field
+- `init` now copies the full template tree (modes, artifacts, metadata, developer guides) and renders `go-project-guide.md`
+- Template discovery in `sync.py` updated for new directory structure
+- Old static guide files (`project-guide.md`, `debug-guide.md`, `documentation-setup-guide.md`) replaced by mode templates
+- Config migration: v1.0 configs load with `current_mode: "default"` added automatically
+- Test suite expanded to 102 tests (up from 87), coverage at 87%
+
 ## [1.5.2] - 2026-04-05
 
 ### Added

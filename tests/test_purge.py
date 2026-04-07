@@ -35,19 +35,19 @@ def test_purge_removes_all_files(runner, tmp_path):
 
         # Verify files exist
         assert Path(".project-guide.yml").exists()
-        assert Path("docs/guides").exists()
+        assert Path("docs/project-guide").exists()
 
         # Purge with --force to skip confirmation
         result = runner.invoke(main, ['purge', '--force'])
         assert result.exit_code == 0
         # Handle both Unix (/) and Windows (\) path separators
-        assert ("✓ Removed docs/guides/" in result.output or "✓ Removed docs\\guides/" in result.output)
+        assert ("✓ Removed docs/project-guide/" in result.output or "✓ Removed docs\\guides/" in result.output)
         assert "✓ Removed .project-guide.yml" in result.output
         assert "project-guide has been purged" in result.output
 
         # Verify files are gone
         assert not Path(".project-guide.yml").exists()
-        assert not Path("docs/guides").exists()
+        assert not Path("docs/project-guide").exists()
 
 
 def test_purge_with_confirmation_prompt(runner, tmp_path):
@@ -63,7 +63,7 @@ def test_purge_with_confirmation_prompt(runner, tmp_path):
 
         # Files should still exist
         assert Path(".project-guide.yml").exists()
-        assert Path("docs/guides").exists()
+        assert Path("docs/project-guide").exists()
 
         # Purge without --force, answer 'y' to confirm
         result = runner.invoke(main, ['purge'], input='y\n')
@@ -71,7 +71,7 @@ def test_purge_with_confirmation_prompt(runner, tmp_path):
 
         # Files should be gone
         assert not Path(".project-guide.yml").exists()
-        assert not Path("docs/guides").exists()
+        assert not Path("docs/project-guide").exists()
 
 
 def test_purge_with_custom_target_dir(runner, tmp_path):
@@ -113,13 +113,13 @@ def test_purge_handles_missing_guides_dir(runner, tmp_path):
 
         # Manually delete guides directory
         import shutil
-        shutil.rmtree("docs/guides")
+        shutil.rmtree("docs/project-guide")
 
         # Purge should still work
         result = runner.invoke(main, ['purge', '--force'])
         assert result.exit_code == 0
         # Handle both Unix (/) and Windows (\) path separators
-        assert ("docs/guides/ not found (skipped)" in result.output or "docs\\guides/ not found (skipped)" in result.output)
+        assert ("docs/project-guide/ not found (skipped)" in result.output or "docs\\guides/ not found (skipped)" in result.output)
         assert "✓ Removed .project-guide.yml" in result.output
 
         # Config should be gone

@@ -40,3 +40,13 @@ class GuideNotFoundError(ProjectGuidesError):
             message += f"\nAvailable guides: {', '.join(sorted(available_guides))}"
 
         super().__init__(message)
+
+
+class MetadataError(ProjectGuidesError):
+    """Exception raised for metadata parsing or validation errors."""
+    pass
+
+
+class RenderError(ProjectGuidesError):
+    """Exception raised for template rendering failures."""
+    pass
