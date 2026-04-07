@@ -42,7 +42,7 @@ def render_go_project_guide(
         raise RenderError(f"Templates directory not found: {templates_subdir}")
 
     env = Environment(
-        loader=FileSystemLoader([str(template_dir), str(templates_subdir)]),
+        loader=FileSystemLoader([str(template_dir), str(templates_subdir)], encoding="utf-8"),
         keep_trailing_newline=True,
         undefined=_LenientUndefined,
     )
@@ -76,7 +76,7 @@ def render_go_project_guide(
 
     # Write output
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(rendered)
+    output_path.write_text(rendered, encoding="utf-8")
 
 
 class _LenientUndefined(Undefined):
