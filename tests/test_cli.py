@@ -160,6 +160,61 @@ def test_status_after_mode_change(runner, tmp_path):
         assert "Generate code with velocity" in result.output
 
 
+def test_status_v1_migration_notice(runner, tmp_path):
+    """Test status shows migration notice for v1.x configs."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # Simulate v1.x config
+        config = Config.load(".project-guide.yml")
+        config.version = "1.0"
+        config.target_dir = "docs/guides"
+        config.save(".project-guide.yml")
+
+        result = runner.invoke(main, ['status'])
+
+        assert result.exit_code == 0
+        assert "Migration notice" in result.output
+        assert "docs/guides/ is deprecated" in result.output
+        assert "refactor_plan" in result.output
+        assert "refactor_document" in result.output
+
+
+def test_status_no_migration_notice_for_v2(runner, tmp_path):
+    """Test status does NOT show migration notice for v2.x configs."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        result = runner.invoke(main, ['status'])
+
+        assert result.exit_code == 0
+        assert "Migration notice" not in result.output
+
+
+def test_refactor_modes_render(runner, tmp_path):
+    """Test that refactor_plan and refactor_document modes render correctly."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        for name in ["refactor_plan", "refactor_document"]:
+            result = runner.invoke(main, ['mode', name])
+            assert result.exit_code == 0, f"{name} failed: {result.output}"
+            assert f"Mode set: {name}" in result.output
+
+            content = Path("docs/specs/go-project-guide.md").read_text(encoding="utf-8")
+            assert "Restart the cycle" in content  # cycle header
+            assert "Legacy Content" in content  # step 5
+
+        # Verify distinct content
+        runner.invoke(main, ['mode', 'refactor_plan'])
+        plan = Path("docs/specs/go-project-guide.md").read_text(encoding="utf-8")
+        runner.invoke(main, ['mode', 'refactor_document'])
+        doc = Path("docs/specs/go-project-guide.md").read_text(encoding="utf-8")
+        assert plan != doc
+        assert "concept.md" in plan
+        assert "descriptions.md" in doc
+
+
 def test_mode_no_config(runner, tmp_path):
     """Test mode command with no config file."""
     with runner.isolated_filesystem(temp_dir=tmp_path):

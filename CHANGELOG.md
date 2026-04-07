@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.9] - 2026-04-07
+
+### Added
+- New `refactor_plan` cycle mode — migrate planning artifacts (concept, features, tech-spec) to v2.x artifact template format
+- New `refactor_document` cycle mode — migrate documentation artifacts (descriptions, landing page, MkDocs) to v2.x format
+- v1.x → v2.x migration notice in `status` command when config version is "1.0" or target_dir is "docs/guides"
+
 ## [2.0.8] - 2026-04-07
 
 ### Added

@@ -171,3 +171,21 @@ modes:
     files_exist:
       - "{{spec_artifacts_path}}/stories.md"
       - "{{mode_templates_path}}/debug-mode.md"
+
+  # Refactoring modes
+  - name: refactor_plan
+    info: Migrate planning artifacts (concept, features, tech-spec) to v2.x format
+    description: Refactor existing planning documents into the v2.x artifact template format, preserving all information while restructuring into standardized sections.
+    sequence_or_cycle: cycle
+    generation_type: document
+    mode_template: "{{mode_templates_path}}/refactor-plan-mode.md"
+    files_exist:
+      - "{{mode_templates_path}}/refactor-plan-mode.md"
+  - name: refactor_document
+    info: Migrate documentation artifacts (descriptions, landing page, MkDocs) to v2.x format
+    description: Refactor existing documentation files into the v2.x format, covering brand descriptions, landing page, and MkDocs configuration.
+    sequence_or_cycle: cycle
+    generation_type: document
+    mode_template: "{{mode_templates_path}}/refactor-document-mode.md"
+    files_exist:
+      - "{{mode_templates_path}}/refactor-document-mode.md"

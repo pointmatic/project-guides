@@ -251,6 +251,15 @@ def status():
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(3)  # Configuration error exit code
 
+    # Show v1.x migration notice if applicable
+    if config.version == "1.0" or config.target_dir == "docs/guides":
+        click.secho("Migration notice (v1.x → v2.x):", fg='yellow', bold=True)
+        click.secho("  docs/guides/ is deprecated; new features target docs/project-guide/ only.", fg='yellow')
+        click.secho("  Run 'project-guide init' to install the v2.x template system.", fg='yellow')
+        click.secho("  Use 'project-guide mode refactor_plan' to migrate concept, features, tech-spec.", fg='yellow')
+        click.secho("  Use 'project-guide mode refactor_document' to migrate descriptions, landing page, MkDocs.", fg='yellow')
+        click.echo()
+
     # Show version info
     package_version = __version__
     click.echo(f"project-guide v{package_version} (installed: v{config.installed_version})")

@@ -345,27 +345,49 @@ Extract project scaffolding (LICENSE, headers, manifest, README, CHANGELOG, .git
 - [x] Bump `version.py` and `pyproject.toml` to `2.0.8`
 - [x] Update `CHANGELOG.md`
 
-### Story J.k: v2.0.9 Refactoring Modes [Planned]
+### Story J.j: v2.0.9 Artifact Refactoring Modes [Done]
 
-Implement the `refactor_plan` and `refactor_document` cycle modes. The mode steps are (generally):
+Implement `refactor_plan` and `refactor_document` cycle modes for migrating existing documents into the v2.x artifact template format. Also add a v1.x → v2.x migration notice to the `status` command.
 
-Enumerate the documents to refactor (to run through the refactor steps)
+**Mode templates:**
+- [x] Create `refactor-plan-mode.md` — cycle mode for refactoring planning artifacts (`concept.md`, `features.md`, `tech-spec.md`)
+- [x] Create `refactor-document-mode.md` — cycle mode for refactoring documentation artifacts (`brand-descriptions.md`, landing page `index.html`, MkDocs files)
+- [x] Each mode template includes `{% include "modes/_header-cycle.md" %}`
+- [x] Add both modes to `project-guide-metadata.yml`
 
-Steps for each document
-1. Move existing document to `<doc_name>_old.md`
-2. Gather information from old document as the primary source. 
-3. If any necessary information is missing from the old document, ask the developer for the information.
-4. Output new document in the updated format. 
-5. Any leftover information should be added to the end of the new document as a `## Legacy Content` section.
-6. Present the completed document to the developer for approval; iterate as needed.
+**Cycle steps (both modes follow this pattern for each document):**
+1. Enumerate the documents to refactor
+2. For each document:
+   - [x] Move existing document to `<doc_name>_old.md`
+   - [x] Read old document as the primary source of information
+   - [x] If any necessary information is missing from the old document, ask the developer
+   - [x] Generate new document using the appropriate artifact template format
+   - [x] Append any leftover information to the end as a `## Legacy Content` section
+   - [x] Present the completed document to the developer for approval; iterate as needed
 
-### Future Story: Code Production Mode [Deferred]
+**`refactor_plan` targets:**
+- `docs/specs/concept.md` → artifact template format from `templates/artifacts/concept.md`
+- `docs/specs/features.md` → artifact template format from `templates/artifacts/features.md`
+- `docs/specs/tech-spec.md` → artifact template format from `templates/artifacts/tech-spec.md`
 
-Implement the `code_production` mode...TBD
+**`refactor_document` targets:**
+- `docs/specs/descriptions.md` → `docs/specs/brand-descriptions.md` (artifact template format)
+- `docs/site/index.html` → updated with `{{ web_root }}` structure from `document-landing-mode.md`
+- MkDocs configuration and pages
 
-### Future Story: Audit Modes [Deferred]
+**v1.x → v2.x migration notice in `status`:**
+- [x] Detect v1.x config (`version: "1.0"` or `target_dir: "docs/guides"`) in the `status` command
+- [x] Display migration notice:
+  - `docs/guides/` directory is deprecated; new features target `docs/project-guide/` only
+  - Run `project-guide init` to install the v2.x template system alongside existing guides
+  - Use `refactor_plan` mode to migrate `concept.md`, `features.md`, `tech-spec.md` to the new artifact format
+  - Use `refactor_document` mode to migrate `descriptions.md`, landing page, and MkDocs files
 
-Future modes (deferred): `audit_security`, `audit_architecture`, `audit_performance`, `audit_best_practices`, `audit_modularity`, `audit_patterns`, .
+**Tests:**
+- [x] Write tests for `refactor_plan` and `refactor_document` mode rendering
+- [x] Write test for v1.x migration notice in `status` output
+- [x] Bump `version.py` and `pyproject.toml` to `2.0.9`
+- [x] Update `CHANGELOG.md`
 
 ### Future Story: Landing Page Documentation Updates [Deferred]
 
@@ -373,4 +395,21 @@ Update all documentation to reflect the new mode system and workflow changes.
 
 - [ ] Update index.html page (`docs/site/index.html`)
 - [ ] Update MkDocs pages (`docs/site/*.md`)
+
+### Future Story: Code Production Mode [Deferred]
+
+Implement the `code_production` mode...TBD
+
+### Future Story: Archive Stories Mode [Deferred]
+
+Future mode (deferred): `archive_stories`
+
+Move the `docs/specs/stories.md` file to `docs/specs/.archive/stories.md-vx.x.x.md` where `vx.x.x` is the most recent version set by a story.
+
+Then `plan_phase` mode can create a new `docs/specs/stories.md` file. This requires a minor tweak to the metadata since there is a `file_exists` requirement for the stories file and a `modify` action on that file (as well as some logic changes if we add a `create_or_modify` action type).
+
+### Future Story: Audit Modes [Deferred]
+
+Future modes (deferred): `audit_security`, `audit_architecture`, `audit_performance`, `audit_best_practices`, `audit_modularity`, `audit_patterns`
+
 
