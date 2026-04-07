@@ -42,7 +42,7 @@ def get_template_path(guide_name: str) -> Path:
     raise GuideNotFoundError(guide_name, get_all_guide_names())
 
 
-_EXCLUDED_FROM_SYNC = {"go-project-guide.md"}
+_EXCLUDED_FROM_SYNC: set[str] = set()
 
 
 def get_all_guide_names() -> list[str]:
@@ -53,7 +53,7 @@ def get_all_guide_names() -> list[str]:
     root = _get_package_template_root()
     guide_names = []
 
-    for pattern in ("*.md", "*.yml"):
+    for pattern in ("*.md", "*.md.j2", "*.yml"):
         for path in sorted(root.rglob(pattern)):
             # Use forward slashes for cross-platform consistency
             rel = path.relative_to(root).as_posix()

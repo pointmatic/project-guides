@@ -109,19 +109,21 @@ def init(target_dir: str, force: bool):
 
     click.secho(f"✓ Created {target_dir}/", fg='green')
 
-    # Load metadata and render go-project-guide.md in default mode
+    # Load metadata and render go-project-guide.md
     metadata_path = target_path / "project-guide-metadata.yml"
+    spec_artifacts_path = "docs/specs"
     try:
         metadata = load_metadata(metadata_path)
+        spec_artifacts_path = metadata.common.get("spec_artifacts_path", spec_artifacts_path)
         mode = metadata.get_mode("plan_concept")
-        output_path = target_path / "go-project-guide.md"
+        output_path = Path(spec_artifacts_path) / "go-project-guide.md"
         render_go_project_guide(target_path, mode, metadata, output_path)
-        click.secho("✓ Rendered go-project-guide.md (mode: plan_concept)", fg='green')
+        click.secho(f"✓ Rendered {output_path} (mode: plan_concept)", fg='green')
     except (MetadataError, RenderError) as e:
         click.secho(f"Warning: Could not render go-project-guide.md: {e}", fg='yellow')
 
-    # Add go-project-guide.md to .gitignore if not already present
-    _ensure_gitignore_entry(target_dir)
+    # Add rendered output to .gitignore
+    _ensure_gitignore_entry(spec_artifacts_path)
 
     # Create config file
     config = Config(
@@ -201,9 +203,10 @@ def set_mode(mode_name: str | None):
             click.echo(f"  {m.name:25} {m.info}")
         sys.exit(1)
 
-    # Render go-project-guide.md
+    # Render go-project-guide.md to spec_artifacts_path
     target_dir = Path(config.target_dir)
-    output_path = target_dir / "go-project-guide.md"
+    spec_artifacts_path = metadata.common.get("spec_artifacts_path", "docs/specs")
+    output_path = Path(spec_artifacts_path) / "go-project-guide.md"
     try:
         render_go_project_guide(target_dir, mode, metadata, output_path)
     except RenderError as e:
@@ -261,7 +264,8 @@ def status():
         mode = metadata.get_mode(config.current_mode)
         click.echo(f"Mode:  {mode.name}")
         click.echo(f"       {mode.info}")
-        click.echo(f"Guide: {target_dir / 'go-project-guide.md'}")
+        spec_artifacts_path = metadata.common.get("spec_artifacts_path", "docs/specs")
+        click.echo(f"Guide: {Path(spec_artifacts_path) / 'go-project-guide.md'}")
 
         # Show prerequisite status
         if mode.files_exist:
@@ -466,7 +470,8 @@ def update(guides: tuple, dry_run: bool, force: bool):
             try:
                 metadata = load_metadata(metadata_path)
                 mode = metadata.get_mode(config.current_mode)
-                output_path = target_dir / "go-project-guide.md"
+                spec_artifacts_path = metadata.common.get("spec_artifacts_path", "docs/specs")
+                output_path = Path(spec_artifacts_path) / "go-project-guide.md"
                 render_go_project_guide(target_dir, mode, metadata, output_path)
                 click.secho("✓ Re-rendered go-project-guide.md", fg='green')
             except (MetadataError, RenderError) as e:

@@ -72,8 +72,8 @@ def test_get_all_guide_names_returns_all_guides():
     # Should contain developer guides
     assert "developer/codecov-setup-guide.md" in guide_names
 
-    # Should NOT contain rendered artifacts
-    assert "go-project-guide.md" not in guide_names
+    # Entry point template should be included (it's a source file, not a rendered artifact)
+    assert "go-project-guide.md" in guide_names
 
     # Should be sorted
     assert guide_names == sorted(guide_names)

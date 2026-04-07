@@ -261,21 +261,21 @@ Adapt the sync/override system to operate on the new template directory structur
 - [x] Verify: `project-guide update` syncs new template files and re-renders `go-project-guide.md`
 - [x] Verify: `project-guide override templates/modes/plan-concept-mode.md "reason"` works correctly
 
-### Story J.d: v2.0.3 Add Planning Mode Templates [Planned]
+### Story J.d: v2.0.3 Add Planning Mode Templates [Done]
 
 Add the remaining planning mode templates: `plan_features`, `plan_tech_spec`, `plan_stories`, `plan_phase`. Each must include the appropriate header partial and be self-contained.
 
-- [ ] Finalize `plan-features-mode.md` — migrate content from old `go-project-guide.md` Step 1 (Features Document)
-- [ ] Finalize `plan-tech-spec-mode.md` — migrate content from old Step 2 (Technical Specification)
-- [ ] Finalize `plan-stories-mode.md` — migrate content from old Step 3 (Stories Document)
-- [ ] Finalize `plan-phase-mode.md` — combined concept/features/tech-spec for adding a new phase to an existing project
-- [ ] Create artifact templates for each mode where applicable (`features.md`, `tech-spec.md`, `stories.md`)
-- [ ] Each mode template includes `{% include "_header-sequence.md" %}` with `next_mode` populated
-- [ ] Update `init` to copy all planning templates
-- [ ] Verify: `project-guide mode plan_features` renders correctly and includes next_mode prompt to `plan_tech_spec`
-- [ ] Verify: each planning mode's rendered output is self-contained for an LLM to follow
-- [ ] Bump `version.py` and `pyproject.toml` to `2.0.3`
-- [ ] Update `CHANGELOG.md`
+- [x] Finalize `plan-features-mode.md` — migrate content from old `go-project-guide.md` Step 1 (Features Document)
+- [x] Finalize `plan-tech-spec-mode.md` — migrate content from old Step 2 (Technical Specification)
+- [x] Finalize `plan-stories-mode.md` — migrate content from old Step 3 (Stories Document)
+- [x] Finalize `plan-phase-mode.md` — combined concept/features/tech-spec for adding a new phase to an existing project
+- [x] Create artifact templates for each mode where applicable (`features.md`, `tech-spec.md`, `stories.md`)
+- [x] Each mode template includes `{% include "_header-sequence.md" %}` with `next_mode` populated
+- [x] Update `init` to copy all planning templates
+- [x] Verify: `project-guide mode plan_features` renders correctly and includes next_mode prompt to `plan_tech_spec`
+- [x] Verify: each planning mode's rendered output is self-contained for an LLM to follow
+- [x] Bump `version.py` and `pyproject.toml` to `2.0.3`
+- [x] Update `CHANGELOG.md`
 
 ### Story J.e: v2.0.4 Add Code and Debug Mode Templates [Planned]
 

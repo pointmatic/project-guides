@@ -24,7 +24,7 @@ from project_guide.render import render_go_project_guide
 @pytest.fixture
 def template_dir(tmp_path):
     """Create a minimal template directory for rendering tests."""
-    # Entry point template
+    # Entry point template (source lives in template dir, rendered output goes elsewhere)
     (tmp_path / "go-project-guide.md").write_text(
         "# Guide\n\n{% include 'modes/_header-common.md' %}\n\n{% include mode_template %}\n"
     )
@@ -125,7 +125,7 @@ def test_render_end_to_end_with_package_templates():
         result = runner.invoke(main, ['init'])
         assert result.exit_code == 0
 
-        output = Path("docs/project-guide/go-project-guide.md")
+        output = Path("docs/specs/go-project-guide.md")
         assert output.exists()
 
         content = output.read_text()

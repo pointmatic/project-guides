@@ -43,7 +43,7 @@ def test_init_in_empty_directory(runner, tmp_path):
         assert Path(".project-guide.yml").exists()
 
         # Verify templates were created in new structure
-        assert Path("docs/project-guide/go-project-guide.md").exists()
+        assert Path("docs/specs/go-project-guide.md").exists()
         assert Path("docs/project-guide/project-guide-metadata.yml").exists()
         assert Path("docs/project-guide/templates/modes/plan-concept-mode.md").exists()
         assert Path("docs/project-guide/developer/codecov-setup-guide.md").exists()

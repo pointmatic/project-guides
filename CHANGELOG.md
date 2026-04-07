@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-04-07
+
+### Added
+- Complete planning mode templates: `plan-features-mode.md`, `plan-tech-spec-mode.md`, `plan-stories-mode.md`, `plan-phase-mode.md`
+- Artifact templates: `features.md`, `tech-spec.md`, `stories.md`
+- All mode templates now include appropriate header partials (`_header-sequence.md` or `_header-cycle.md`)
+
+### Fixed
+- Entry point template renamed to `go-project-guide.md.j2` to prevent rendered output from overwriting the Jinja2 source template
+- Explicit `encoding="utf-8"` in Jinja2 `FileSystemLoader` and `write_text()` to fix Windows cp1252 corruption of em-dash characters
+
+### Changed
+- Monolithic Steps 0-4 content removed from `go-project-guide.md.j2` — entry point is now a thin shell (header + mode include)
+
 ## [2.0.2] - 2026-04-07
 
 ### Changed
