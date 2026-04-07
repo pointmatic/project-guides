@@ -306,18 +306,20 @@ Add `document_brand` and `document_landing` mode templates.
 - [x] Bump `version.py` and `pyproject.toml` to `2.0.5`
 - [x] Update `CHANGELOG.md`
 
-### Story J.g: v2.0.6 Migrate Monolithic Entry Point Content [Planned]
+### Story J.g: v2.0.6 Migrate Monolithic Entry Point Content [Done]
 
 The old `go-project-guide.md` entry point template contains Steps 0-4 as a monolithic document. Now that all mode templates exist, reduce the entry point to a thin shell that includes `_header-common.md` and the active mode template. Move Step 0 (Project Setup) content into `_header-common.md` or `default-mode.md`.
 
-- [ ] Slim down `go-project-guide.md` entry point template to: common header + mode inclusion only
-- [ ] Move Step 0 content (License, Copyright Headers, Badges, CHANGELOG) into `_header-common.md` or `default-mode.md` as appropriate
-- [ ] Remove old static guide files that are now fully absorbed into mode templates (`best-practices-guide.md`, etc.)
-- [ ] Update `init` to no longer copy removed static guides
-- [ ] Verify: all modes render complete, self-contained output from the slimmed entry point
-- [ ] Verify: no content was lost in the migration
-- [ ] Bump `version.py` and `pyproject.toml` to `2.0.6`
-- [ ] Update `CHANGELOG.md`
+- [x] Slim down `go-project-guide.md` entry point template to: common header + mode inclusion only
+- [x] Move Step 0 content (License, Copyright Headers, Badges, CHANGELOG) into `default-mode.md`
+- [x] Distribute prerequisites from old default-mode.md into planning modes (concept, features, tech-spec)
+- [x] Rewrite `default-mode.md` as full lifecycle overview for new users
+- [x] Add `default` mode to `project-guide-metadata.yml`
+- [x] Remove old static guide files that are now fully absorbed into mode templates (`best-practices-guide.md`)
+- [x] Verify: all 11 modes render complete, self-contained output from the slimmed entry point
+- [x] Verify: no content was lost in the migration
+- [x] Bump `version.py` and `pyproject.toml` to `2.0.6`
+- [x] Update `CHANGELOG.md`
 
 ### Story J.h: v2.0.7 Test Coverage and Documentation [Planned]
 

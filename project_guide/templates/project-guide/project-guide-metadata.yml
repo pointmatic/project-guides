@@ -10,6 +10,13 @@ common:
   default_code_mode: code_velocity
 
 modes:
+  - name: default
+    info: Getting started -- full project lifecycle overview
+    description: Default mode for new projects. Walks through setup, planning, and implementation with links to specific modes.
+    sequence_or_cycle: sequence
+    generation_type: document
+    mode_template: "{{mode_templates_path}}/default-mode.md"
+    next_mode: plan_concept
   - name: plan_concept
     info: Generate a high-level concept (problem and solution space)
     description: Define the problem space (problem statement, pain points, target users, value criteria) and the solution space (solution statement, goals, scope, constraints), and pain point to solution mapping.

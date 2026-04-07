@@ -6,6 +6,15 @@ For requirements and behavior, see `features.md`. For the implementation plan, s
 
 {% include "modes/_header-sequence.md" %}
 
+## Prerequisites
+
+Before starting, the developer must provide (or the LLM must ask for):
+
+1. **Language / runtime** -- e.g. Python 3.14, Node 22, Go 1.23, etc.
+2. **Preferred frameworks, libraries, or tools** (if any)
+
+The approved `docs/specs/concept.md` and `docs/specs/features.md` must exist before starting this mode.
+
 ## Steps
 
 1. Read `docs/specs/features.md` to understand the requirements.

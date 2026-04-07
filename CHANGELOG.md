@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.6] - 2026-04-07
+
+### Changed
+- `default-mode.md` rewritten as a full project lifecycle overview (setup, planning, implementation) with links to specific modes -- serves as a friendly starting point for new users
+- Distributed prerequisites from old default mode into appropriate planning modes:
+  - Project idea -> `plan-concept-mode.md`
+  - License preference, target audience, constraints -> `plan-features-mode.md`
+  - Language/runtime, preferred frameworks -> `plan-tech-spec-mode.md`
+- Added `default` mode to `project-guide-metadata.yml`
+
+### Removed
+- `best-practices-guide.md` -- content absorbed into `code-velocity-mode.md` and `code-test-first-mode.md`
+
 ## [2.0.5] - 2026-04-07
 
 ### Added

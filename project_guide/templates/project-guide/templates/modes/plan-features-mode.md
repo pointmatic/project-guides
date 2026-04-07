@@ -6,6 +6,16 @@ For implementation details, see `tech-spec.md`. For the implementation plan, see
 
 {% include "modes/_header-sequence.md" %}
 
+## Prerequisites
+
+Before starting, the developer must provide (or the LLM must ask for):
+
+1. **License preference** -- e.g. Apache-2.0, MIT, MPL-2.0, GPL-3.0. If a `LICENSE` file already exists in the project root, that license prevails.
+2. **Target audience** -- CLI tool, library, web app, etc.
+3. **Constraints** -- no UI, no database, must run offline, etc. (if any)
+
+The approved `docs/specs/concept.md` must exist before starting this mode.
+
 ## Steps
 
 1. Gather information from the developer (ask questions if needed):
