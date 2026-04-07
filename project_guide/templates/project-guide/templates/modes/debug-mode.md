@@ -2,6 +2,8 @@
 
 This mode is a structured approach for LLMs to help developers debug issues in existing software projects. It emphasizes test-driven debugging, root cause analysis, and preventing regressions.
 
+{% include "modes/_header-cycle.md" %}
+
 ## Core Debugging Principles
 
 ### 1. Test First, Fix Second

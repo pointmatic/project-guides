@@ -458,6 +458,20 @@ def update(guides: tuple, dry_run: bool, force: bool):
         config.installed_version = __version__
         config.save(str(config_path))
 
+        # Re-render go-project-guide.md if any mode templates or headers were updated
+        template_files = [f for f in all_updated if f.startswith("templates/modes/") or f == "go-project-guide.md"]
+        if template_files:
+            target_dir = Path(config.target_dir)
+            metadata_path = target_dir / "project-guide-metadata.yml"
+            try:
+                metadata = load_metadata(metadata_path)
+                mode = metadata.get_mode(config.current_mode)
+                output_path = target_dir / "go-project-guide.md"
+                render_go_project_guide(target_dir, mode, metadata, output_path)
+                click.secho("✓ Re-rendered go-project-guide.md", fg='green')
+            except (MetadataError, RenderError) as e:
+                click.secho(f"Warning: Could not re-render go-project-guide.md: {e}", fg='yellow')
+
     # Print summary
     click.echo()
     if dry_run:

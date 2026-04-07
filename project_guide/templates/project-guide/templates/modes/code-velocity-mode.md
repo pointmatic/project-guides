@@ -1,3 +1,5 @@
+{% include "modes/_header-cycle.md" %}
+
 ### Development Mode: Velocity vs. Production
 
 Projects naturally transition from **velocity mode** (rapid iteration) to **production mode** (stability and security). Recognize this shift and adjust practices accordingly:

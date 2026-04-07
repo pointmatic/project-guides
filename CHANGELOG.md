@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-04-07
+
+### Changed
+- `update` command re-renders `go-project-guide.md` after syncing template files that affect the rendered output
+- Override/unoverride work on template-relative paths (e.g., `templates/modes/plan-concept-mode.md`)
+- Guide discovery in `sync.py` fully scans new directory structure (old `guides/` references removed)
+
 ## [2.0.1] - 2026-04-07
 
 ### Changed

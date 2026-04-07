@@ -2,6 +2,8 @@
 
 This guide explains a documentation pattern for GitHub Pages. It features a custom landing page (`index.html`) as the home page combined with MkDocs Material theme built from markdown pages for additional documentation.
 
+{% include "modes/_header-sequence.md" %}
+
 ## Overview
 
 **Architecture:**

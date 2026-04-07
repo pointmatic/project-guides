@@ -246,20 +246,20 @@ Update `status` to reflect the mode system. Show current mode, mode description,
 - [x] Update `CHANGELOG.md`
 - [x] Verify: `project-guide status` shows mode name, description, and prerequisite status
 
-### Story J.c: v2.0.2 Update Sync/Update for New Directory Structure [Planned]
+### Story J.c: v2.0.2 Update Sync/Update for New Directory Structure [Done]
 
 Adapt the sync/override system to operate on the new template directory structure. After any update that touches mode templates or header partials, re-render `go-project-guide.md`.
 
-- [ ] Update guide discovery in `sync.py` (`get_all_guide_names()`) to scan `templates/modes/*.md`, `templates/artifacts/*.md`, `project-guide-metadata.yml`
-  - [ ] Remove old `guides/` directory references
-- [ ] Update `update` command: after syncing template files, re-render `go-project-guide.md` for the current mode
-- [ ] Override/unoverride work on template-relative paths (e.g., `override templates/modes/plan-concept-mode.md "Custom concept workflow"`)
-- [ ] Update `purge` to remove `docs/project-guide/` instead of `docs/guides/`
-- [ ] Write tests for updated sync discovery, update-then-render flow, and override on new paths
-- [ ] Bump `version.py` and `pyproject.toml` to `2.0.2`
-- [ ] Update `CHANGELOG.md`
-- [ ] Verify: `project-guide update` syncs new template files and re-renders `go-project-guide.md`
-- [ ] Verify: `project-guide override templates/modes/plan-concept-mode.md "reason"` works correctly
+- [x] Update guide discovery in `sync.py` (`get_all_guide_names()`) to scan `templates/modes/*.md`, `templates/artifacts/*.md`, `project-guide-metadata.yml`
+  - [x] Remove old `guides/` directory references
+- [x] Update `update` command: after syncing template files, re-render `go-project-guide.md` for the current mode
+- [x] Override/unoverride work on template-relative paths (e.g., `override templates/modes/plan-concept-mode.md "Custom concept workflow"`)
+- [x] Update `purge` to remove `docs/project-guide/` instead of `docs/guides/`
+- [x] Write tests for updated sync discovery, update-then-render flow, and override on new paths
+- [x] Bump `version.py` and `pyproject.toml` to `2.0.2`
+- [x] Update `CHANGELOG.md`
+- [x] Verify: `project-guide update` syncs new template files and re-renders `go-project-guide.md`
+- [x] Verify: `project-guide override templates/modes/plan-concept-mode.md "reason"` works correctly
 
 ### Story J.d: v2.0.3 Add Planning Mode Templates [Planned]
 

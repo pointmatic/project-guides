@@ -630,6 +630,62 @@ def test_update_all_overridden_message(runner, tmp_path):
         assert "overridden" in result.output.lower()
 
 
+def test_update_rerenders_after_template_change(runner, tmp_path):
+    """Test that update re-renders go-project-guide.md after template files are updated."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # Simulate older version so update triggers
+        config = Config.load(".project-guide.yml")
+        config.installed_version = "0.9.0"
+        config.save(".project-guide.yml")
+
+        result = runner.invoke(main, ['update'])
+
+        assert result.exit_code == 0
+        assert "Re-rendered go-project-guide.md" in result.output
+
+
+def test_override_on_template_relative_path(runner, tmp_path):
+    """Test that override works with template-relative paths."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        result = runner.invoke(main, ['override', 'templates/modes/plan-concept-mode.md', 'Custom concept workflow'])
+
+        assert result.exit_code == 0
+        assert "Marked templates/modes/plan-concept-mode.md as overridden" in result.output
+
+        config = Config.load(".project-guide.yml")
+        assert config.is_overridden("templates/modes/plan-concept-mode.md")
+
+        # Unoverride should also work
+        result = runner.invoke(main, ['unoverride', 'templates/modes/plan-concept-mode.md'])
+        assert result.exit_code == 0
+
+        config = Config.load(".project-guide.yml")
+        assert not config.is_overridden("templates/modes/plan-concept-mode.md")
+
+
+def test_update_skips_overridden_template(runner, tmp_path):
+    """Test that update skips overridden templates and re-renders after."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # Override a template
+        config = Config.load(".project-guide.yml")
+        config.add_override("templates/modes/debug-mode.md", "Custom debug", "0.9.0")
+        config.installed_version = "0.9.0"
+        config.save(".project-guide.yml")
+
+        result = runner.invoke(main, ['update'])
+
+        assert result.exit_code == 0
+        assert "Skipped (overridden)" in result.output
+        assert "templates/modes/debug-mode.md" in result.output
+        assert "Re-rendered go-project-guide.md" in result.output
+
+
 def test_override_with_missing_config(runner, tmp_path):
     """Test override with no config file exits with code 1."""
     with runner.isolated_filesystem(temp_dir=tmp_path):

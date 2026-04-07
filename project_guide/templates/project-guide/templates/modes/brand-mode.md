@@ -4,6 +4,8 @@
 
 {description}
 
+{% include "modes/_header-sequence.md" %}
+
 ---
 
 ## Purpose
