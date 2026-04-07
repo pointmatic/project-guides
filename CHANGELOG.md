@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.5] - 2026-04-07
+
+### Added
+- Brand descriptions artifact template (`templates/artifacts/brand-descriptions.md`)
+
+### Fixed
+- Renamed `brand-mode.md` to `document-brand-mode.md` and `document-mode.md` to `document-landing-mode.md` to match metadata definitions
+- Added missing `mode_template` field to `document_landing` mode in metadata
+- Escaped GitHub Actions `${{ }}` syntax in `document-landing-mode.md` to prevent Jinja2 conflict
+- Converted `{info}` / `{description}` placeholders in brand mode to Jinja2 `{{ mode_info }}` / `{{ mode_description }}`
+
 ## [2.0.4] - 2026-04-07
 
 ### Added

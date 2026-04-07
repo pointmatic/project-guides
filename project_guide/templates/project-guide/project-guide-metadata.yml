@@ -83,6 +83,8 @@ modes:
     info: Generate a GitHub landing page and markdown support documentation using MkDocs
     description: TBD.
     sequence_or_cycle: sequence
+    generation_type: document
+    mode_template: "{{mode_templates_path}}/document-landing-mode.md"
     artifacts:
       - webpage: "{{web_root}}/index.md"
         action: create

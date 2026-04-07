@@ -1,8 +1,8 @@
-# Brand Mode — {info}
+# Brand Mode — {{ mode_info }}
 
 ### Description
 
-{description}
+{{ mode_description }}
 
 {% include "modes/_header-sequence.md" %}
 

@@ -292,19 +292,19 @@ Add `code_velocity`, `code_test_first`, and `debug` mode templates. Migrate rele
 - [x] Bump `version.py` and `pyproject.toml` to `2.0.4`
 - [x] Update `CHANGELOG.md`
 
-### Story J.f: v2.0.5 Add Document Mode Templates [Planned]
+### Story J.f: v2.0.5 Add Document Mode Templates [Done]
 
 Add `document_brand` and `document_landing` mode templates.
 
-- [ ] Finalize `brand-mode.md` — adapted from old `descriptions-guide.md`, generate `docs/specs/brand-descriptions.md`
-- [ ] Finalize `document-mode.md` — generate GitHub landing page (`docs/site/index.html`) and MkDocs documentation
-- [ ] Each mode template includes `{% include "_header-sequence.md" %}`
-- [ ] Create artifact templates where applicable
-- [ ] Update `init` to copy document templates
-- [ ] Verify: `project-guide mode document_brand` renders correctly
-- [ ] Verify: `project-guide mode document_landing` renders correctly
-- [ ] Bump `version.py` and `pyproject.toml` to `2.0.5`
-- [ ] Update `CHANGELOG.md`
+- [x] Finalize `document-brand-mode.md` — adapted from old `descriptions-guide.md`, generate `docs/specs/brand-descriptions.md`
+- [x] Finalize `document-landing-mode.md` — generate GitHub landing page (`docs/site/index.html`) and MkDocs documentation
+- [x] Each mode template includes `{% include "_header-sequence.md" %}`
+- [x] Create artifact templates where applicable
+- [x] Update `init` to copy document templates
+- [x] Verify: `project-guide mode document_brand` renders correctly
+- [x] Verify: `project-guide mode document_landing` renders correctly
+- [x] Bump `version.py` and `pyproject.toml` to `2.0.5`
+- [x] Update `CHANGELOG.md`
 
 ### Story J.g: v2.0.6 Migrate Monolithic Entry Point Content [Planned]
 
