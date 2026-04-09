@@ -273,10 +273,9 @@ def status(verbose):
 
     # --- Header ---
     target_dir = Path(config.target_dir)
-    version_str = f"project-guide v{__version__}"
+    click.secho(f"project-guide v{__version__}", bold=True)
     if config.installed_version and config.installed_version != __version__:
-        version_str += f" (installed: v{config.installed_version})"
-    click.echo(version_str)
+        click.secho(f"  installed: v{config.installed_version}", fg='yellow')
 
     # --- Mode section ---
     click.echo()
@@ -284,7 +283,11 @@ def status(verbose):
     try:
         metadata = load_metadata(metadata_path)
         mode = metadata.get_mode(config.current_mode)
-        click.echo(f"Mode: {mode.name} — {mode.info}")
+        click.echo(
+            click.style("Mode: ", bold=True)
+            + click.style(mode.name, fg='cyan', bold=True)
+            + click.style(f" — {mode.info}", dim=True)
+        )
 
         # Prerequisites — only show when the mode has them
         if mode.files_exist:
@@ -295,16 +298,19 @@ def status(verbose):
                 for f in met:
                     click.secho(f"    ✓ {f}", fg='green')
                 for f in missing_prereqs:
-                    click.secho(f"    ✗ {f}", fg='yellow')
+                    click.secho(f"    ✗ {f}", fg='red')
             else:
-                click.echo("  Prerequisites: all met")
+                click.echo("  Prerequisites: " + click.style("all met", fg='green'))
     except (MetadataError, FileNotFoundError):
-        click.echo(f"Mode: {config.current_mode}")
-    click.echo("  Run 'project-guide mode' to see available modes.")
+        click.echo(click.style("Mode: ", bold=True) + config.current_mode)
+    click.secho("  Run 'project-guide mode' to see available modes.", dim=True)
 
     # --- Guide section ---
     click.echo()
-    click.echo(f"Guide: {target_dir / 'go.md'}")
+    click.echo(
+        click.style("Guide: ", bold=True)
+        + click.style(str(target_dir / 'go.md'), fg='cyan')
+    )
 
     # --- Files section ---
     click.echo()
@@ -336,31 +342,28 @@ def status(verbose):
             needs_update_count += 1
             problem_lines.append((file_name, "(needs updating)", "yellow"))
 
-    # Build summary line
-    summary_parts = []
+    # Build colored summary parts
+    parts = []
     if current_count > 0:
-        summary_parts.append(f"{current_count} current")
+        parts.append(click.style(f"{current_count} current", fg='green'))
     if needs_update_count > 0:
-        summary_parts.append(f"{needs_update_count} need updating")
+        parts.append(click.style(f"{needs_update_count} need updating", fg='yellow'))
     if missing_count > 0:
-        summary_parts.append(f"{missing_count} missing")
+        parts.append(click.style(f"{missing_count} missing", fg='red'))
     if overridden_count > 0:
-        summary_parts.append(f"{overridden_count} overridden")
+        parts.append(click.style(f"{overridden_count} overridden", fg='yellow'))
 
-    summary = ", ".join(summary_parts) if summary_parts else "no tracked files"
+    summary = ", ".join(parts) if parts else "no tracked files"
 
+    click.echo(click.style("Files: ", bold=True) + summary)
     if problem_lines:
-        click.echo(f"Files: {summary}")
         if verbose:
             for file_name, detail, color in problem_lines:
                 click.secho(f"  ✗ {file_name:40} {detail}", fg=color)
-        click.echo("  Run 'project-guide update' to sync.")
+        click.secho("  Run 'project-guide update' to sync.", dim=True)
     elif verbose:
-        click.secho(f"Files: {summary}", fg='green')
         for file_name in all_files:
             click.secho(f"  ✓ {file_name}", fg='green')
-    else:
-        click.secho(f"Files: {summary}", fg='green')
 
 
 @main.command()

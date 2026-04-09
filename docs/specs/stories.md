@@ -531,6 +531,11 @@ The file lives in `docs/project-guide/` — the directory provides context. The 
 - [x] Verify: `project-guide status` shows grouped output with hash-based file state
 - [x] Verify: version upgrade with no template changes shows `Files: 33 current`
 
+### Story J.o: v2.0.14 Adjust status output colors
+
+- [x] Adjust status output colors for interest and readability
+- [ ] Bump version to 2.0.14
+
 ---
 
 ## Future
