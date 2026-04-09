@@ -222,8 +222,8 @@ def test_dry_run_doesnt_modify_files(runner, tmp_path):
         assert config_check.installed_version == "0.10.0"
 
 
-def test_specific_guide_update(runner, tmp_path):
-    """Test updating only specific guides."""
+def test_specific_file_update(runner, tmp_path):
+    """Test updating only specific files."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         # Initialize
         result = runner.invoke(main, ['init'])
@@ -234,8 +234,8 @@ def test_specific_guide_update(runner, tmp_path):
         config.installed_version = "0.10.0"
         config.save(".project-guide.yml")
 
-        # Update only specific guides
-        result = runner.invoke(main, ['update', '--guides', 'templates/modes/debug-mode.md', '--guides', 'templates/modes/plan-concept-mode.md'])
+        # Update only specific files
+        result = runner.invoke(main, ['update', '--files', 'templates/modes/debug-mode.md', '--files', 'templates/modes/plan-concept-mode.md'])
         assert result.exit_code == 0
         assert "templates/modes/debug-mode.md" in result.output
         assert "templates/modes/plan-concept-mode.md" in result.output

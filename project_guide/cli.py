@@ -24,10 +24,10 @@ from project_guide.exceptions import ConfigError, MetadataError, RenderError, Sy
 from project_guide.metadata import load_metadata
 from project_guide.render import render_go_project_guide
 from project_guide.sync import (
-    apply_guide_update,
+    apply_file_update,
     compare_versions,
-    get_all_guide_names,
-    sync_guides,
+    get_all_file_names,
+    sync_files,
 )
 from project_guide.version import __version__
 
@@ -44,7 +44,7 @@ def _migrate_config_if_needed() -> None:
 @click.group()
 @click.version_option(version=__version__)
 def main():
-    """Manage LLM project guides across repositories."""
+    """Manage LLM project guide across repositories."""
     _migrate_config_if_needed()
 
 
@@ -80,7 +80,7 @@ def _copy_template_tree(src_dir: Path, dest_dir: Path, force: bool = False) -> i
 
 
 @main.command()
-@click.option('--target-dir', default='docs/project-guide', help='Target directory for guides')
+@click.option('--target-dir', default='docs/project-guide', help='Target directory for the guide')
 @click.option('--force', is_flag=True, help='Overwrite existing files')
 def init(target_dir: str, force: bool):
     """Initialize project-guide in a new project."""
@@ -232,8 +232,9 @@ def set_mode(mode_name: str | None):
 
 
 @main.command()
-def status():
-    """Show status of all guides."""
+@click.option('--verbose', '-v', is_flag=True, help='Show full per-file list')
+def status(verbose):
+    """Show project-guide status."""
     config_path = Path(".project-guide.yml")
 
     # Check if config exists
@@ -261,22 +262,21 @@ def status():
         click.secho("  Use 'project-guide mode refactor_document' to migrate descriptions, landing page, MkDocs.", fg='yellow')
         click.echo()
 
-    # Show version info
+    # Header
     package_version = __version__
-    click.echo(f"project-guide v{package_version} (installed: v{config.installed_version})")
-    click.echo()
-
-    # Show mode info
     target_dir = Path(config.target_dir)
+    click.echo(f"project-guide v{package_version}")
+    click.echo(f"  Target: {config.target_dir}")
+
+    # Mode info
     metadata_path = target_dir / config.metadata_file
     try:
         metadata = load_metadata(metadata_path)
         mode = metadata.get_mode(config.current_mode)
-        click.echo(f"Mode:  {mode.name}")
-        click.echo(f"       {mode.info}")
-        click.echo(f"Guide: {target_dir / 'go-project-guide.md'}")
+        click.echo(f"  Mode:   {mode.name} — {mode.info}")
+        click.echo(f"  Guide:  {target_dir / 'go-project-guide.md'}")
 
-        # Show prerequisite status
+        # Prerequisites
         if mode.files_exist:
             met = [f for f in mode.files_exist if Path(f).exists()]
             missing_prereqs = [f for f in mode.files_exist if not Path(f).exists()]
@@ -288,82 +288,77 @@ def status():
                 for f in missing_prereqs:
                     click.secho(f"  ✗ {f}", fg='yellow')
             else:
-                click.echo()
-                click.secho("Prerequisites: all met", fg='green')
+                click.echo("  Prerequisites: all met")
+        else:
+            click.echo("  Prerequisites: none")
     except (MetadataError, FileNotFoundError):
-        click.echo(f"Mode:  {config.current_mode}")
+        click.echo(f"  Mode:   {config.current_mode}")
 
     click.echo()
 
-    # Check each guide's status
-    guide_names = get_all_guide_names()
+    # Collect file statuses
+    all_files = get_all_file_names()
+    from project_guide.sync import file_matches_template
 
     current_count = 0
-    outdated_count = 0
-    overridden_count = 0
-    missing_count = 0
+    problem_lines: list[tuple[str, str, str]] = []  # (file_name, detail, color)
 
-    click.echo("Guides status:")
-    for guide_name in guide_names:
-        target_file = target_dir / guide_name
+    for file_name in all_files:
+        target_file = target_dir / file_name
 
-        # Check if overridden
-        if config.is_overridden(guide_name):
-            override = config.overrides[guide_name]
-            click.secho(
-                f"  ⊘ {guide_name:40} v{override.locked_version}  (overridden: \"{override.reason}\")",
-                fg='yellow'
-            )
-            overridden_count += 1
-        # Check if file exists
+        if config.is_overridden(file_name):
+            override = config.overrides[file_name]
+            problem_lines.append((
+                file_name,
+                f"v{override.locked_version}  (overridden: \"{override.reason}\")",
+                "yellow",
+            ))
         elif not target_file.exists():
-            click.secho(f"  ✗ {guide_name:40} (missing)", fg='red')
-            missing_count += 1
-        # Check if current version and content matches
+            problem_lines.append((file_name, "(missing)", "red"))
         elif config.installed_version and compare_versions(config.installed_version, package_version) == 0:
-            # Version is current - check if content matches template
-            from project_guide.sync import file_matches_template
-            if file_matches_template(target_file, guide_name):
-                click.secho(f"  ✓ {guide_name:40} v{package_version}  (current)", fg='green')
+            if file_matches_template(target_file, file_name):
                 current_count += 1
             else:
-                click.secho(
-                    f"  ⚠ {guide_name:40} v{package_version}  (modified)",
-                    fg='yellow'
-                )
-                outdated_count += 1
-        # Must be outdated version
+                problem_lines.append((file_name, f"v{package_version}  (modified)", "yellow"))
         else:
-            click.secho(
-                f"  ⚠ {guide_name:40} v{config.installed_version}  (update available)",
-                fg='yellow'
-            )
-            outdated_count += 1
+            problem_lines.append((
+                file_name,
+                f"v{config.installed_version}  (update available)",
+                "yellow",
+            ))
 
-    # Show summary
-    click.echo()
-    summary_parts = []
-    if overridden_count > 0:
-        summary_parts.append(f"{overridden_count} guide{'s' if overridden_count != 1 else ''} overridden")
-    if outdated_count > 0:
-        summary_parts.append(f"{outdated_count} update{'s' if outdated_count != 1 else ''} available")
-    if missing_count > 0:
-        summary_parts.append(f"{missing_count} guide{'s' if missing_count != 1 else ''} missing")
+    # Show summary or details
+    if problem_lines:
+        click.echo("Files:")
+        for file_name, detail, color in problem_lines:
+            click.secho(f"  ✗ {file_name:40} {detail}", fg=color)
+        if current_count > 0:
+            click.echo(f"  ✓ {current_count} current")
 
-    if summary_parts:
-        click.echo(", ".join(summary_parts).capitalize())
-        if outdated_count > 0 or missing_count > 0:
+        click.echo()
+        has_actionable = any(c in ("red",) or "update available" in d or "modified" in d
+                            for _, d, c in problem_lines)
+        if has_actionable:
             click.echo("Run 'project-guide update' to sync.")
+    elif verbose:
+        click.echo("Files:")
+        for file_name in all_files:
+            click.secho(f"  ✓ {file_name:40} v{package_version}  (current)", fg='green')
+        click.echo()
+        click.secho("All files are up to date.", fg='green')
     else:
-        click.secho("All guides are up to date.", fg='green')
+        click.secho(f"Files: {current_count} current", fg='green')
+
+    click.echo()
+    click.echo("Run 'project-guide mode' to see available modes.")
 
 
 @main.command()
-@click.option('--guides', multiple=True, help='Specific guides to update')
+@click.option('--files', multiple=True, help='Specific files to update')
 @click.option('--dry-run', is_flag=True, help='Show what would be updated without applying')
-@click.option('--force', is_flag=True, help='Update even overridden guides (creates backups)')
-def update(guides: tuple, dry_run: bool, force: bool):
-    """Update guides to latest version."""
+@click.option('--force', is_flag=True, help='Update even overridden files (creates backups)')
+def update(files: tuple, dry_run: bool, force: bool):
+    """Update files to latest version."""
     config_path = Path(".project-guide.yml")
 
     # Check if config exists
@@ -382,20 +377,20 @@ def update(guides: tuple, dry_run: bool, force: bool):
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(3)  # Configuration error exit code
 
-    # Convert guides tuple to list or None
-    guides_list = list(guides) if guides else None
+    # Convert files tuple to list or None
+    files_list = list(files) if files else None
 
-    # Validate specific guides if provided
-    if guides_list:
-        all_guides = get_all_guide_names()
-        for guide in guides_list:
-            if guide not in all_guides:
+    # Validate specific files if provided
+    if files_list:
+        all_files = get_all_file_names()
+        for f in files_list:
+            if f not in all_files:
                 click.secho(
-                    f"Error: Guide '{guide}' not found.",
+                    f"Error: File '{f}' not found.",
                     fg='red',
                     err=True
                 )
-                click.echo(f"Available guides: {', '.join(all_guides)}")
+                click.echo(f"Available files: {', '.join(all_files)}")
                 sys.exit(1)  # General error exit code
 
     # Run sync
@@ -404,7 +399,7 @@ def update(guides: tuple, dry_run: bool, force: bool):
         click.echo()
 
     try:
-        updated, skipped, current, missing, modified = sync_guides(config, guides_list, force, dry_run)
+        updated, skipped, current, missing, modified = sync_files(config, files_list, force, dry_run)
     except SyncError as e:
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(2)  # File I/O error exit code
@@ -416,54 +411,54 @@ def update(guides: tuple, dry_run: bool, force: bool):
 
     if modified and not dry_run:
         click.secho("Modified files detected:", fg='yellow')
-        for guide in modified:
-            click.secho(f"  ⚠ {guide} has been modified locally.", fg='yellow')
-            if click.confirm(f"    Backup and overwrite {guide}?", default=False):
+        for f in modified:
+            click.secho(f"  ⚠ {f} has been modified locally.", fg='yellow')
+            if click.confirm(f"    Backup and overwrite {f}?", default=False):
                 try:
-                    apply_guide_update(guide, config, make_backup=True)
-                    user_approved.append(guide)
+                    apply_file_update(f, config, make_backup=True)
+                    user_approved.append(f)
                 except SyncError as e:
-                    click.secho(f"  Error updating {guide}: {e}", fg='red', err=True)
+                    click.secho(f"  Error updating {f}: {e}", fg='red', err=True)
             else:
-                user_declined.append(guide)
+                user_declined.append(f)
     elif modified and dry_run:
         click.secho("Modified (would prompt: backup and overwrite?):", fg='yellow')
-        for guide in modified:
-            click.secho(f"  ⚠ {guide}", fg='yellow')
+        for f in modified:
+            click.secho(f"  ⚠ {f}", fg='yellow')
 
     # Print other results
     if updated:
         action = "Would update (backed up)" if (dry_run and force) else ("Updated (backed up)" if force else ("Would update" if dry_run else "Updated"))
         click.secho(f"{action}:", fg='green')
-        for guide in updated:
-            click.secho(f"  ✓ {guide}", fg='green')
+        for f in updated:
+            click.secho(f"  ✓ {f}", fg='green')
 
     if user_approved:
         click.secho("Updated (approved by user):", fg='green')
-        for guide in user_approved:
-            click.secho(f"  ✓ {guide}", fg='green')
+        for f in user_approved:
+            click.secho(f"  ✓ {f}", fg='green')
 
     if missing:
         action = "Would create" if dry_run else "Created"
         click.secho(f"{action} (missing files):", fg='cyan')
-        for guide in missing:
-            click.secho(f"  + {guide}", fg='cyan')
+        for f in missing:
+            click.secho(f"  + {f}", fg='cyan')
 
     if user_declined:
         click.secho("Skipped (user declined):", fg='yellow')
-        for guide in user_declined:
-            click.secho(f"  ⊘ {guide}", fg='yellow')
+        for f in user_declined:
+            click.secho(f"  ⊘ {f}", fg='yellow')
 
     if skipped:
         click.secho("Skipped (overridden):", fg='yellow')
-        for guide in skipped:
-            override = config.overrides[guide]
-            click.secho(f"  ⊘ {guide} - {override.reason}", fg='yellow')
+        for f in skipped:
+            override = config.overrides[f]
+            click.secho(f"  ⊘ {f} - {override.reason}", fg='yellow')
 
     if current:
         click.echo("Already current:")
-        for guide in current:
-            click.echo(f"  • {guide}")
+        for f in current:
+            click.echo(f"  • {f}")
 
     # Update config if not dry-run and any updates were made
     all_updated = updated + user_approved + missing
@@ -471,7 +466,7 @@ def update(guides: tuple, dry_run: bool, force: bool):
         config.installed_version = __version__
         config.save(str(config_path))
 
-        # Re-render go-project-guide.md if any mode templates or headers were updated
+        # Re-render go-project-guide.md if any templates were updated
         template_files = [f for f in all_updated if f.startswith("templates/")]
         if template_files:
             target_dir = Path(config.target_dir)
@@ -510,22 +505,22 @@ def update(guides: tuple, dry_run: bool, force: bool):
                 parts.append(f"updated {n}")
             if missing:
                 parts.append(f"created {len(missing)}")
-            click.secho(f"✓ Successfully {' and '.join(parts)} guide{'s' if total_changes != 1 else ''}.", fg='green')
+            click.secho(f"✓ Successfully {' and '.join(parts)} file{'s' if total_changes != 1 else ''}.", fg='green')
             if user_backed_up:
                 click.echo(f"  {len(user_backed_up)} backup(s) created.")
         elif user_declined and not skipped and not current:
-            click.echo("No guides updated (all modifications declined).")
+            click.echo("No files updated (all modifications declined).")
         elif skipped and not current and not user_declined:
-            click.echo("All guides are overridden. Use --force to update anyway.")
+            click.echo("All files are overridden. Use --force to update anyway.")
         else:
-            click.echo("All guides are up to date.")
+            click.echo("All files are up to date.")
 
 
 @main.command()
-@click.argument('guide_name')
+@click.argument('file_name')
 @click.argument('reason')
-def override(guide_name: str, reason: str):
-    """Mark a guide as overridden to prevent updates."""
+def override(file_name: str, reason: str):
+    """Mark a file as overridden to prevent updates."""
     config_path = Path(".project-guide.yml")
 
     # Check if config exists
@@ -544,29 +539,29 @@ def override(guide_name: str, reason: str):
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(3)  # Configuration error exit code
 
-    # Verify guide exists
-    all_guides = get_all_guide_names()
-    if guide_name not in all_guides:
+    # Verify file exists
+    all_files = get_all_file_names()
+    if file_name not in all_files:
         click.secho(
-            f"Error: Guide '{guide_name}' not found.",
+            f"Error: File '{file_name}' not found.",
             fg='red',
             err=True
         )
-        click.echo(f"Available guides: {', '.join(all_guides)}")
+        click.echo(f"Available files: {', '.join(all_files)}")
         sys.exit(1)  # General error exit code
 
     # Add override
-    config.add_override(guide_name, reason, config.installed_version or __version__)
+    config.add_override(file_name, reason, config.installed_version or __version__)
     config.save(str(config_path))
 
-    click.secho(f"✓ Marked {guide_name} as overridden", fg='green')
+    click.secho(f"✓ Marked {file_name} as overridden", fg='green')
     click.echo(f"  Reason: {reason}")
 
 
 @main.command()
-@click.argument('guide_name')
-def unoverride(guide_name: str):
-    """Remove override status from a guide."""
+@click.argument('file_name')
+def unoverride(file_name: str):
+    """Remove override status from a file."""
     config_path = Path(".project-guide.yml")
 
     # Check if config exists
@@ -585,25 +580,25 @@ def unoverride(guide_name: str):
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(3)  # Configuration error exit code
 
-    # Check if guide is overridden
-    if not config.is_overridden(guide_name):
+    # Check if file is overridden
+    if not config.is_overridden(file_name):
         click.secho(
-            f"Error: Guide '{guide_name}' is not overridden.",
+            f"Error: File '{file_name}' is not overridden.",
             fg='red',
             err=True
         )
         raise click.Abort()
 
     # Remove override
-    config.remove_override(guide_name)
+    config.remove_override(file_name)
     config.save(str(config_path))
 
-    click.secho(f"✓ Removed override from {guide_name}", fg='green')
+    click.secho(f"✓ Removed override from {file_name}", fg='green')
 
 
 @main.command()
 def overrides():
-    """List all overridden guides."""
+    """List all overridden files."""
     try:
         config = Config.load()
     except ConfigError as e:
@@ -611,13 +606,13 @@ def overrides():
         sys.exit(3)
 
     if not config.overrides:
-        click.secho("No overridden guides.", fg="yellow")
+        click.secho("No overridden files.", fg="yellow")
         return
 
-    click.secho("Overridden guides:\n", fg="cyan", bold=True)
+    click.secho("Overridden files:\n", fg="cyan", bold=True)
 
-    for guide_name, override in config.overrides.items():
-        click.secho(f"{guide_name}", fg="yellow", bold=True)
+    for file_name, override in config.overrides.items():
+        click.secho(f"{file_name}", fg="yellow", bold=True)
         click.secho(f"  Reason: {override.reason}", fg="white")
         click.secho(f"  Since: v{override.locked_version}", fg="white")
         click.secho(f"  Last updated: {override.last_updated}", fg="white")
@@ -639,12 +634,12 @@ def purge(force):
         sys.exit(3)
 
     config_path = Path(".project-guide.yml")
-    guides_dir = Path(config.target_dir)
+    target_dir = Path(config.target_dir)
 
     # Show what will be removed
     click.secho("The following will be removed:", fg="yellow", bold=True)
     click.echo(f"  • {config_path}")
-    click.echo(f"  • {guides_dir}/ (and all contents)")
+    click.echo(f"  • {target_dir}/ (and all contents)")
     click.echo()
 
     # Confirm unless --force
@@ -654,16 +649,16 @@ def purge(force):
             abort=True
         )
 
-    # Remove guides directory
+    # Remove target directory
     try:
-        if guides_dir.exists():
+        if target_dir.exists():
             import shutil
-            shutil.rmtree(guides_dir)
-            click.secho(f"✓ Removed {guides_dir}/", fg="green")
+            shutil.rmtree(target_dir)
+            click.secho(f"✓ Removed {target_dir}/", fg="green")
         else:
-            click.secho(f"  {guides_dir}/ not found (skipped)", fg="yellow")
+            click.secho(f"  {target_dir}/ not found (skipped)", fg="yellow")
     except OSError as e:
-        click.secho(f"Error removing {guides_dir}/: {e}", fg="red", err=True)
+        click.secho(f"Error removing {target_dir}/: {e}", fg="red", err=True)
         sys.exit(2)
 
     # Remove config file

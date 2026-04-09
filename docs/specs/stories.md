@@ -455,6 +455,30 @@ The rendered `go-project-guide.md` is mode instructions, not a spec artifact. It
 - [x] Verify: `project-guide mode code_velocity` re-renders in the correct location
 - [x] Verify: developer instruction is `Read docs/project-guide/go-project-guide.md`
 
+### Story J.m: v2.0.12 Improve Status Command UX and Rename Guides to Files [Done]
+
+The `status` command outputs 40+ lines dominated by a per-file sync list. On the happy path (everything current), this is noise. Also, "guides" no longer describes what the sync system tracks — rename to "files" throughout.
+
+**Status UX:**
+- [x] Refactor `status` command: compact summary by default, per-file list only on problems
+- [x] Show `target_dir` in status header
+- [x] Show hint: `Run 'project-guide mode' to see available modes.`
+- [x] Add `--verbose` / `-v` flag to force full per-file list
+
+**Rename "guides" → "files":**
+- [x] `exceptions.py`: `GuideNotFoundError` → `ProjectFileNotFoundError`
+- [x] `sync.py`: `get_all_guide_names` → `get_all_file_names`, `copy_guide` → `copy_file`, `backup_guide` → `backup_file`, `apply_guide_update` → `apply_file_update`, `sync_guides` → `sync_files`
+- [x] `config.py`: `GuideOverride` → `FileOverride`, `guide_name` → `file_name` parameters
+- [x] `cli.py`: `--guides` → `--files` flag, all user-facing strings ("Guide" → "File", "guides" → "files")
+- [x] All test files updated
+
+**Wrap-up:**
+- [x] Bump `version.py` and `pyproject.toml` to `2.0.12`
+- [x] Update `CHANGELOG.md`
+- [x] Run full test suite — all tests pass at 85%+ coverage
+
+---
+
 ## Future
 
 ### Future Story: Landing Page Documentation Updates [Deferred]

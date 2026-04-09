@@ -106,13 +106,14 @@ def test_status_with_all_guides_current(runner, tmp_path):
 
         assert result.exit_code == 0
         assert f"project-guide v{__version__}" in result.output
-        # Mode info
+        # Header
+        assert "Target:" in result.output
         assert "Mode:" in result.output
         assert "default" in result.output
         assert "Guide:" in result.output
-        # Guide sync status
-        assert "Guides status:" in result.output
+        # Compact guide summary
         assert "current" in result.output
+        assert "Run 'project-guide mode'" in result.output
 
 
 def test_status_with_outdated_guides(runner, tmp_path):
@@ -142,7 +143,7 @@ def test_status_shows_mode_and_prerequisites(runner, tmp_path):
         result = runner.invoke(main, ['status'])
 
         assert result.exit_code == 0
-        assert "Mode:  default" in result.output
+        assert "Mode:   default" in result.output
         assert "Getting started" in result.output
         assert "go-project-guide.md" in result.output
 
@@ -156,7 +157,7 @@ def test_status_after_mode_change(runner, tmp_path):
         result = runner.invoke(main, ['status'])
 
         assert result.exit_code == 0
-        assert "Mode:  code_velocity" in result.output
+        assert "Mode:   code_velocity" in result.output
         assert "Generate code with velocity" in result.output
 
 
@@ -286,7 +287,6 @@ def test_status_with_overridden_guides(runner, tmp_path):
         assert result.exit_code == 0
         assert "overridden" in result.output
         assert "Custom content" in result.output
-        assert "1 guide overridden" in result.output
 
 
 def test_status_with_missing_config(runner, tmp_path):
@@ -328,8 +328,8 @@ def test_override_with_nonexistent_guide_error(runner, tmp_path):
         result = runner.invoke(main, ['override', 'fake-guide.md', 'Some reason'])
 
         assert result.exit_code == 1
-        assert "Guide 'fake-guide.md' not found" in result.output
-        assert "Available guides:" in result.output
+        assert "File 'fake-guide.md' not found" in result.output
+        assert "Available files:" in result.output
 
 
 def test_unoverride_removes_entry(runner, tmp_path):
@@ -379,7 +379,7 @@ def test_overrides_lists_all_overridden_guides(runner, tmp_path):
         result = runner.invoke(main, ['overrides'])
 
         assert result.exit_code == 0
-        assert "Overridden guides:" in result.output
+        assert "Overridden files:" in result.output
         assert "templates/modes/debug-mode.md" in result.output
         assert "Custom debugging" in result.output
         assert "templates/modes/plan-concept-mode.md" in result.output
@@ -398,7 +398,7 @@ def test_overrides_with_no_overrides(runner, tmp_path):
         result = runner.invoke(main, ['overrides'])
 
         assert result.exit_code == 0
-        assert "No overridden guides" in result.output
+        assert "No overridden files" in result.output
 
 
 def test_update_all_guides(runner, tmp_path):
@@ -417,15 +417,15 @@ def test_update_all_guides(runner, tmp_path):
 
         assert result.exit_code == 0
         assert "Updated" in result.output
-        assert "guide" in result.output.lower()
+        assert "file" in result.output.lower()
 
         # Verify config was updated
         config = Config.load(".project-guide.yml")
         assert config.installed_version == __version__
 
 
-def test_update_specific_guides(runner, tmp_path):
-    """Test update command with specific guides."""
+def test_update_specific_files(runner, tmp_path):
+    """Test update command with specific files."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         # Initialize project
         runner.invoke(main, ['init'])
@@ -435,8 +435,8 @@ def test_update_specific_guides(runner, tmp_path):
         config.installed_version = "0.9.0"
         config.save(".project-guide.yml")
 
-        # Update only specific guides
-        result = runner.invoke(main, ['update', '--guides', 'templates/modes/debug-mode.md', '--guides', 'templates/modes/plan-concept-mode.md'])
+        # Update only specific files
+        result = runner.invoke(main, ['update', '--files', 'templates/modes/debug-mode.md', '--files', 'templates/modes/plan-concept-mode.md'])
 
         assert result.exit_code == 0
         assert "templates/modes/debug-mode.md" in result.output
@@ -576,7 +576,7 @@ def test_status_with_missing_guide_file(runner, tmp_path):
 
         assert result.exit_code == 0
         assert "missing" in result.output
-        assert "guide" in result.output.lower()
+        assert "file" in result.output.lower()
 
 
 def test_status_with_modified_guide(runner, tmp_path):
@@ -612,20 +612,20 @@ def test_update_with_corrupt_config(runner, tmp_path):
         assert result.exit_code == 3
 
 
-def test_update_with_invalid_guide_name(runner, tmp_path):
-    """Test update with non-existent guide name exits with code 1."""
+def test_update_with_invalid_file_name(runner, tmp_path):
+    """Test update with non-existent file name exits with code 1."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(main, ['init'])
 
-        result = runner.invoke(main, ['update', '--guides', 'fake-guide.md'])
+        result = runner.invoke(main, ['update', '--files', 'fake-guide.md'])
 
         assert result.exit_code == 1
-        assert "Guide 'fake-guide.md' not found" in result.output
-        assert "Available guides:" in result.output
+        assert "File 'fake-guide.md' not found" in result.output
+        assert "Available files:" in result.output
 
 
 def test_update_sync_error_exits_with_code_2(runner, tmp_path):
-    """Test update exits with code 2 when sync_guides raises SyncError."""
+    """Test update exits with code 2 when sync_files raises SyncError."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(main, ['init'])
 
@@ -633,7 +633,7 @@ def test_update_sync_error_exits_with_code_2(runner, tmp_path):
         config.installed_version = "0.9.0"
         config.save(".project-guide.yml")
 
-        with patch("project_guide.cli.sync_guides", side_effect=SyncError("Disk full")):
+        with patch("project_guide.cli.sync_files", side_effect=SyncError("Disk full")):
             result = runner.invoke(main, ['update'])
 
             assert result.exit_code == 2
@@ -718,7 +718,7 @@ def test_update_all_declined_message(runner, tmp_path):
         result = runner.invoke(main, ['update'], input=("n\n" * 50))
 
         assert result.exit_code == 0
-        assert "No guides updated" in result.output or "declined" in result.output
+        assert "No files updated" in result.output or "declined" in result.output
 
 
 def test_update_all_overridden_message(runner, tmp_path):
@@ -728,8 +728,8 @@ def test_update_all_overridden_message(runner, tmp_path):
 
         config = Config.load(".project-guide.yml")
         config.installed_version = "0.9.0"
-        from project_guide.sync import get_all_guide_names
-        for guide in get_all_guide_names():
+        from project_guide.sync import get_all_file_names
+        for guide in get_all_file_names():
             config.add_override(guide, "Custom", "0.9.0")
         config.save(".project-guide.yml")
 
@@ -860,13 +860,13 @@ def test_purge_missing_guides_directory(runner, tmp_path):
 
 
 def test_update_modified_file_apply_sync_error(runner, tmp_path):
-    """Test update when apply_guide_update raises SyncError during user-approved update."""
+    """Test update when apply_file_update raises SyncError during user-approved update."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(main, ['init'])
 
         Path("docs/project-guide/templates/modes/debug-mode.md").write_text("User-modified content")
 
-        with patch("project_guide.cli.apply_guide_update", side_effect=SyncError("Write failed")):
+        with patch("project_guide.cli.apply_file_update", side_effect=SyncError("Write failed")):
             result = runner.invoke(main, ['update'], input="y\n")
 
             assert result.exit_code == 0

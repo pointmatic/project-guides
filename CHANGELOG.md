@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.12] - 2026-04-08
+
+### Changed
+- `status` command redesigned: compact summary by default, per-file list only when problems exist
+- Status header now shows `Target:` directory, mode on one line with description
+- Added `--verbose` / `-v` flag to force full per-file list
+- Status footer shows `Run 'project-guide mode' to see available modes.`
+- Renamed "guides" to "files" throughout: the sync system tracks files, not guides
+  - `--guides` CLI flag → `--files`
+  - `GuideNotFoundError` → `ProjectFileNotFoundError`
+  - `GuideOverride` → `FileOverride`
+  - sync.py: `get_all_guide_names` → `get_all_file_names`, `copy_guide` → `copy_file`, `backup_guide` → `backup_file`, `apply_guide_update` → `apply_file_update`, `sync_guides` → `sync_files`
+  - All user-facing strings updated
+
 ## [2.0.11] - 2026-04-08
 
 ### Changed

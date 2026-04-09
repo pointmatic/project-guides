@@ -22,8 +22,8 @@ from project_guide.exceptions import ConfigError
 
 
 @dataclass
-class GuideOverride:
-    """Represents an overridden guide."""
+class FileOverride:
+    """Represents an overridden file."""
     reason: str
     locked_version: str
     last_updated: date
@@ -37,7 +37,7 @@ class GuideOverride:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "GuideOverride":
+    def from_dict(cls, data: dict) -> "FileOverride":
         """Create from dictionary loaded from YAML."""
         return cls(
             reason=data["reason"],
@@ -54,7 +54,7 @@ class Config:
     target_dir: str = "docs/project-guide"
     metadata_file: str = ".metadata.yml"
     current_mode: str = "default"
-    overrides: dict[str, GuideOverride] = field(default_factory=dict)
+    overrides: dict[str, FileOverride] = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: str = ".project-guide.yml") -> "Config":
@@ -81,15 +81,15 @@ class Config:
         # Parse overrides
         overrides = {}
         if 'overrides' in data:
-            for guide_name, override_data in data['overrides'].items():
+            for file_name, override_data in data['overrides'].items():
                 try:
                     # Convert last_updated string to date object if needed
                     if 'last_updated' in override_data and isinstance(override_data['last_updated'], str):
                         from datetime import datetime
                         override_data['last_updated'] = datetime.strptime(override_data['last_updated'], '%Y-%m-%d').date()
-                    overrides[guide_name] = GuideOverride(**override_data)
+                    overrides[file_name] = FileOverride(**override_data)
                 except (TypeError, ValueError) as e:
-                    raise ConfigError(f"Invalid override data for '{guide_name}': {e}")
+                    raise ConfigError(f"Invalid override data for '{file_name}': {e}")
 
         return Config(
             version=data.get('version', '2.0'),
@@ -112,8 +112,8 @@ class Config:
 
         if self.overrides:
             overrides_dict = {
-                guide_name: override.to_dict()
-                for guide_name, override in self.overrides.items()
+                file_name: override.to_dict()
+                for file_name, override in self.overrides.items()
             }
             data["overrides"] = overrides_dict  # type: ignore[assignment]
 
@@ -121,18 +121,18 @@ class Config:
         with open(config_path, "w") as f:
             yaml.dump(data, f, default_flow_style=False, sort_keys=False)
 
-    def is_overridden(self, guide_name: str) -> bool:
-        """Check if a guide is overridden."""
-        return guide_name in self.overrides
+    def is_overridden(self, file_name: str) -> bool:
+        """Check if a file is overridden."""
+        return file_name in self.overrides
 
-    def add_override(self, guide_name: str, reason: str, version: str) -> None:
-        """Add or update an override."""
-        self.overrides[guide_name] = GuideOverride(
+    def add_override(self, file_name: str, reason: str, version: str) -> None:
+        """Add or update a file override."""
+        self.overrides[file_name] = FileOverride(
             reason=reason,
             locked_version=version,
             last_updated=date.today(),
         )
 
-    def remove_override(self, guide_name: str) -> None:
-        """Remove an override."""
-        self.overrides.pop(guide_name, None)
+    def remove_override(self, file_name: str) -> None:
+        """Remove a file override."""
+        self.overrides.pop(file_name, None)

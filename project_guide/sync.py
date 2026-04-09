@@ -21,7 +21,7 @@ from pathlib import Path
 from packaging.version import parse
 
 from project_guide.config import Config
-from project_guide.exceptions import GuideNotFoundError, SyncError
+from project_guide.exceptions import ProjectFileNotFoundError, SyncError
 from project_guide.version import __version__
 
 
@@ -33,34 +33,34 @@ def _get_package_template_root() -> Path:
         return Path(path)
 
 
-def get_template_path(guide_name: str) -> Path:
-    """Get path to bundled template for a guide."""
+def get_template_path(file_name: str) -> Path:
+    """Get path to bundled template for a tracked file."""
     root = _get_package_template_root()
-    candidate = root / guide_name
+    candidate = root / file_name
     if candidate.exists():
         return candidate
-    raise GuideNotFoundError(guide_name, get_all_guide_names())
+    raise ProjectFileNotFoundError(file_name, get_all_file_names())
 
 
 _EXCLUDED_FROM_SYNC: set[str] = set()
 
 
-def get_all_guide_names() -> list[str]:
-    """Get list of all available guide names (excludes rendered artifacts).
+def get_all_file_names() -> list[str]:
+    """Get list of all tracked file names (excludes rendered artifacts).
 
     Always returns forward-slash paths for cross-platform consistency.
     """
     root = _get_package_template_root()
-    guide_names: set[str] = set()
+    file_names: set[str] = set()
 
     for pattern in ("*.md", "*.md.j2", "*.yml", ".*.yml"):
         for path in root.rglob(pattern):
             # Use forward slashes for cross-platform consistency
             rel = path.relative_to(root).as_posix()
             if rel not in _EXCLUDED_FROM_SYNC:
-                guide_names.add(rel)
+                file_names.add(rel)
 
-    return sorted(guide_names)
+    return sorted(file_names)
 
 
 def get_package_version() -> str:
@@ -68,12 +68,12 @@ def get_package_version() -> str:
     return __version__
 
 
-def copy_guide(guide_name: str, target_dir: Path, force: bool = False) -> None:
+def copy_file(file_name: str, target_dir: Path, force: bool = False) -> None:
     """
-    Copy a guide template to the target directory.
+    Copy a tracked file template to the target directory.
 
     Args:
-        guide_name: Name of the guide to copy
+        file_name: Name of the file to copy
         target_dir: Target directory path
         force: If True, overwrite existing files
 
@@ -81,8 +81,8 @@ def copy_guide(guide_name: str, target_dir: Path, force: bool = False) -> None:
         FileExistsError: If file exists and force is False
         SyncError: If copy operation fails
     """
-    template_path = get_template_path(guide_name)
-    target_file = target_dir / guide_name
+    template_path = get_template_path(file_name)
+    target_file = target_dir / file_name
 
     # Create subdirectories if needed
     try:
@@ -100,31 +100,31 @@ def copy_guide(guide_name: str, target_dir: Path, force: bool = False) -> None:
     except PermissionError:
         raise SyncError(f"Permission denied writing to: {target_file}")
     except OSError as e:
-        raise SyncError(f"Failed to copy {guide_name}: {e}")
+        raise SyncError(f"Failed to copy {file_name}: {e}")
 
 
-def backup_guide(guide_path: Path) -> Path:
-    """Create a backup of a guide file."""
-    guide_path = Path(guide_path)
+def backup_file(file_path: Path) -> Path:
+    """Create a backup of a tracked file."""
+    file_path = Path(file_path)
 
-    if not guide_path.exists():
-        raise FileNotFoundError(f"Guide file not found: {guide_path}")
+    if not file_path.exists():
+        raise FileNotFoundError(f"File not found: {file_path}")
 
     # Create backup with timestamp
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    backup_path = guide_path.with_suffix(f"{guide_path.suffix}.bak.{timestamp}")
+    backup_path = file_path.with_suffix(f"{file_path.suffix}.bak.{timestamp}")
 
-    shutil.copy2(guide_path, backup_path)
+    shutil.copy2(file_path, backup_path)
     return backup_path
 
 
-def file_matches_template(file_path: Path, guide_name: str) -> bool:
+def file_matches_template(file_path: Path, file_name: str) -> bool:
     """
     Check if a file's content matches the bundled template.
 
     Args:
         file_path: Path to the file to check
-        guide_name: Name of the guide template to compare against
+        file_name: Name of the tracked file template to compare against
 
     Returns:
         True if file content matches template, False otherwise
@@ -134,7 +134,7 @@ def file_matches_template(file_path: Path, guide_name: str) -> bool:
 
     try:
         # Get template content
-        template_path = get_template_path(guide_name)
+        template_path = get_template_path(file_name)
         with open(template_path, 'rb') as f:
             template_hash = hashlib.sha256(f.read()).hexdigest()
 
@@ -143,7 +143,7 @@ def file_matches_template(file_path: Path, guide_name: str) -> bool:
             file_hash = hashlib.sha256(f.read()).hexdigest()
 
         return template_hash == file_hash
-    except (OSError, GuideNotFoundError):
+    except (OSError, ProjectFileNotFoundError):
         return False
 
 
@@ -167,46 +167,46 @@ def compare_versions(installed: str, package: str) -> int:
         return 0
 
 
-def apply_guide_update(guide_name: str, config: Config, make_backup: bool = False) -> None:
+def apply_file_update(file_name: str, config: Config, make_backup: bool = False) -> None:
     """
-    Apply a single guide update, optionally creating a backup first.
+    Apply a single file update, optionally creating a backup first.
 
     Args:
-        guide_name: Name of the guide to update
+        file_name: Name of the file to update
         config: Project configuration
         make_backup: If True, create a .bak backup before overwriting
     """
     target_dir = Path(config.target_dir)
-    target_file = target_dir / guide_name
+    target_file = target_dir / file_name
 
     if make_backup and target_file.exists():
-        backup_guide(target_file)
+        backup_file(target_file)
 
-    copy_guide(guide_name, target_dir, force=True)
+    copy_file(file_name, target_dir, force=True)
 
 
-def sync_guides(
+def sync_files(
     config: Config,
-    guides: list[str] | None = None,
+    files: list[str] | None = None,
     force: bool = False,
     dry_run: bool = False
 ) -> tuple[list[str], list[str], list[str], list[str], list[str]]:
     """
-    Sync guides to latest version.
+    Sync tracked files to latest version.
 
     Args:
         config: Project configuration
-        guides: List of specific guides to sync, or None for all guides
-        force: If True, update even overridden guides (creates backups)
+        files: List of specific files to sync, or None for all files
+        force: If True, update even overridden files (creates backups)
         dry_run: If True, show what would change without applying
 
     Returns:
-        Tuple of (updated, skipped, current, missing, modified) guide name lists
-        - updated: Guides that were/will be updated (outdated version)
-        - skipped: Guides skipped due to override (unless force=True)
-        - current: Guides that match template and are up-to-date
-        - missing: Guides that don't exist and were/will be created
-        - modified: Guides with user edits detected (version current but content differs)
+        Tuple of (updated, skipped, current, missing, modified) file name lists
+        - updated: Files that were/will be updated (outdated version)
+        - skipped: Files skipped due to override (unless force=True)
+        - current: Files that match template and are up-to-date
+        - missing: Files that don't exist and were/will be created
+        - modified: Files with user edits detected (version current but content differs)
                     These are NOT automatically updated; caller must handle them
     """
     updated = []
@@ -215,53 +215,53 @@ def sync_guides(
     missing = []
     modified = []
 
-    # Get list of guides to sync
-    guides_to_sync = get_all_guide_names() if guides is None else guides
+    # Get list of files to sync
+    files_to_sync = get_all_file_names() if files is None else files
 
     target_dir = Path(config.target_dir)
     package_version = get_package_version()
 
-    for guide_name in guides_to_sync:
-        target_file = target_dir / guide_name
+    for file_name in files_to_sync:
+        target_file = target_dir / file_name
 
-        # Check if guide is overridden
-        if config.is_overridden(guide_name) and not force:
-            skipped.append(guide_name)
+        # Check if file is overridden
+        if config.is_overridden(file_name) and not force:
+            skipped.append(file_name)
             continue
 
         # Check if file exists
         if not target_file.exists():
             # File is missing - always needs to be created
-            missing.append(guide_name)
+            missing.append(file_name)
             if not dry_run:
-                copy_guide(guide_name, target_dir, force=True)
+                copy_file(file_name, target_dir, force=True)
             continue
 
         # File exists - check version and content
         if config.installed_version and compare_versions(config.installed_version, package_version) == 0:
             # Version is current - check if content matches template
-            if file_matches_template(target_file, guide_name):
+            if file_matches_template(target_file, file_name):
                 # File matches template exactly - mark as current
-                current.append(guide_name)
+                current.append(file_name)
                 continue
             else:
                 # User has modified this file - report for caller to handle
                 if force:
                     # --force: backup and overwrite without prompting
                     if not dry_run:
-                        apply_guide_update(guide_name, config, make_backup=True)
-                    updated.append(guide_name)
+                        apply_file_update(file_name, config, make_backup=True)
+                    updated.append(file_name)
                 else:
                     # No --force: defer to caller to prompt
-                    modified.append(guide_name)
+                    modified.append(file_name)
                 continue
 
         # Outdated version - update unconditionally
         if not dry_run:
-            if config.is_overridden(guide_name) and force:
-                backup_guide(target_file)
-            copy_guide(guide_name, target_dir, force=True)
+            if config.is_overridden(file_name) and force:
+                backup_file(target_file)
+            copy_file(file_name, target_dir, force=True)
 
-        updated.append(guide_name)
+        updated.append(file_name)
 
     return (updated, skipped, current, missing, modified)

@@ -28,16 +28,16 @@ class SyncError(ProjectGuidesError):
     pass
 
 
-class GuideNotFoundError(ProjectGuidesError):
-    """Exception raised when a guide template is not found."""
+class ProjectFileNotFoundError(ProjectGuidesError):
+    """Exception raised when a tracked project file is not found."""
 
-    def __init__(self, guide_name: str, available_guides: list | None = None):
-        self.guide_name = guide_name
-        self.available_guides = available_guides or []
+    def __init__(self, file_name: str, available_files: list | None = None):
+        self.file_name = file_name
+        self.available_files = available_files or []
 
-        message = f"Guide '{guide_name}' not found."
-        if available_guides:
-            message += f"\nAvailable guides: {', '.join(sorted(available_guides))}"
+        message = f"File '{file_name}' not found."
+        if available_files:
+            message += f"\nAvailable files: {', '.join(sorted(available_files))}"
 
         super().__init__(message)
 
