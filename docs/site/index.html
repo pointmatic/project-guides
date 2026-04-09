@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>project-guide - Stay organized in LLM-based coding</title>
-    <meta name="description" content="Stay organized and in control with adaptive LLM workflow prompts">
-    <meta name="keywords" content="llm, coding, human-in-the-loop, hitloop, documentation, workflow, guide, templates, python, cli, version-management, synchronization, project-management, development-tools, best-practices, override-support, yaml-config, cross-platform">
+    <meta name="description" content="Mode-driven template system for organized, human-in-the-loop LLM development">
+    <meta name="keywords" content="llm, coding, human-in-the-loop, hitloop, documentation, workflow, guide, templates, jinja2, mode-driven, python, cli, version-management, synchronization, project-management, development-tools, best-practices, override-support, yaml-config, cross-platform">
     <meta name="author" content="Pointmatic">
     
     <style>
@@ -342,11 +342,11 @@
                 <img src="images/project-guide-banner-landing.png" alt="project-guide banner">
             </div>
             
-            <h1>Stay organized and in control with adaptive workflow prompts</h1>
+            <h1>Mode-driven templates for organized LLM development</h1>
             <div class="hero-description">
-                <p>Install project-guide in any repository with <code>pip install project-guide</code>, run <code>project-guide init</code>, then tell your LLM to "Read <code>docs/guides/project-guide.md</code> and start." The guide walks the LLM through planning documents, breaking work into stories, and implementing each story step-by-step. You just say "proceed" after each step. The developer stays in charge—guiding features, flow, and taste—while the LLM handles the typing.</p>
+                <p>Install project-guide in any repository with <code>pip install project-guide</code>, run <code>project-guide init</code>, then tell your LLM to "Read <code>docs/project-guide/go.md</code> and start." A single rendered entry point dynamically assembles instructions from 15 development modes—planning, setup, coding, debugging, documentation, refactoring, and more—using Jinja2 templates. Type "go" to advance through each step. Switch modes as needed to get the right guidance for the task at hand.</p>
                 <br>
-                <p>This is "HITLoop" (human-in-the-loop) development: the developer directs, the LLM executes. The pace is "flaming agile"—an entire production-ready backend can be completed in 6-12 hours. When you customize a guide for your project, mark it as overridden so future package updates skip it. When you want the latest workflow improvements, run <code>project-guide update</code> to sync all non-overridden guides.</p>
+                <p>This is "HITLoop" (human-in-the-loop) development: the developer directs, the LLM executes. The pace is "flaming agile"—an entire production-ready backend can be completed in 6-12 hours. When you customize a file for your project, lock it so future package updates skip it. When you want the latest workflow improvements, run <code>project-guide update</code> to sync all non-locked files.</p>
             </div>
             
             <div class="cta-buttons">
@@ -373,18 +373,18 @@
                 </div>
                 <div class="quick-start-step">
                     <h3>3. Start</h3>
-                    <p>Tell your LLM to read the guide and begin</p>
-                    <code>Read `docs/guides/project-guide.md` and start.</code>
+                    <p>Tell your LLM to read the rendered entry point</p>
+                    <code>Read `docs/project-guide/go.md` and start.</code>
                 </div>
                 <div class="quick-start-step">
-                    <h3>4. Collaborate</h3>
-                    <p>Say "proceed" after each step as the LLM works</p>
-                    <code>proceed</code>
+                    <h3>4. Advance</h3>
+                    <p>Type "go" to advance through each workflow step</p>
+                    <code>go</code>
                 </div>
                 <div class="quick-start-step">
-                    <h3>5. Customize</h3>
-                    <p>Mark guides as overridden when you customize them</p>
-                    <code>project-guide override &lt;guide-name&gt;</code>
+                    <h3>5. Switch Modes</h3>
+                    <p>Change modes to match your current task</p>
+                    <code>project-guide mode &lt;mode-name&gt;</code>
                 </div>
                 <div class="quick-start-step">
                     <h3>6. Update</h3>
@@ -393,7 +393,7 @@
                 </div>
                 <div class="quick-start-step">
                     <h3>7. Check Status</h3>
-                    <p>See which guides are current, outdated, or overridden</p>
+                    <p>See which files are current, outdated, or locked</p>
                     <code>project-guide status</code>
                 </div>
             </div>
@@ -408,62 +408,62 @@
                 <h3>Core Capabilities</h3>
                 <div class="feature-grid">
                     <div class="feature-card">
-                        <h4>Battle-Tested Workflows</h4>
-                        <p>Crafted workflow prompts from concept through production release in one place.</p>
+                        <h4>Mode-Driven Workflows</h4>
+                        <p>15 development modes—planning, setup, coding, debugging, documentation, refactoring, and more—each tailored with the right instructions for the task.</p>
                     </div>
                     <div class="feature-card">
-                        <h4>Adaptive Guidance</h4>
-                        <p>Switch project between plan, code, and debug modes to get the right instructions for each task.</p>
+                        <h4>Dynamic Rendering</h4>
+                        <p>Jinja2 templates assemble a single rendered entry point (<code>go.md</code>) from mode-specific content, so the LLM always sees exactly what it needs.</p>
                     </div>
                     <div class="feature-card">
-                        <h4>Version Management</h4>
-                        <p>Track and update all prompt docs in a project with a single command.</p>
+                        <h4>Hash-Based Sync</h4>
+                        <p>Content-hash tracking detects changes precisely, so updates only touch files that actually differ from the package version.</p>
                     </div>
                     <div class="feature-card">
-                        <h4>Custom Prompt Lock</h4>
-                        <p>Lock a customized LLM prompt in any project to prevent future updates for that prompt document.</p>
+                        <h4>File Override Lock</h4>
+                        <p>Lock any customized file to prevent future package updates from overwriting your project-specific changes.</p>
                     </div>
                     <div class="feature-card">
-                        <h4>CLI Interface</h4>
-                        <p>Eight intuitive commands for all operations.</p>
+                        <h4>Compact Status</h4>
+                        <p>Color-coded status output shows at a glance which files are current, outdated, locked, or missing.</p>
                     </div>
                     <div class="feature-card">
                         <h4>Zero Configuration</h4>
-                        <p>Works out of the box with sensible defaults.</p>
+                        <p>Works out of the box with sensible defaults. Run init and start working immediately.</p>
                     </div>
                 </div>
             </div>
-            
+
             <div class="features-category">
                 <h3>Operational Benefits</h3>
                 <div class="feature-grid">
-                    <div class="feature-card">
-                        <h4>Clear Status Reporting</h4>
-                        <p>See at a glance which guides are current, outdated, overridden, or missing with color-coded status output.</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>Gentle 'Forced' Updates</h4>
-                        <p>Automatic `.bak` files created if you `--force` update a custom prompt document.</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>Safe Operations</h4>
-                        <p>Idempotent commands and explicit consent requirements protect your project-specific customizations.</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>Lightweight & Fast</h4>
-                        <p>Minimal dependencies (click, pyyaml, packaging) mean fast installation and no bloat.</p>
-                    </div>
                     <div class="feature-card">
                         <h4>Cross-Platform</h4>
                         <p>Runs on macOS, Linux, and Windows with Python 3.11+ for consistent workflows everywhere.</p>
                     </div>
                     <div class="feature-card">
                         <h4>Well Tested</h4>
-                        <p>Comprehensive test coverage minimum of 85% ensures reliability.</p>
+                        <p>129 tests with 91% coverage ensure reliability across platforms and edge cases.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Lightweight and Fast</h4>
+                        <p>Minimal dependencies (click, jinja2, pyyaml, packaging) mean fast installation and no bloat.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Selective File Updates</h4>
+                        <p>Use the <code>--files</code> flag to update specific files, or update everything at once with a single command.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Safe Operations</h4>
+                        <p>Idempotent commands and explicit consent requirements protect your project-specific customizations.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Gentle Forced Updates</h4>
+                        <p>Automatic <code>.bak</code> files created if you force-update a locked file, so nothing is lost.</p>
                     </div>
                 </div>
             </div>
-            
+
             <div class="features-category">
                 <h3>Development Philosophy</h3>
                 <div class="feature-grid">
@@ -477,7 +477,7 @@
                     </div>
                     <div class="feature-card">
                         <h4>Structured Workflow</h4>
-                        <p>The workflow enforces a focused methodology: planning, coding, debugging, etc. with approval gates.</p>
+                        <p>The workflow enforces a focused methodology across 15 modes with approval gates at every step.</p>
                     </div>
                 </div>
             </div>
@@ -513,7 +513,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2024 Pointmatic. Licensed under Apache-2.0.</p>
+            <p>&copy; 2026 Pointmatic. Licensed under Apache-2.0.</p>
         </div>
     </footer>
 </body>

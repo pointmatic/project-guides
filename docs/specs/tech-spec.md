@@ -2,20 +2,21 @@
 
 This document defines **how** the `project-guide` project is built — architecture, module layout, dependencies, data models, API signatures, and cross-cutting concerns.
 
-For a high-level concept (why), see `concept.md`. For requirements and behavior (what), see `features.md`. For a breakdown of the implementation plan (step-by-step tasks), see `stories.md`.
+For requirements and behavior, see `features.md`. For the implementation plan, see `stories.md`.
 
 ---
 
 ## Runtime & Tooling
 
 - **Language**: Python 3.11+
-- **Package Manager**: pip / uv
+- **Package Manager**: pip
 - **Build System**: Hatchling (via pyproject.toml)
 - **Linter**: ruff (check + format)
-- **Test Runner**: pytest
-- **Type Checker**: mypy (optional, recommended)
-- **CLI Framework**: click (or argparse for minimal dependencies)
-- **Package Data**: Include guide templates via `package_data` in pyproject.toml
+- **Test Runner**: pytest + pytest-cov
+- **Type Checker**: mypy
+- **CLI Framework**: click
+- **Template Engine**: Jinja2
+- **Configuration**: PyYAML
 
 ---
 
@@ -25,20 +26,20 @@ For a high-level concept (why), see `concept.md`. For requirements and behavior 
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `click` | ^8.1 | CLI framework with command groups and help text |
-| `pyyaml` | ^6.0 | Parse and write `.project-guide.yml` configuration |
-| `packaging` | ^24.0 | Version comparison and parsing |
-
-**Alternative (minimal)**: Use only stdlib (`argparse` instead of `click`, manual YAML parsing) to reduce dependencies.
+| `click` | >=8.1 | CLI framework with command groups, options, and styled output |
+| `jinja2` | >=3.1 | Template rendering for mode-driven entry point |
+| `pyyaml` | >=6.0 | Parse and write `.project-guide.yml` and `.metadata.yml` |
+| `packaging` | >=24.0 | Version parsing (used in config, not for sync freshness) |
 
 ### Development Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `pytest` | ^8.0 | Test runner |
-| `pytest-cov` | ^5.0 | Coverage reporting |
-| `ruff` | ^0.6 | Linting and formatting |
-| `mypy` | ^1.11 | Type checking |
+| `pytest` | >=7.0 | Test runner |
+| `pytest-cov` | >=4.0 | Coverage reporting (85% minimum) |
+| `ruff` | >=0.1.0 | Linting and formatting |
+| `mypy` | >=1.0 | Type checking |
+| `types-PyYAML` | >=6.0 | Type stubs for PyYAML |
 
 ### System Dependencies
 
@@ -50,327 +51,208 @@ None — pure Python, no external binaries required.
 
 ```
 project-guide/
-├── pyproject.toml                    # Package metadata, dependencies, build config
-├── README.md                         # Installation, usage, examples
-├── LICENSE                           # Apache-2.0
-├── .gitignore                        # Python, IDE, build artifacts
-├── project_guides/
-│   ├── __init__.py                   # Package version, public API
-│   ├── __main__.py                   # Entry point for `python -m project_guides`
-│   ├── cli.py                        # CLI command definitions (click commands)
-│   ├── config.py                     # Configuration model and file I/O
-│   ├── sync.py                       # Guide synchronization logic
-│   ├── templates/                    # Bundled guide templates
-│   │   ├── guides/
-│   │   │   ├── README.md
-│   │   │   ├── project-guide.md
-│   │   │   ├── best-practices-guide.md
-│   │   │   ├── debug-guide.md
-│   │   │   ├── documentation-setup-guide.md
-│   │   │   └── developer/
-│   │   │       ├── codecov-setup-guide.md
-│   │   │       └── production-mode.md
-│   │   └── .project-guide.yml.template  # Default config template
-│   └── version.py                    # Version constant
+├── pyproject.toml
+├── README.md
+├── LICENSE
+├── CHANGELOG.md
+├── requirements-dev.txt                # Dev/test deps for pyve testenv
+├── .github/workflows/
+│   ├── ci.yml                          # Lint + test on push
+│   ├── test.yml                        # Multi-platform test matrix
+│   ├── publish.yml                     # PyPI publish on release
+│   └── deploy-docs.yml                 # MkDocs deployment
+├── project_guide/
+│   ├── __init__.py                     # Package exports
+│   ├── __main__.py                     # python -m project_guide
+│   ├── version.py                      # Single source of truth: __version__
+│   ├── exceptions.py                   # Custom exception hierarchy
+│   ├── config.py                       # Config dataclass + YAML I/O
+│   ├── metadata.py                     # .metadata.yml parser + variable resolution
+│   ├── render.py                       # Jinja2 rendering pipeline
+│   ├── sync.py                         # File sync: hash comparison, copy, backup
+│   ├── cli.py                          # Click CLI commands
+│   └── templates/
+│       └── project-guide/              # Bundled template tree (copied on init)
+│           ├── .metadata.yml
+│           ├── README.md
+│           ├── developer/              # Developer reference docs
+│           └── templates/
+│               ├── go.md               # Jinja2 entry point template
+│               ├── modes/              # Mode templates + header partials
+│               └── artifacts/          # Artifact structure templates
 └── tests/
-    ├── __init__.py
-    ├── test_cli.py                   # CLI command tests
-    ├── test_config.py                # Config parsing and writing tests
-    ├── test_sync.py                  # Sync logic tests
-    └── fixtures/                     # Test data (sample configs, guides)
+    ├── test_cli.py                     # CLI command tests (~35K)
+    ├── test_sync.py                    # Sync logic tests (~13K)
+    ├── test_integration.py             # End-to-end workflow tests
+    ├── test_render.py                  # Rendering pipeline tests
+    ├── test_metadata.py                # Metadata parsing tests
+    ├── test_config.py                  # Config round-trip tests
+    └── test_purge.py                   # Purge command tests
 ```
+
+---
+
+## Filename Conventions
+
+| Pattern | Purpose |
+|---------|---------|
+| `<mode-name>-mode.md` | Mode template (e.g., `code-velocity-mode.md`) |
+| `_header-*.md` | Jinja2 partials included by mode templates |
+| `.metadata.yml` | Hidden config/metadata files (dotfile prefix) |
+| `*.bak.<timestamp>` | Backup files created by forced updates |
+| `go.md` | Rendered entry point (gitignored) |
 
 ---
 
 ## Key Component Design
 
-### Module: `cli.py`
+### Module: `cli.py` (695 lines)
 
-**Purpose**: Define CLI commands using click.
+**Purpose**: All Click CLI commands.
 
-**Commands**:
+**Commands:**
 
-```python
-@click.group()
-@click.version_option()
-def main():
-    """Manage LLM project guides across repositories."""
-    pass
+| Command | Description |
+|---------|-------------|
+| `init` | Copy template tree, render `go.md`, create config, update `.gitignore` |
+| `mode [name]` | Switch mode and re-render `go.md`, or list available modes |
+| `status` | Grouped status: Mode, Guide, Files (with `--verbose`) |
+| `update` | Hash-based sync with prompt/force/dry-run |
+| `override` | Lock a file from updates |
+| `unoverride` | Remove a file lock |
+| `overrides` | List all locked files |
+| `purge` | Remove all project-guide files with confirmation |
 
-@main.command()
-@click.option('--target-dir', default='docs/guides', help='Target directory for guides')
-@click.option('--force', is_flag=True, help='Overwrite existing files')
-def init(target_dir: str, force: bool):
-    """Initialize guides in a new project."""
-    # 1. Check if .project-guide.yml exists (error unless --force)
-    # 2. Create target directory if needed
-    # 3. Copy all templates from package data to target_dir
-    # 4. Create .project-guide.yml with current version
-    # 5. Print success message with list of installed guides
+**Key functions:**
+- `_ensure_gitignore_entry(target_dir)` — adds `go.md` and `*.bak.*` patterns
+- `_copy_template_tree(src, dest, force)` — recursive copy preserving structure
+- `_migrate_config_if_needed()` — renames legacy `.project-guides.yml`
 
-@main.command()
-@click.option('--guides', multiple=True, help='Specific guides to update')
-@click.option('--dry-run', is_flag=True, help='Show changes without applying')
-@click.option('--force', is_flag=True, help='Update overridden guides (creates backups)')
-@click.option('--interactive', is_flag=True, help='Prompt for each guide')
-def update(guides: tuple[str, ...], dry_run: bool, force: bool, interactive: bool):
-    """Update guides to latest version."""
-    # 1. Load .project-guide.yml (error if missing)
-    # 2. Get list of guides to update (all or --guides subset)
-    # 3. For each guide:
-    #    - Check if overridden (skip unless --force)
-    #    - Check if current (skip if same version)
-    #    - If --interactive, prompt user
-    #    - If --dry-run, print what would change
-    #    - Otherwise, copy template to target
-    # 4. Update .project-guide.yml with new version
-    # 5. Print summary
+### Module: `config.py` (138 lines)
 
-@main.command()
-def status():
-    """Show status of all guides."""
-    # 1. Load .project-guide.yml (error if missing)
-    # 2. Get package version
-    # 3. For each guide:
-    #    - Check if file exists
-    #    - Check if overridden
-    #    - Check if current version
-    # 4. Print table with status
+**Purpose**: Configuration model and YAML I/O.
 
-@main.command()
-@click.option('--guide', required=True, help='Guide filename to override')
-@click.option('--reason', required=True, help='Reason for override')
-def override(guide: str, reason: str):
-    """Mark a guide as overridden (won't be updated)."""
-    # 1. Load .project-guide.yml (error if missing)
-    # 2. Check if guide file exists (error if not)
-    # 3. Add override entry with reason, current version, date
-    # 4. Save .project-guide.yml
-    # 5. Print success message
+**Data classes:**
+- `FileOverride` — reason, locked_version, last_updated
+- `Config` — version, installed_version, target_dir, metadata_file, current_mode, overrides
 
-@main.command()
-@click.option('--guide', required=True, help='Guide filename to unoverride')
-def unoverride(guide: str):
-    """Remove override from a guide (allow updates)."""
-    # 1. Load .project-guide.yml (error if missing)
-    # 2. Remove override entry
-    # 3. Save .project-guide.yml
-    # 4. Print success message
+**Key behavior:**
+- `Config.load()` / `Config.save()` — YAML round-trip
+- Override management: `is_overridden()`, `add_override()`, `remove_override()`
+- Defaults: `target_dir="docs/project-guide"`, `metadata_file=".metadata.yml"`, `current_mode="default"`
 
-@main.command()
-def overrides():
-    """List all overridden guides."""
-    # 1. Load .project-guide.yml (error if missing)
-    # 2. Print table of overridden guides with reason, version, date
+### Module: `metadata.py` (145 lines)
+
+**Purpose**: Parse `.metadata.yml` with two-pass variable resolution.
+
+**Data classes:**
+- `ModeDefinition` — name, info, description, sequence_or_cycle, generation_type, mode_template, next_mode, artifacts, files_exist
+- `Metadata` — common dict + list of ModeDefinition
+
+**Key behavior:**
+- `load_metadata(path)` — load YAML, resolve `{{var}}` placeholders in common block against themselves, then resolve all mode fields against common
+- `Metadata.get_mode(name)` — lookup by name, raises `MetadataError` if not found
+- `Metadata.list_mode_names()` — return all mode names
+
+### Module: `render.py` (99 lines)
+
+**Purpose**: Jinja2 rendering pipeline.
+
+**Key function:**
+- `render_go_project_guide(template_dir, mode, metadata, output_path)` — configures Jinja2 environment with `templates/` as the loader path, resolves mode template path (strips prefix to get relative path within `modes/`), builds context from mode fields + metadata common vars + `target_dir`, renders `go.md` template, writes output
+
+**Jinja2 configuration:**
+- Loader: `FileSystemLoader` on `templates/` subdirectory only
+- `keep_trailing_newline=True`
+- `_LenientUndefined` — undefined variables render as `{{ var_name }}` instead of erroring (preserves LLM instruction placeholders)
+
+### Module: `sync.py` (250 lines)
+
+**Purpose**: File synchronization using content-hash comparison.
+
+**Key functions:**
+- `get_all_file_names()` — discover tracked files via `rglob` patterns (`*.md`, `*.md.j2`, `*.yml`, `.*.yml`), returns deduplicated sorted list
+- `file_matches_template(file_path, file_name)` — SHA-256 hash comparison between installed file and bundled template
+- `copy_file(file_name, target_dir, force)` — copy from package to target
+- `backup_file(file_path)` — create `.bak.<timestamp>` copy
+- `apply_file_update(file_name, config, make_backup)` — backup + copy
+- `sync_files(config, files, force, dry_run)` — main sync loop returning (updated, skipped, current, missing, modified) tuples
+
+**Key design decision:** `sync_files` uses `file_matches_template()` as the sole freshness check. Version numbers are not used to determine whether a file needs updating. This means a package version bump that doesn't change a specific template won't flag that file as stale.
+
+### Module: `exceptions.py` (52 lines)
+
+**Exception hierarchy:**
 ```
-
-**Error Handling**:
-- Missing `.project-guide.yml` → suggest running `init` first
-- File permission errors → clear error message
-- Invalid YAML → parse error with line number
-- Invalid guide name → list valid guide names
-
----
-
-### Module: `config.py`
-
-**Purpose**: Configuration model and file I/O.
-
-**Data Model**:
-
-```python
-from dataclasses import dataclass, field
-from datetime import date
-from typing import Dict, Optional
-
-@dataclass
-class GuideOverride:
-    """Represents an overridden guide."""
-    reason: str
-    locked_version: str
-    last_updated: date
-
-@dataclass
-class Config:
-    """Project configuration for project-guide."""
-    version: str = "1.0"  # Config schema version
-    installed_version: str = ""  # Package version when last synced
-    target_dir: str = "docs/guides"
-    overrides: Dict[str, GuideOverride] = field(default_factory=dict)
-
-    @classmethod
-    def load(cls, path: str = ".project-guide.yml") -> "Config":
-        """Load configuration from YAML file."""
-        # Read YAML, parse into Config object
-        # Handle missing file, invalid YAML, schema errors
-        pass
-
-    def save(self, path: str = ".project-guide.yml") -> None:
-        """Save configuration to YAML file."""
-        # Convert Config to dict, write as YAML
-        pass
-
-    def is_overridden(self, guide_name: str) -> bool:
-        """Check if a guide is overridden."""
-        return guide_name in self.overrides
-
-    def add_override(self, guide_name: str, reason: str, version: str) -> None:
-        """Add or update an override."""
-        self.overrides[guide_name] = GuideOverride(
-            reason=reason,
-            locked_version=version,
-            last_updated=date.today()
-        )
-
-    def remove_override(self, guide_name: str) -> None:
-        """Remove an override."""
-        self.overrides.pop(guide_name, None)
-```
-
-**Functions**:
-
-```python
-def load_config(path: str = ".project-guide.yml") -> Config:
-    """Load configuration from file."""
-    # Wrapper around Config.load() with error handling
-
-def save_config(config: Config, path: str = ".project-guide.yml") -> None:
-    """Save configuration to file."""
-    # Wrapper around config.save() with error handling
-```
-
----
-
-### Module: `sync.py`
-
-**Purpose**: Guide synchronization logic.
-
-**Functions**:
-
-```python
-from pathlib import Path
-from typing import List, Tuple
-
-def get_template_path(guide_name: str) -> Path:
-    """Get path to bundled template for a guide."""
-    # Use importlib.resources or pkg_resources to access package data
-    # Return Path to template file
-    pass
-
-def get_all_guide_names() -> List[str]:
-    """Get list of all available guide names."""
-    # List files in templates/guides/ directory
-    # Return list of filenames
-    pass
-
-def copy_guide(guide_name: str, target_dir: Path, force: bool = False) -> None:
-    """Copy a guide template to target directory."""
-    # Get template path
-    # Check if target file exists (error unless force=True)
-    # Copy template to target_dir/guide_name
-    pass
-
-def backup_guide(guide_path: Path) -> Path:
-    """Create a backup of a guide file."""
-    # Copy guide_path to guide_path.bak
-    # Return backup path
-    pass
-
-def compare_versions(installed: str, package: str) -> int:
-    """Compare two version strings."""
-    # Use packaging.version.parse()
-    # Return -1 if installed < package, 0 if equal, 1 if installed > package
-    pass
-
-def get_package_version() -> str:
-    """Get current package version."""
-    # Read from project_guides.__version__
-    pass
-
-def sync_guides(
-    config: Config,
-    guides: List[str] | None = None,
-    force: bool = False,
-    dry_run: bool = False
-) -> Tuple[List[str], List[str], List[str]]:
-    """
-    Sync guides to latest version.
-    
-    Returns:
-        (updated, skipped, current) - lists of guide names
-    """
-    # If guides is None, sync all guides
-    # For each guide:
-    #   - Check if overridden (skip unless force=True)
-    #   - Check if current version (skip if same)
-    #   - If dry_run, add to updated list but don't copy
-    #   - Otherwise, copy template
-    # Return lists of updated, skipped, current guides
-    pass
-```
-
----
-
-### Module: `version.py`
-
-**Purpose**: Single source of truth for package version.
-
-```python
-__version__ = "0.1.0"
-```
-
-**Note**: This is imported in `__init__.py` and used throughout the package.
-
----
-
-### Module: `__init__.py`
-
-**Purpose**: Package initialization and public API.
-
-```python
-from project_guides.version import __version__
-
-__all__ = ["__version__"]
-```
-
----
-
-### Module: `__main__.py`
-
-**Purpose**: Entry point for `python -m project_guides`.
-
-```python
-from project_guides.cli import main
-
-if __name__ == "__main__":
-    main()
+ProjectGuidesError (base)
+├── ConfigError
+├── SyncError
+├── ProjectFileNotFoundError
+├── MetadataError
+└── RenderError
 ```
 
 ---
 
 ## Data Models
 
-### Configuration Schema (`.project-guide.yml`)
+### Config (`FileOverride`)
 
-```yaml
-version: "1.0"                    # String, config schema version
-installed_version: "0.2.1"        # String, package version
-target_dir: "docs/guides"         # String, relative path
-
-overrides:                        # Dict[str, GuideOverride]
-  debug_guide.md:                 # Guide filename as key
-    reason: "Custom case study"   # String, why overridden
-    locked_version: "0.2.0"       # String, package version when locked
-    last_updated: "2026-03-03"    # String, ISO 8601 date
+```python
+@dataclass
+class FileOverride:
+    reason: str
+    locked_version: str
+    last_updated: date
 ```
 
-**Validation**:
-- `version` must be "1.0"
-- `installed_version` must be valid semver
-- `target_dir` must be relative path (no absolute paths)
-- `overrides` keys must be valid guide filenames
-- `locked_version` must be valid semver
-- `last_updated` must be ISO 8601 date (YYYY-MM-DD)
+### Config (`Config`)
+
+```python
+@dataclass
+class Config:
+    version: str = "2.0"
+    installed_version: str = ""
+    target_dir: str = "docs/project-guide"
+    metadata_file: str = ".metadata.yml"
+    current_mode: str = "default"
+    overrides: dict[str, FileOverride] = field(default_factory=dict)
+```
+
+### Metadata (`ModeDefinition`)
+
+```python
+@dataclass
+class ModeDefinition:
+    name: str
+    info: str
+    description: str
+    sequence_or_cycle: str
+    generation_type: str = "document"
+    mode_template: str = ""
+    next_mode: str | None = None
+    artifacts: list[dict] = field(default_factory=list)
+    files_exist: list[str] = field(default_factory=list)
+```
+
+---
+
+## Configuration
+
+### Precedence
+
+1. Command-line flags (highest priority)
+2. `.project-guide.yml` in project root
+3. `.metadata.yml` in target directory
+4. Package defaults (lowest priority)
+
+### `.gitignore` Management
+
+`init` adds under a `# project-guide` comment:
+```
+docs/project-guide/go.md
+docs/project-guide/**/*.bak.*
+```
 
 ---
 
@@ -378,48 +260,28 @@ overrides:                        # Dict[str, GuideOverride]
 
 ### Entry Point
 
-**Package**: `project-guide`
-**Command**: `project-guide` (registered in `pyproject.toml` as console script)
-
-### Command Structure
-
-```
-project-guide
-├── init          Initialize guides in a new project
-├── update        Update guides to latest version
-├── status        Show status of all guides
-├── override      Mark a guide as overridden
-├── unoverride    Remove override from a guide
-└── overrides     List all overridden guides
-```
-
-### Help Text
-
-```bash
-$ project-guide --help
-Usage: project-guide [OPTIONS] COMMAND [ARGS]...
-
-  Manage LLM project guides across repositories.
-
-Options:
-  --version  Show the version and exit.
-  --help     Show this message and exit.
-
-Commands:
-  init        Initialize guides in a new project
-  update      Update guides to latest version
-  status      Show status of all guides
-  override    Mark a guide as overridden
-  unoverride  Remove override from a guide
-  overrides   List all overridden guides
+```toml
+[project.scripts]
+project-guide = "project_guide.cli:main"
 ```
 
 ### Exit Codes
 
-- `0` — Success
-- `1` — General error (missing config, invalid arguments)
-- `2` — File I/O error (permission denied, file not found)
-- `3` — Configuration error (invalid YAML, schema mismatch)
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | General error (missing config, invalid arguments, abort) |
+| 2 | File I/O error (permission denied, render failure) |
+| 3 | Configuration error (invalid YAML, schema mismatch) |
+
+### Output Styling
+
+- **Bold**: section labels (`Mode:`, `Guide:`, `Files:`)
+- **Cyan**: mode name, guide path
+- **Green**: success markers, current counts
+- **Yellow**: warnings, overridden counts, needs-updating counts
+- **Red**: errors, missing counts
+- **Dim**: action prompts, hints
 
 ---
 
@@ -427,151 +289,91 @@ Commands:
 
 ### Error Handling
 
-**Strategy**: Fail fast with clear error messages.
-
-**Error Types**:
-1. **Missing Configuration** → "No .project-guide.yml found. Run 'project-guide init' first."
-2. **Invalid YAML** → "Failed to parse .project-guide.yml: <error> at line <N>"
-3. **File Not Found** → "Guide not found: <guide_name>. Available guides: <list>"
-4. **Permission Denied** → "Cannot write to <path>: Permission denied"
-5. **Invalid Version** → "Invalid version string: <version>"
-
-**Implementation**:
-- Use custom exception classes (`ConfigError`, `SyncError`)
-- Catch exceptions in CLI commands, print friendly messages
-- Exit with appropriate exit codes
-
-### Logging
-
-**Strategy**: Minimal logging, focus on user-facing output.
-
-**Levels**:
-- **INFO**: Progress messages (e.g., "Installing project_guide.md...")
-- **WARNING**: Non-fatal issues (e.g., "Guide already up to date")
-- **ERROR**: Fatal errors (e.g., "Failed to write config file")
-
-**Implementation**:
-- Use `click.echo()` for normal output
-- Use `click.secho()` with colors for status (green=success, yellow=warning, red=error)
-- No debug logging in production (keep it simple)
+Fail fast with actionable messages:
+- Missing config → "Run 'project-guide init' first."
+- Render failure → "Run 'project-guide status' to check for missing files." + "Run 'project-guide update' to restore missing templates."
+- Invalid file name → list available files
 
 ### File Safety
 
-**Strategy**: Never overwrite files without explicit consent.
+1. `init` without `--force` → skip existing files
+2. `update` without `--force` → prompt for each modified file
+3. `update --force` → create `.bak.<timestamp>` backups before overwriting
+4. `purge` → confirm unless `--force`
+5. Overridden files → skip during update unless `--force`
 
-**Rules**:
-1. `init` without `--force` → error if `.project-guide.yml` exists
-2. `update` without `--force` → skip overridden guides
-3. `update --force` → create `.bak` backups before overwriting
-4. Always validate paths to prevent directory traversal
+### Legacy Migration
 
-**Implementation**:
-- Check file existence before writing
-- Use `shutil.copy2()` to preserve metadata
-- Create backups with timestamp suffix (e.g., `debug_guide.md.bak.20260303`)
+- `.project-guides.yml` → `.project-guide.yml` (automatic rename on any CLI command)
+- v1.x config detection → migration notice in `status` output
 
-### Version Comparison
+---
 
-**Strategy**: Use `packaging.version.parse()` for semver comparison.
+## Performance Implementation
 
-**Logic**:
-```python
-from packaging.version import parse
+All operations are file-based on small files (<100KB each). No performance concerns.
 
-def is_outdated(installed: str, package: str) -> bool:
-    return parse(installed) < parse(package)
-```
+- SHA-256 hashing: effectively instant on template-sized files
+- Jinja2 rendering: milliseconds
+- File discovery: `rglob` on a small directory tree
 
 ---
 
 ## Testing Strategy
 
-### Unit Tests
+### Test Structure
 
-**Coverage**:
-- `config.py`: Config loading, saving, override management
-- `sync.py`: Template copying, version comparison, sync logic
-- `cli.py`: Command argument parsing (mock file I/O)
+| File | Focus | Tests |
+|------|-------|-------|
+| `test_cli.py` | All CLI commands, error paths, output assertions | ~60 |
+| `test_sync.py` | Hash comparison, copy, backup, sync logic | ~22 |
+| `test_integration.py` | End-to-end workflows | ~6 |
+| `test_render.py` | Jinja2 rendering, parametrized mode test | ~20 |
+| `test_metadata.py` | YAML parsing, variable resolution | ~9 |
+| `test_config.py` | Config round-trip, overrides | ~7 |
+| `test_purge.py` | Purge command edge cases | ~5 |
 
-**Approach**:
-- Use `pytest` fixtures for temporary directories
-- Mock file I/O for CLI tests
-- Test error conditions (missing files, invalid YAML)
+**Total: 129 tests, ~91% coverage**
 
-### Integration Tests
+### Key Test Patterns
 
-**Coverage**:
-- Full `init` workflow: create config, copy templates
-- Full `update` workflow: sync guides, respect overrides
-- Override workflow: add, list, remove overrides
+- `CliRunner.isolated_filesystem()` for all CLI tests
+- `tmp_path` fixture for sync/config unit tests
+- `@pytest.mark.parametrize` over all mode names for render regression
+- `unittest.mock.patch` for error injection (SyncError, permission denied)
+- Windows `encoding="utf-8"` on all `read_text()` calls reading template content
 
-**Approach**:
-- Use `tmp_path` fixture for isolated test directories
-- Create real files and configs
-- Verify file contents and config state
+### CI/CD
 
-### Acceptance Tests
-
-**Coverage**:
-- Install guides in new project
-- Update guides after version bump
-- Override a guide and verify it's not updated
-- Remove override and verify guide updates
-
-**Approach**:
-- End-to-end tests using `subprocess` to run CLI
-- Verify console output and file state
+- **ci.yml**: ruff check + pytest on push
+- **test.yml**: Multi-platform matrix (macOS, Linux, Windows) × Python 3.11-3.14
+- **publish.yml**: Build + publish to PyPI on GitHub Release
+- **deploy-docs.yml**: MkDocs deployment to GitHub Pages
 
 ---
 
 ## Packaging and Distribution
 
-### PyPI Metadata
+### PyPI
 
-**Package Name**: `project-guide`
-**Description**: "Manage LLM development workflow documentation across projects"
-**Keywords**: `llm`, `documentation`, `workflow`, `guides`, `templates`
-**License**: Apache-2.0
-**Python Requires**: `>=3.11`
+- **Package name**: `project-guide`
+- **License**: Apache-2.0
+- **Python requires**: `>=3.11`
+- **Build backend**: Hatchling
 
 ### Package Data
 
-Include guide templates in distribution:
-
-```toml
-[tool.hatch.build.targets.wheel]
-packages = ["project_guides"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"project_guides/templates" = "project_guides/templates"
-```
+Templates are included automatically — Hatchling includes all non-Python files under `packages = ["project_guide"]`.
 
 ### Console Script
 
 ```toml
 [project.scripts]
-project-guide = "project_guides.cli:main"
+project-guide = "project_guide.cli:main"
 ```
 
-### Installation Methods
+### Installation
 
-**Via pip**:
 ```bash
 pip install project-guide
 ```
-
-**Via pipx** (recommended for system-wide CLI):
-```bash
-pipx install project-guide
-```
-
----
-
-## Summary
-
-**Architecture**: Simple CLI tool with file-based operations
-**Dependencies**: Minimal (click, pyyaml, packaging)
-**Data Model**: YAML configuration with override tracking
-**CLI**: 6 commands for init, update, status, override management
-**Testing**: Unit, integration, and acceptance tests with ≥85% coverage
-**Distribution**: PyPI package with bundled templates

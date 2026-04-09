@@ -4,11 +4,15 @@ Comprehensive guide to testing project-guide.
 
 ## Test Suite Overview
 
-project-guide has 82% test coverage with 59 comprehensive tests covering:
+project-guide has 91% test coverage with 129 tests across 7 test files covering:
+
 - CLI commands
 - Configuration handling
-- Guide synchronization
+- File synchronization
+- Jinja2 template rendering
+- Metadata loading and validation
 - Integration scenarios
+- Purge command
 
 ## Running Tests
 
@@ -37,24 +41,39 @@ open htmlcov/index.html
 pytest tests/test_cli.py
 pytest tests/test_config.py
 pytest tests/test_sync.py
+pytest tests/test_render.py
+pytest tests/test_metadata.py
 pytest tests/test_integration.py
+pytest tests/test_purge.py
 ```
 
 ### Specific Tests
 
 ```bash
 pytest tests/test_cli.py::test_init_command
-pytest tests/test_cli.py::TestInitCommand::test_creates_guides_directory
+pytest tests/test_cli.py::TestInitCommand::test_creates_project_guide_directory
 ```
 
 ### By Pattern
 
 ```bash
 pytest -k "init"
-pytest -k "override"
+pytest -k "render"
 ```
 
 ## Test Structure
+
+### Test Files
+
+| File | Tests | Description |
+|------|-------|-------------|
+| `test_cli.py` | ~60 | CLI command tests using CliRunner |
+| `test_sync.py` | ~22 | File synchronization logic |
+| `test_render.py` | ~20 | Jinja2 template rendering |
+| `test_metadata.py` | ~9 | Metadata loading and validation |
+| `test_config.py` | ~7 | Configuration handling |
+| `test_integration.py` | ~6 | End-to-end integration scenarios |
+| `test_purge.py` | ~5 | Purge command |
 
 ### Unit Tests
 
@@ -67,13 +86,11 @@ def test_config_loads_from_file(tmp_path):
     config_file = tmp_path / ".project-guide.yml"
     config_file.write_text("""
 version: "1.0"
-package_version: "1.1.3"
-guides_dir: "docs/guides"
-overrides: {}
+package_version: "2.0.0"
 """)
-    
+
     config = Config.load(tmp_path)
-    assert config.package_version == "1.1.3"
+    assert config.package_version == "2.0.0"
 ```
 
 ### Integration Tests
@@ -83,18 +100,16 @@ Test multiple components working together.
 **Example**: `tests/test_integration.py`
 
 ```python
-def test_full_workflow(tmp_path):
-    # Init
-    result = runner.invoke(cli, ["init"], cwd=tmp_path)
-    assert result.exit_code == 0
-    
-    # Override
-    result = runner.invoke(cli, ["override", "project-guide.md"], cwd=tmp_path)
-    assert result.exit_code == 0
-    
-    # Update (should skip overridden)
-    result = runner.invoke(cli, ["update"], cwd=tmp_path)
-    assert "Skipped" in result.output
+def test_full_workflow():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        # Init
+        result = runner.invoke(main, ["init"])
+        assert result.exit_code == 0
+
+        # Status
+        result = runner.invoke(main, ["status"])
+        assert result.exit_code == 0
 ```
 
 ### CLI Tests
@@ -105,14 +120,27 @@ Test command-line interface using Click's test runner.
 
 ```python
 from click.testing import CliRunner
-from project_guide.cli import cli
+from project_guide.cli import main
 
 def test_init_command():
     runner = CliRunner()
     with runner.isolated_filesystem():
-        result = runner.invoke(cli, ["init"])
+        result = runner.invoke(main, ["init"])
         assert result.exit_code == 0
-        assert "Initialized" in result.output
+```
+
+### Render Tests
+
+Test Jinja2 template rendering, including parametrized tests that render every mode defined in `.metadata.yml`.
+
+**Example**: `tests/test_render.py`
+
+```python
+@pytest.mark.parametrize("mode", get_all_modes_from_metadata())
+def test_render_mode(mode):
+    """Verify every mode in .metadata.yml renders without error."""
+    result = render_template(mode=mode)
+    assert result is not None
 ```
 
 ## Writing Tests
@@ -121,10 +149,10 @@ def test_init_command():
 
 ```python
 # Good
-def test_init_creates_guides_directory():
+def test_init_creates_project_guide_directory():
     ...
 
-def test_override_marks_guide_as_overridden():
+def test_render_mode_produces_valid_output():
     ...
 
 # Bad
@@ -133,6 +161,19 @@ def test1():
 
 def test_stuff():
     ...
+```
+
+### Using CliRunner.isolated_filesystem()
+
+CLI tests should use `isolated_filesystem()` to avoid polluting the real filesystem:
+
+```python
+def test_init_creates_files():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ["init"])
+        assert result.exit_code == 0
+        assert Path(".project-guide.yml").exists()
 ```
 
 ### Using Fixtures
@@ -144,25 +185,23 @@ from pathlib import Path
 @pytest.fixture
 def project_dir(tmp_path):
     """Create a temporary project directory."""
-    guides_dir = tmp_path / "docs" / "guides"
-    guides_dir.mkdir(parents=True)
     return tmp_path
 
 def test_with_fixture(project_dir):
-    assert (project_dir / "docs" / "guides").exists()
+    assert project_dir.exists()
 ```
 
 ### Parametrized Tests
 
 ```python
-@pytest.mark.parametrize("guide_name", [
-    "project-guide.md",
-    "best-practices-guide.md",
-    "debug-guide.md",
+@pytest.mark.parametrize("mode", [
+    "greenfield",
+    "existing",
+    "maintenance",
 ])
-def test_guide_exists(guide_name):
-    from project_guide.templates import GUIDES_DIR
-    assert (GUIDES_DIR / guide_name).exists()
+def test_mode_renders(mode):
+    result = render_template(mode=mode)
+    assert result is not None
 ```
 
 ### Testing Exceptions
@@ -178,13 +217,25 @@ def test_invalid_config_raises_error():
 ### Testing File Operations
 
 ```python
-def test_init_creates_files(tmp_path):
+def test_init_creates_files():
     runner = CliRunner()
-    result = runner.invoke(cli, ["init"], cwd=tmp_path)
-    
-    assert (tmp_path / "docs" / "guides").exists()
-    assert (tmp_path / ".project-guide.yml").exists()
-    assert (tmp_path / "docs" / "guides" / "project-guide.md").exists()
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ["init"])
+        assert result.exit_code == 0
+        assert Path(".project-guide.yml").exists()
+        assert Path("project-guide").exists()
+```
+
+## Windows Encoding
+
+When reading template content in tests, always specify UTF-8 encoding to avoid Windows encoding issues:
+
+```python
+# Good
+content = path.read_text(encoding="utf-8")
+
+# Bad - may fail on Windows
+content = path.read_text()
 ```
 
 ## Test Fixtures
@@ -201,21 +252,16 @@ def runner():
 def project_dir(tmp_path):
     """Temporary project directory."""
     return tmp_path
-
-@pytest.fixture
-def initialized_project(tmp_path, runner):
-    """Project with guides initialized."""
-    runner.invoke(cli, ["init"], cwd=tmp_path)
-    return tmp_path
 ```
 
 ### Using Fixtures
 
 ```python
-def test_status_command(initialized_project, runner):
-    result = runner.invoke(cli, ["status"], cwd=initialized_project)
-    assert result.exit_code == 0
-    assert "Current" in result.output
+def test_status_command(runner):
+    with runner.isolated_filesystem():
+        runner.invoke(main, ["init"])
+        result = runner.invoke(main, ["status"])
+        assert result.exit_code == 0
 ```
 
 ## Mocking
@@ -244,14 +290,12 @@ def test_with_mock_subprocess():
 
 ### Current Coverage
 
-- **Overall**: 82%
-- **CLI**: 85%
-- **Config**: 90%
-- **Sync**: 80%
+- **Overall**: 91%
+- **Minimum threshold**: 85% (enforced)
 
 ### Coverage Targets
 
-- Maintain minimum 80% overall coverage
+- Maintain minimum 85% overall coverage (enforced in CI)
 - New code should have 90%+ coverage
 - Critical paths should have 100% coverage
 
@@ -264,6 +308,9 @@ pytest --cov=project_guide --cov-report=term-missing
 # HTML report
 pytest --cov=project_guide --cov-report=html
 open htmlcov/index.html
+
+# Fail if coverage drops below threshold
+pytest --cov=project_guide --cov-fail-under=85
 ```
 
 ## Continuous Integration
@@ -278,8 +325,8 @@ Tests run automatically on:
 ```yaml
 - name: Run tests
   run: |
-    pytest --cov=project_guide --cov-report=xml
-    
+    pytest --cov=project_guide --cov-report=xml --cov-fail-under=85
+
 - name: Upload coverage
   uses: codecov/codecov-action@v3
 ```
@@ -290,14 +337,16 @@ Tests run automatically on:
 
 ```python
 # Good - tests behavior
-def test_init_creates_guides():
-    result = runner.invoke(cli, ["init"])
-    assert (project_dir / "docs" / "guides").exists()
+def test_init_creates_project_guide():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ["init"])
+        assert Path("project-guide").exists()
 
 # Bad - tests implementation details
 def test_init_calls_create_directory():
     with patch("project_guide.sync.create_directory") as mock:
-        runner.invoke(cli, ["init"])
+        runner.invoke(main, ["init"])
         mock.assert_called_once()
 ```
 
@@ -317,13 +366,15 @@ assert True
 
 ```python
 # Good - uses isolated filesystem
-def test_init(tmp_path):
-    runner.invoke(cli, ["init"], cwd=tmp_path)
-    assert (tmp_path / ".project-guide.yml").exists()
+def test_init():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ["init"])
+        assert Path(".project-guide.yml").exists()
 
 # Bad - modifies actual filesystem
 def test_init():
-    runner.invoke(cli, ["init"])
+    runner.invoke(main, ["init"])
     # Pollutes actual directory
 ```
 
@@ -348,11 +399,13 @@ def test_init_with_invalid_path():
 ### Print Debugging
 
 ```python
-def test_something(tmp_path):
-    result = runner.invoke(cli, ["init"], cwd=tmp_path)
-    print(f"Exit code: {result.exit_code}")
-    print(f"Output: {result.output}")
-    assert result.exit_code == 0
+def test_something():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ["init"])
+        print(f"Exit code: {result.exit_code}")
+        print(f"Output: {result.output}")
+        assert result.exit_code == 0
 ```
 
 ### Using pdb

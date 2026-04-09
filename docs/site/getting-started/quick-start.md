@@ -26,52 +26,63 @@ project-guide init
 ```
 
 This creates:
-- `docs/guides/` directory with all workflow guides
-- `.project-guide.yml` configuration file
+
+- `.project-guide.yml` configuration file in your project root
+- `docs/project-guide/` directory with mode templates
+- `docs/project-guide/go.md` rendered guide for your current mode
 
 ## 3. Start Collaborating with Your LLM
 
-Tell your LLM to read the project guide and begin:
+Tell your LLM to read the rendered guide and begin:
 
 ```
-Read `docs/guides/project-guide.md` and start.
+Read docs/project-guide/go.md
 ```
 
-The guide will walk your LLM through:
-1. Creating planning documents (features.md, tech-spec.md, stories.md)
-2. Breaking work into stories and tasks
-3. Implementing each story step-by-step
+The guide walks your LLM through structured development steps based on the active mode.
 
 ## 4. Guide the Workflow
 
-As the LLM completes each step, simply say:
+As the LLM completes each step, type:
 
 ```
-proceed
+go
 ```
 
-You stay in charge—directing features, flow, and taste—while the LLM handles the typing.
+You stay in charge -- directing features, flow, and taste -- while the LLM handles the typing.
+
+## 5. Switch Modes
+
+project-guide includes 15 development modes. Switch between them to match your current task:
+
+```bash
+project-guide mode code_velocity
+project-guide mode debug
+```
+
+Each mode renders a fresh `go.md` tailored to that workflow.
 
 ## HITLoop Development
 
 This is "HITLoop" (human-in-the-loop) development:
+
 - **You direct**: Features, architecture, priorities
 - **LLM executes**: Planning, coding, testing, documentation
 - **Pace**: Production-ready backends in 6-12 hours
 
 ## Managing Customizations
 
-### Override a Guide
+### Override a Template
 
-When you customize a guide for your project:
+When you need to customize a mode template for your project:
 
 ```bash
-project-guide override project-guide.md
+project-guide override templates/modes/debug-mode.md "Custom debugging workflow"
 ```
 
-This marks the guide as overridden, preventing future updates from overwriting your changes.
+This marks the template as overridden, preventing future updates from overwriting your changes.
 
-### Update Non-Overridden Guides
+### Update Non-Overridden Files
 
 Pull the latest workflow improvements:
 
@@ -79,11 +90,11 @@ Pull the latest workflow improvements:
 project-guide update
 ```
 
-This updates all non-overridden guides to the latest versions.
+This updates all non-overridden files to the latest versions.
 
 ### Check Status
 
-See which guides are current, outdated, or overridden:
+See which files are current, outdated, or overridden:
 
 ```bash
 project-guide status

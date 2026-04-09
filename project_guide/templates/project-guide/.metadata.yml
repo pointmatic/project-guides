@@ -163,14 +163,14 @@ modes:
 
   # Refactoring modes
   - name: refactor_plan
-    info: Migrate planning artifacts (concept, features, tech-spec) to v2.x format
-    description: Refactor existing planning documents into the v2.x artifact template format, preserving all information while restructuring into standardized sections.
+    info: Update planning artifacts (concept, features, tech-spec)
+    description: Rewrite or update existing planning documents because of new features or improvements, including concept, features, and tech-spec. You can also migrate legacy project-guide planning documents--it will preserve information while restructuring into standardized sections.
     sequence_or_cycle: cycle
     generation_type: document
     mode_template: "{{mode_templates_path}}/refactor-plan-mode.md"
   - name: refactor_document
-    info: Migrate documentation artifacts (README, brand descriptions, landing page, MkDocs) to v2.x format
-    description: Refactor existing documentation files into the v2.x format, covering brand descriptions, landing page, and MkDocs configuration.
+    info: Update documentation artifacts (README, brand descriptions, landing page, MkDocs)
+    description: Update existing documentation files because of new features or improvements, including README, brand descriptions, landing page, and MkDocs configuration. You can also migrate legacy project-guide documentation--it will preserve information while restructuring into standardized sections.
     sequence_or_cycle: cycle
     generation_type: document
     mode_template: "{{mode_templates_path}}/refactor-document-mode.md"

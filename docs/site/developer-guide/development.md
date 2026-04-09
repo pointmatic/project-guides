@@ -39,7 +39,7 @@ pip install -e ".[dev,docs]"
 
 This installs:
 - The package in editable mode
-- Development dependencies (pytest, ruff, mypy)
+- Development dependencies (pytest, pytest-cov, ruff, mypy)
 - Documentation dependencies (mkdocs-material)
 
 ## Verify Installation
@@ -125,18 +125,24 @@ git commit -m "Add feature: description"
 
 ```
 project_guide/
-├── __init__.py           # Package initialization
-├── __main__.py           # CLI entry point
-├── cli.py                # CLI commands implementation
-├── config.py             # Configuration model
-├── sync.py               # Guide synchronization logic
-├── version.py            # Version information
-└── templates/            # Bundled templates
-    └── guides/           # Workflow guides
-        ├── project-guide.md
-        ├── best-practices-guide.md
-        ├── debug-guide.md
-        └── documentation-setup-guide.md
+├── __init__.py               # Package initialization
+├── __main__.py               # CLI entry point
+├── cli.py                    # CLI commands implementation
+├── config.py                 # Configuration model
+├── metadata.py               # Metadata loading and validation
+├── render.py                 # Jinja2 template rendering
+├── sync.py                   # File synchronization logic
+├── exceptions.py             # Custom exception classes
+├── version.py                # Version information
+└── templates/                # Bundled templates
+    └── project-guide/        # Project guide templates
+        ├── .metadata.yml     # Mode and artifact definitions
+        ├── README.md         # Template README
+        ├── developer/        # Developer guide templates
+        └── templates/        # Jinja2 templates
+            ├── modes/        # Mode templates (*.md)
+            ├── artifacts/    # Artifact templates (*.md)
+            └── go.md         # Go template
 ```
 
 ### Tests
@@ -144,26 +150,24 @@ project_guide/
 ```
 tests/
 ├── __init__.py
-├── test_cli.py           # CLI command tests
-├── test_config.py        # Configuration tests
-├── test_sync.py          # Sync logic tests
-└── test_integration.py   # Integration tests
+├── test_cli.py               # CLI command tests (~60 tests)
+├── test_sync.py              # Sync logic tests (~22 tests)
+├── test_integration.py       # Integration tests (~6 tests)
+├── test_render.py            # Render tests (~20 tests)
+├── test_metadata.py          # Metadata tests (~9 tests)
+├── test_config.py            # Configuration tests (~7 tests)
+└── test_purge.py             # Purge command tests (~5 tests)
 ```
 
 ### Documentation
 
 ```
 docs/
-├── guides/               # Developer guides
-├── site/                 # MkDocs documentation
-│   ├── getting-started/
-│   ├── user-guide/
-│   ├── developer-guide/
-│   └── about/
-└── specs/                # Specifications
-    ├── features.md
-    ├── tech-spec.md
-    └── stories.md
+└── site/                     # MkDocs documentation
+    ├── getting-started/
+    ├── user-guide/
+    ├── developer-guide/
+    └── about/
 ```
 
 ## Running Tests
@@ -294,18 +298,26 @@ python -m project_guide init
 3. Update documentation in `docs/site/user-guide/commands.md`
 4. Run tests and linters
 
-### Update a Guide Template
+### Add a New Mode
 
-1. Edit file in `project_guide/templates/guides/`
-2. Test with actual LLM
+1. Create a mode template in `project_guide/templates/project-guide/templates/modes/`
+2. Add the mode to `.metadata.yml` in `project_guide/templates/project-guide/`
+3. Test rendering with `project-guide init` and select the new mode
+4. Verify the parametrized test in `test_render.py` picks up the new mode
+5. Document changes in `CHANGELOG.md`
+
+### Update a Template
+
+1. Edit the template in `project_guide/templates/project-guide/templates/`
+2. Test with `project-guide init` followed by mode selection to verify rendering
 3. Update version in `project_guide/version.py` if needed
 4. Document changes in `CHANGELOG.md`
 
-### Add a New Guide
+### Add a New Artifact
 
-1. Create guide in `project_guide/templates/guides/`
-2. Update `project_guide/sync.py` to include it
-3. Add tests
+1. Create an artifact template in `project_guide/templates/project-guide/templates/artifacts/`
+2. Add the artifact to `.metadata.yml`
+3. Add tests for the new artifact
 4. Update documentation
 
 ## Troubleshooting

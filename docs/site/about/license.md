@@ -24,7 +24,7 @@ limitations under the License.
 
 The Apache License 2.0 is a permissive open source license that allows you to:
 
-### ✅ Permitted
+### Permitted
 
 - **Use** - Use the software for any purpose
 - **Modify** - Modify the source code
@@ -33,13 +33,13 @@ The Apache License 2.0 is a permissive open source license that allows you to:
 - **Commercial Use** - Use the software commercially
 - **Patent Grant** - Receive an express grant of patent rights
 
-### 📋 Conditions
+### Conditions
 
 - **License and Copyright Notice** - Include the license and copyright notice with the software
 - **State Changes** - Document significant changes made to the software
 - **Disclaimer** - Include the license's disclaimer of warranty
 
-### ❌ Limitations
+### Limitations
 
 - **Liability** - The license includes a limitation of liability
 - **Warranty** - The software is provided without warranty
@@ -54,6 +54,7 @@ The complete Apache License 2.0 text is available in the [LICENSE](https://githu
 project-guide depends on the following open source packages:
 
 - **click** - BSD-3-Clause License
+- **Jinja2** - BSD-3-Clause License
 - **PyYAML** - MIT License
 - **packaging** - Apache-2.0 or BSD-2-Clause License
 

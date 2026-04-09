@@ -7,39 +7,39 @@
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://pointmatic.github.io/project-guide/)
 [![codecov](https://codecov.io/gh/pointmatic/project-guide/graph/badge.svg)](https://codecov.io/gh/pointmatic/project-guide)
 
-A Python CLI tool that installs, swaps, and synchronizes battle-tested LLM workflow prompts across projects, supporting version tracking and project-specific overrides to keep documentation consistent while preserving customizations.
+A Python CLI tool that installs, renders, and synchronizes battle-tested LLM workflow prompts across projects using mode-driven Jinja2 templates, with content-hash sync and project-specific overrides to keep documentation consistent while preserving customizations.
 
 ## Why project-guide?
 
-The `go-project-guide` prompt provides the LLM with a structured workflow:
-- Adapts for your current development mode (plan, code, debug, etc.) 
+The `go.md` prompt provides the LLM with a structured workflow:
+- Adapts for your current development mode (plan, code, debug, document, refactor)
 - Lets you stay in charge: guiding features, flow, and taste
 - Handles the typing so you can stay focused on the big picture
 
 ### How It Works
 - Install project-guide in any repository
-- Initialize the Project-Guide system. 
-- (optional) Set the project mode (plan, code, debug, etc.) 
-- Tell your LLM to read the `go-project-guide.md` (in your IDE, or however you prefer).
+- Initialize the Project-Guide system
+- (optional) Set the project mode (plan, code, debug, etc.)
+- Tell your LLM to read `docs/project-guide/go.md` (in your IDE, or however you prefer)
 
 ### Human-in-the-Loop Development
 
-This is "HITLoop" (human-in-the-loop) development: you direct, the LLM executes—It is not vibe-coding. Instead you are following the development closely and interactively guiding and improving the flow. The pace is "flaming agile"—an entire production-ready backend can be completed in 6-12 hours. 
+This is "HITLoop" (human-in-the-loop) development: you direct, the LLM executes--it is not vibe-coding. Instead you are following the development closely and interactively guiding and improving the flow. The pace is "flaming agile"--an entire production-ready backend can be completed in 6-12 hours.
 
 ### Customization and Updates
 
-When you customize a prompt for your project, mark it as overridden so future package updates skip it. When you want the latest workflow improvements, run `project-guide update` to sync all non-overridden prompts. 
+When you customize a file for your project, mark it as overridden so future package updates skip it. When you want the latest workflow improvements, run `project-guide update` to sync all non-overridden files.
 
 ## Key Features
-- 📚 **Battle-Tested Workflows** - Crafted workflow prompts from concept through production release in one place
-- **Adaptive** — Switch project between plan, code, and debug modes to get the right instructions for each task
-- 🔄 **Version Management** - Track and update all prompt docs in a project with a single command
-- 🔒 **Custom Doc Lock** - Lock customized prompts to prevent update overwrites
-- **Gentle Force Updates** — Automatic `.bak` files created if you `--force` update a custom prompt document
-- 🎨 **CLI Interface** - Eight intuitive commands for all operations
-- 🧪 **Well Tested** - 92% test coverage with 112 comprehensive tests
-- ⚡ **Zero Configuration** - Works with sensible defaults out of the box
-- 🌐 **Cross-Platform** - Runs on macOS, Linux, and Windows with Python 3.11+
+- **Battle-Tested Workflows** - Crafted workflow prompts from concept through production release in one place
+- **Mode-Driven Templates** - 15 modes rendered via Jinja2 so `go.md` always matches your current task
+- **Content-Hash Sync** - SHA-256 hash comparison detects changes without relying on version numbers
+- **Custom File Lock** - Lock customized files to prevent update overwrites
+- **Gentle Force Updates** - Automatic `.bak` files created if you `--force` update a custom file
+- **CLI Interface** - Eight intuitive commands for all operations
+- **Well Tested** - 91% test coverage with 129 comprehensive tests
+- **Zero Configuration** - Works with sensible defaults out of the box
+- **Cross-Platform** - Runs on macOS, Linux, and Windows with Python 3.11+
 
 ## Installation
 
@@ -55,6 +55,10 @@ pip install project-guide
 pipx install project-guide
 ```
 
+### Dependencies
+
+click, jinja2, pyyaml, packaging
+
 ## Quick Start
 
 ### 1. Initialize in your project
@@ -67,12 +71,14 @@ project-guide init
 This creates:
 - `.project-guide.yml` - Configuration file
 - `docs/project-guide/` - Mode templates, artifact templates, and metadata
-- `docs/specs/go-project-guide.md` - Rendered LLM instructions (default mode)
+- `docs/project-guide/go.md` - Rendered LLM instructions (default mode)
+
+The rendered `go.md` and `.bak.*` backup files are gitignored.
 
 ### 2. Tell your LLM to read the guide
 
 ```
-Read docs/specs/go-project-guide.md
+Read docs/project-guide/go.md
 ```
 
 The LLM follows the instructions, asks clarifying questions, and generates artifacts. Type `go` to advance through steps.
@@ -84,11 +90,17 @@ project-guide mode plan_concept      # Define problem & solution
 project-guide mode plan_features     # Define requirements
 project-guide mode plan_tech_spec    # Define architecture
 project-guide mode plan_stories      # Break into stories
+project-guide mode plan_phase        # Add a new phase to stories
 project-guide mode code_velocity     # Implement stories fast
+project-guide mode code_test_first   # TDD red-green-refactor
 project-guide mode debug             # Debug with test-first approach
+project-guide mode document_brand    # Brand descriptions
+project-guide mode document_landing  # GitHub Pages + MkDocs docs
+project-guide mode refactor_plan     # Plan a refactor
+project-guide mode refactor_document # Document a refactor
 ```
 
-Each mode regenerates `docs/specs/go-project-guide.md` with focused instructions for that workflow.
+Each mode re-renders `docs/project-guide/go.md` with focused instructions for that workflow.
 
 ### 4. List available modes
 
@@ -101,27 +113,32 @@ Output:
 Current mode: plan_concept
 
 Available modes:
-  → default                   Getting started -- full project lifecycle overview
-    plan_concept              Generate a high-level concept (problem and solution space)
-    plan_features             Generate feature requirements (what the project does)
-    plan_tech_spec            Generate a technical specification prompt (how it's built)
-    plan_stories              Generate a user stories prompt
-    code_velocity             Generate code with velocity
-    code_test_first           Generate code with a test-first approach
-    debug                     Debug code with a test-first approach
-    ...
+  -> default                   Getting started -- full project lifecycle overview
+     plan_concept              Generate a high-level concept (problem and solution space)
+     plan_features             Generate feature requirements (what the project does)
+     plan_tech_spec            Generate a technical specification prompt (how it's built)
+     plan_stories              Generate a user stories prompt
+     plan_phase                Add a new phase to stories
+     code_velocity             Generate code with velocity
+     code_test_first           Generate code with a test-first approach
+     debug                     Debug code with a test-first approach
+     document_brand            Generate brand descriptions
+     document_landing          Generate landing page and docs
+     refactor_plan             Plan a refactor
+     refactor_document         Document a refactor
+     ...
 ```
 
-### 5. Update templates
+### 5. Update files
 
 ```bash
 pip install --upgrade project-guide
 project-guide update
 ```
 
-Overridden templates are skipped. Modified templates prompt for confirmation. Backups are always created before overwrites.
+Overridden files are skipped. Modified files prompt for confirmation. Backups are always created before overwrites.
 
-### 6. Customize a template (optional)
+### 6. Customize a file (optional)
 
 ```bash
 project-guide override templates/modes/debug-mode.md "Custom debugging for this project"
@@ -163,7 +180,7 @@ project-guide mode [MODE_NAME]
 
 **Without argument:** Lists current mode and all available modes.
 
-**With argument:** Switches to the specified mode and re-renders `go-project-guide.md`.
+**With argument:** Switches to the specified mode and re-renders `go.md`.
 
 **Examples:**
 ```bash
@@ -179,38 +196,42 @@ project-guide mode debug
 
 ### `status`
 
-Show status of all installed templates and current mode.
+Show status of all installed files and current mode. Output is compact and grouped into Mode, Guide, and Files sections with color.
 
 ```bash
-project-guide status
+project-guide status [OPTIONS]
 ```
 
+**Options:**
+- `--verbose` / `-v` - Show detailed file-level information
+
 **Output includes:**
-- Current package version
-- Installed version in project
-- Status of each guide (current, outdated, overridden, missing)
-- Override reasons
+- Current package version and installed version
+- Active mode
+- Status of the rendered guide
+- Status of each file (current, outdated, overridden, missing)
+- Override reasons (in verbose mode)
 
 ### `update`
 
-Update guides to the latest version.
+Update files to the latest version. Uses SHA-256 content hash comparison to detect changes.
 
 ```bash
 project-guide update [OPTIONS]
 ```
 
 **Options:**
-- `--guides NAME` - Update specific guides only (repeatable)
-- `--force` - Update even overridden guides (creates backups)
+- `--files NAME` - Update specific files only (repeatable)
+- `--force` - Update even overridden files (creates backups)
 - `--dry-run` - Show what would change without applying
 
 **Examples:**
 ```bash
-# Update all guides (skips overridden)
+# Update all files (skips overridden)
 project-guide update
 
-# Update specific guides
-project-guide update --guides project-guide.md --guides debug-guide.md
+# Update specific files
+project-guide update --files templates/modes/debug-mode.md
 
 # Force update all (creates backups for overridden)
 project-guide update --force
@@ -221,37 +242,40 @@ project-guide update --dry-run
 
 ### `override`
 
-Mark a guide as customized to prevent automatic updates.
+Mark a file as customized to prevent automatic updates.
 
 ```bash
-project-guide override GUIDE_NAME REASON
+project-guide override FILE_NAME REASON
 ```
 
 **Arguments:**
-- `GUIDE_NAME` - Name of the guide file
-- `REASON` - Why this guide is customized
+- `FILE_NAME` - Name of the file (positional)
+- `REASON` - Why this file is customized (positional)
 
 **Example:**
 ```bash
-project-guide override debug-guide.md "Custom debugging workflow with project-specific tools"
+project-guide override templates/modes/debug-mode.md "Custom debugging workflow with project-specific tools"
 ```
 
 ### `unoverride`
 
-Remove override status from a guide.
+Remove override status from a file.
 
 ```bash
-project-guide unoverride GUIDE_NAME
+project-guide unoverride FILE_NAME
 ```
+
+**Arguments:**
+- `FILE_NAME` - Name of the file (positional)
 
 **Example:**
 ```bash
-project-guide unoverride debug-guide.md
+project-guide unoverride templates/modes/debug-mode.md
 ```
 
 ### `overrides`
 
-List all overridden guides.
+List all overridden files.
 
 ```bash
 project-guide overrides
@@ -259,11 +283,11 @@ project-guide overrides
 
 **Output:**
 ```
-Overridden guides:
+Overridden files:
 
-debug-guide.md
+templates/modes/debug-mode.md
   Reason: Custom debugging workflow with project-specific tools
-  Since: v0.12.0
+  Since: v2.0.0
   Last updated: 2026-03-03
 ```
 
@@ -289,7 +313,7 @@ project-guide purge --force
 
 **What gets removed:**
 - `.project-guide.yml` configuration file
-- Guides directory (e.g., `docs/guides/`) and all contents
+- Target directory (e.g., `docs/project-guide/`) and all contents
 
 **Warning:** This action cannot be undone. Use with caution.
 
@@ -299,8 +323,9 @@ The `.project-guide.yml` file stores project configuration:
 
 ```yaml
 version: "2.0"
-installed_version: "2.0.7"
+installed_version: "2.0.15"
 target_dir: "docs/project-guide"
+metadata_file: ".metadata.yml"
 current_mode: "code_velocity"
 overrides:
   templates/modes/debug-mode.md:
@@ -311,10 +336,11 @@ overrides:
 
 **Fields:**
 - `version` - Config file format version
-- `installed_version` - Version of templates currently installed
+- `installed_version` - Version of files currently installed
 - `target_dir` - Where templates are stored
+- `metadata_file` - Hidden metadata file inside target dir (default: `.metadata.yml`)
 - `current_mode` - Active development mode
-- `overrides` - Map of customized templates with metadata
+- `overrides` - Map of customized files with metadata
 
 ## Available Modes
 
@@ -343,6 +369,13 @@ overrides:
 | **Branding** | `project-guide mode document_brand` | `docs/specs/brand-descriptions.md` |
 | **Landing Page** | `project-guide mode document_landing` | GitHub Pages + MkDocs docs |
 
+### Refactoring Modes
+
+| Mode | Command | Workflow |
+|------|---------|----------|
+| **Plan** | `project-guide mode refactor_plan` | Plan a refactor |
+| **Document** | `project-guide mode refactor_document` | Document a refactor |
+
 ## Troubleshooting
 
 ### "Configuration file not found"
@@ -354,17 +387,17 @@ overrides:
 project-guide init
 ```
 
-### "Guide already exists"
+### "File already exists"
 
-**Problem:** Trying to initialize when guides already exist.
+**Problem:** Trying to initialize when files already exist.
 
 **Solution:**
 ```bash
 # Use --force to overwrite
 project-guide init --force
 
-# Or manually remove existing guides
-rm -rf docs/guides .project-guide.yml
+# Or manually remove existing files
+rm -rf docs/project-guide .project-guide.yml
 project-guide init
 ```
 
@@ -383,11 +416,11 @@ chmod -R u+w docs/
 
 ### Updates not appearing
 
-**Problem:** Guides show as current but you expect updates.
+**Problem:** Files show as current but you expect updates.
 
 **Solution:**
 ```bash
-# Check if guide is overridden
+# Check if file is overridden
 project-guide overrides
 
 # Force update if needed
@@ -507,12 +540,11 @@ limitations under the License.
 
 ## Documentation
 
-📚 **Full documentation is available at [pointmatic.github.io/project-guide](https://pointmatic.github.io/project-guide/)**
+Full documentation is available at [pointmatic.github.io/project-guide](https://pointmatic.github.io/project-guide/)
 
 - [Getting Started](https://pointmatic.github.io/project-guide/getting-started/installation/) - Installation and quick start
 - [User Guide](https://pointmatic.github.io/project-guide/user-guide/commands/) - Commands, workflows, and override management
 - [Developer Guide](https://pointmatic.github.io/project-guide/developer-guide/contributing/) - Contributing and development setup
-- [Workflow Guides](docs/guides/) - Bundled LLM workflow guides in your project
 
 ## Support
 
@@ -522,4 +554,4 @@ limitations under the License.
 
 ---
 
-**Made with ❤️ for LLM-assisted development workflows**
+**Made for LLM-assisted development workflows**

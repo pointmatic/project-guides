@@ -9,9 +9,11 @@ The `.project-guide.yml` file is created automatically when you run `project-gui
 ### Default Configuration
 
 ```yaml
-version: "1.0"
-package_version: "1.1.3"
-guides_dir: "docs/guides"
+version: "2.0"
+installed_version: "2.0.13"
+target_dir: "docs/project-guide"
+metadata_file: ".metadata.yml"
+current_mode: "code_velocity"
 overrides: {}
 ```
 
@@ -19,65 +21,77 @@ overrides: {}
 
 ### `version`
 
-The configuration file format version. Currently `"1.0"`.
+The configuration file format version. Currently `"2.0"`.
 
-### `package_version`
+### `installed_version`
 
-The version of the project-guide package that was used to install or last update the guides. This is used to track which guides are outdated.
+The version of the project-guide package that was used to install or last update the files. Used alongside content hashing to determine which files need updating.
 
-### `guides_dir`
+### `target_dir`
 
-The directory where guides are installed. Defaults to `docs/guides`.
+The directory where project-guide files are installed. Defaults to `docs/project-guide`.
 
 You can customize this:
 
 ```yaml
-guides_dir: "documentation/workflows"
+target_dir: "documentation/workflows"
 ```
+
+### `metadata_file`
+
+The name of the metadata file used to track file state. Defaults to `.metadata.yml`.
+
+### `current_mode`
+
+Tracks the active development mode. Changed via the `project-guide mode` command. project-guide includes 15 modes to match different development workflows.
 
 ### `overrides`
 
-A mapping of guide names to override metadata. Managed automatically by the `override` and `unoverride` commands.
+A mapping of template paths to override metadata. Managed automatically by the `override` and `unoverride` commands.
 
 Example:
 
 ```yaml
 overrides:
-  project-guide.md:
-    version: "1.1.0"
-    reason: "Customized for our specific workflow"
+  templates/modes/debug-mode.md:
+    reason: "Custom debugging workflow for our project"
+    locked_version: "2.0.10"
+    last_updated: "2026-03-15"
 ```
+
+Override fields:
+
+- `reason` -- Why the override was created
+- `locked_version` -- The package version when the override was set
+- `last_updated` -- When the override was last modified
 
 ## Zero Configuration
 
 project-guide works out of the box with sensible defaults. You don't need to create or modify the configuration file manually unless you want to customize behavior.
 
-## Custom Guides Directory
+## Custom Target Directory
 
-To use a custom guides directory, specify it during initialization:
+To use a custom target directory, specify it during initialization:
 
 ```bash
-project-guide init --guides-dir custom/path
+project-guide init --target-dir custom/path
 ```
 
 Or modify the configuration file:
 
 ```yaml
-guides_dir: "custom/path"
+target_dir: "custom/path"
 ```
 
 All commands will respect this setting.
 
-## Version Tracking
+## Content Hash Sync
 
-project-guide automatically tracks:
-- Which package version installed each guide
-- Which guides have been overridden
-- The version at which a guide was overridden
+project-guide uses content hashing (not version numbers) to track file state. This enables smart updates that:
 
-This enables smart updates that:
-- Only update non-overridden guides
-- Show which guides are outdated
+- Detect exactly which files have changed upstream
+- Only update non-overridden files
+- Show which files are current, outdated, or overridden
 - Preserve your customizations
 
 ## Manual Configuration

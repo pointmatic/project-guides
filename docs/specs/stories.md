@@ -531,7 +531,7 @@ The file lives in `docs/project-guide/` — the directory provides context. The 
 - [x] Verify: `project-guide status` shows grouped output with hash-based file state
 - [x] Verify: version upgrade with no template changes shows `Files: 33 current`
 
-### Story J.o: v2.0.14 Adjust status output colors [Done]
+### Story J.o: v2.0.14 Adjust status output colors []
 
 - [x] Adjust status output colors for interest and readability
 - [x] Bump version to 2.0.14
@@ -541,24 +541,18 @@ The file lives in `docs/project-guide/` — the directory provides context. The 
 - [x] Add prompt to 'Tell your LLM: Read docs/project-guide/go-project-guide.md'
 - [x] Bump version to 2.0.15
 
----
+### Story J.q: v2.0.16 Refactor Planning Docs and Documenation [Planned]
 
-## Future
-
-### Story J.?: v2.0.? (part 1) Refactor Planning Documents
-
-- [ ] Update concept (`docs/specs/concepts.md`)
-- [ ] Update features (`docs/specs/features.md`)
-- [ ] Update tech-spec (`docs/specs/tech-spec.md`)
-
-### Story J.?: v2.0.? (part 2) Refactor Landing Page Documentation [Planned]
-
-Update all documentation to reflect the new mode system and workflow changes.
-
-- [ ] Update README (`README.md`)
-- [ ] Update index.html page (`docs/site/index.html`)
-- [ ] Update MkDocs pages (`docs/site/*.md`)
-
+- [x] Clarify `refactor_*` modes and their purpose in `.metadata.yml`
+- [x] Update `refactor-plan-mode.md` and `refactor-document-mode.md`
+- [x] Update concept (`docs/specs/concepts.md`)
+- [x] Update features (`docs/specs/features.md`)
+- [x] Update tech-spec (`docs/specs/tech-spec.md`)
+- [x] Update README (`README.md`)
+- [x] Update index.html page (`docs/site/index.html`)
+- [x] Update MkDocs pages (`docs/site/*.md`)
+- [x] Update CHANGELOG (`CHANGELOG.md`)
+- [x] Bump version to 2.0.16
 
 ---
 

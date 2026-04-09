@@ -1,43 +1,43 @@
 # Override Management
 
-Learn how to effectively manage guide overrides to balance customization with receiving updates.
+Learn how to effectively manage file overrides to balance customization with receiving updates.
 
 ## Understanding Overrides
 
-An override tells project-guide: "I've customized this guide—don't update it automatically."
+An override tells project-guide: "I've customized this file -- don't update it automatically."
 
 ### Why Overrides Matter
 
 - **Preserve customizations**: Your project-specific changes won't be overwritten
-- **Selective updates**: Update some guides while keeping others locked
-- **Version tracking**: Know which version you customized from
+- **Selective updates**: Update some files while keeping others locked
+- **Hash tracking**: Know which content version you customized from
 
 ## Override Lifecycle
 
-### 1. Customize a Guide
+### 1. Customize a File
 
-Edit the guide file to add project-specific content:
+Edit the file to add project-specific content:
 
 ```bash
-vim docs/guides/project-guide.md
+vim docs/project-guide/templates/modes/debug-mode.md
 # Add your customizations
 ```
 
 ### 2. Mark as Overridden
 
-Tell project-guide not to update this guide:
+Tell project-guide not to update this file. Both arguments are positional:
 
 ```bash
-project-guide override project-guide.md --reason "Added team workflow steps"
+project-guide override templates/modes/debug-mode.md "Added team workflow steps"
 ```
 
 ### 3. Continue Updating Others
 
-Other guides still receive updates:
+Other files still receive updates:
 
 ```bash
 project-guide update
-# Only non-overridden guides are updated
+# Only non-overridden files are updated
 ```
 
 ### 4. Review New Versions (Optional)
@@ -45,11 +45,12 @@ project-guide update
 Periodically check what's new:
 
 ```bash
-# Force update creates .bak backup
+# Force update creates .bak.<timestamp> backup
 project-guide update --force
 
 # Compare versions
-diff docs/guides/project-guide.md docs/guides/project-guide.md.bak
+diff docs/project-guide/templates/modes/debug-mode.md \
+     docs/project-guide/templates/modes/debug-mode.md.bak.*
 ```
 
 ### 5. Decide: Keep or Adopt
@@ -58,27 +59,27 @@ Either keep your override or adopt the new version:
 
 ```bash
 # Keep override (restore from backup)
-mv docs/guides/project-guide.md.bak docs/guides/project-guide.md
+mv docs/project-guide/templates/modes/debug-mode.md.bak.<timestamp> \
+   docs/project-guide/templates/modes/debug-mode.md
 
 # Or adopt new version (remove override)
-project-guide unoverride project-guide.md
-rm docs/guides/project-guide.md.bak
+project-guide unoverride templates/modes/debug-mode.md
 ```
 
 ## Override Strategies
 
-### Strategy 1: Override Heavily Customized Guides
+### Strategy 1: Override Heavily Customized Files
 
-**Use case**: Guides with significant project-specific content
+**Use case**: Files with significant project-specific content
 
 ```bash
 # Customize for your project
-vim docs/guides/project-guide.md
+vim docs/project-guide/templates/modes/debug-mode.md
 # Add company-specific sections, remove irrelevant parts
 
 # Lock it
-project-guide override project-guide.md \
-  --reason "Customized for company workflow and security requirements"
+project-guide override templates/modes/debug-mode.md \
+  "Customized for company workflow and security requirements"
 ```
 
 **Pros**: Preserves all customizations
@@ -92,7 +93,8 @@ project-guide override project-guide.md \
 # Only override when absolutely necessary
 # Periodically review new versions
 project-guide update --force
-diff docs/guides/*.md docs/guides/*.md.bak
+diff docs/project-guide/templates/modes/*.md \
+     docs/project-guide/templates/modes/*.md.bak.*
 
 # Merge improvements manually
 ```
@@ -105,11 +107,10 @@ diff docs/guides/*.md docs/guides/*.md.bak
 **Use case**: Balance customization and updates
 
 ```bash
-# Override guides with project-specific content
-project-guide override project-guide.md
+# Override files with project-specific content
+project-guide override templates/modes/debug-mode.md "Custom debug workflow"
 
-# Keep general guides up-to-date
-# (best-practices-guide.md, debug-guide.md, etc.)
+# Keep general files up-to-date
 project-guide update
 ```
 
@@ -120,11 +121,11 @@ project-guide update
 
 ### 1. Document Override Reasons
 
-Always use `--reason`:
+Always provide a clear reason:
 
 ```bash
-project-guide override project-guide.md \
-  --reason "Added sections for: internal APIs, security review process, deployment checklist"
+project-guide override templates/modes/debug-mode.md \
+  "Added sections for: internal APIs, security review process, deployment checklist"
 ```
 
 This helps future you (and teammates) understand why.
@@ -142,12 +143,13 @@ project-guide overrides
 ### 3. Keep Override List Short
 
 Only override when necessary:
-- ✅ Project-specific workflow steps
-- ✅ Company security requirements
-- ✅ Custom tool integrations
-- ❌ Minor wording preferences
-- ❌ Formatting changes
-- ❌ Typo fixes (contribute upstream instead)
+
+- Project-specific workflow steps
+- Company security requirements
+- Custom tool integrations
+- NOT minor wording preferences
+- NOT formatting changes
+- NOT typo fixes (contribute upstream instead)
 
 ### 4. Use Version Control
 
@@ -155,13 +157,16 @@ Track override decisions in git:
 
 ```bash
 # After overriding
-git add .project-guide.yml docs/guides/
-git commit -m "Override project-guide.md: added internal deployment steps"
+git add .project-guide.yml docs/project-guide/
+git commit -m "Override debug-mode.md: added internal deployment steps"
 ```
+
+Note: `.bak` files are gitignored and will not be committed.
 
 ### 5. Team Communication
 
 For team projects:
+
 - Document overrides in README or CONTRIBUTING.md
 - Discuss override decisions in team meetings
 - Share override reasons in commit messages
@@ -174,28 +179,28 @@ For team projects:
 
 **Solution**:
 ```bash
-# Edit guide
-vim docs/guides/project-guide.md
+# Edit file
+vim docs/project-guide/templates/modes/debug-mode.md
 # Add section: "## Our Project Setup"
 
 # Override
-project-guide override project-guide.md \
-  --reason "Added project-specific setup steps"
+project-guide override templates/modes/debug-mode.md \
+  "Added project-specific setup steps"
 ```
 
 ### Scenario 2: Removing Irrelevant Sections
 
-**Problem**: Guide includes sections that don't apply
+**Problem**: File includes sections that don't apply
 
 **Solution**:
 ```bash
-# Edit guide
-vim docs/guides/project-guide.md
+# Edit file
+vim docs/project-guide/templates/modes/debug-mode.md
 # Remove sections that don't apply
 
 # Override
-project-guide override project-guide.md \
-  --reason "Removed sections not applicable to our stack"
+project-guide override templates/modes/debug-mode.md \
+  "Removed sections not applicable to our stack"
 ```
 
 ### Scenario 3: Integrating Internal Tools
@@ -204,23 +209,23 @@ project-guide override project-guide.md \
 
 **Solution**:
 ```bash
-# Edit guide
-vim docs/guides/project-guide.md
+# Edit file
+vim docs/project-guide/developer/setup.md
 # Add references to internal CI/CD, code review tools
 
 # Override
-project-guide override project-guide.md \
-  --reason "Integrated with internal tools: Jenkins, Gerrit, Artifactory"
+project-guide override developer/setup.md \
+  "Integrated with internal tools: Jenkins, Gerrit, Artifactory"
 ```
 
 ### Scenario 4: Accidentally Overrode
 
-**Problem**: Marked guide as overridden by mistake
+**Problem**: Marked file as overridden by mistake
 
 **Solution**:
 ```bash
 # Remove override
-project-guide unoverride project-guide.md
+project-guide unoverride templates/modes/debug-mode.md
 
 # Update to latest
 project-guide update
@@ -228,26 +233,27 @@ project-guide update
 
 ### Scenario 5: Want to See New Version
 
-**Problem**: Guide is overridden but want to see what's new
+**Problem**: File is overridden but want to see what's new
 
 **Solution**:
 ```bash
-# Force update (creates backup)
+# Force update (creates .bak.<timestamp> backup)
 project-guide update --force
 
 # Compare
-diff docs/guides/project-guide.md docs/guides/project-guide.md.bak
+diff docs/project-guide/templates/modes/debug-mode.md \
+     docs/project-guide/templates/modes/debug-mode.md.bak.*
 
 # Decide what to do
-# Option A: Keep override
-mv docs/guides/project-guide.md.bak docs/guides/project-guide.md
+# Option A: Keep override (restore backup)
+mv docs/project-guide/templates/modes/debug-mode.md.bak.<timestamp> \
+   docs/project-guide/templates/modes/debug-mode.md
 
 # Option B: Merge manually
-# (edit project-guide.md to incorporate new improvements)
+# (edit file to incorporate new improvements)
 
-# Option C: Adopt new version
-project-guide unoverride project-guide.md
-rm docs/guides/project-guide.md.bak
+# Option C: Adopt new version (remove override)
+project-guide unoverride templates/modes/debug-mode.md
 ```
 
 ## Override Metadata
@@ -256,18 +262,21 @@ Overrides are stored in `.project-guide.yml`:
 
 ```yaml
 overrides:
-  project-guide.md:
-    version: "1.1.0"
-    reason: "Customized for our team workflow"
-  debug-guide.md:
-    version: "1.1.2"
-    reason: "Added project-specific debugging steps"
+  templates/modes/debug-mode.md:
+    reason: "Added team-specific debugging steps"
+    locked_version: "a3f8c2e1"
+    last_updated: "2026-03-15T10:30:00Z"
+  developer/setup.md:
+    reason: "Customized for our internal toolchain"
+    locked_version: "b7d4e9f0"
+    last_updated: "2026-04-01T14:20:00Z"
 ```
 
 ### Fields
 
-- `version`: Package version when guide was overridden
-- `reason`: Why the guide was overridden (optional but recommended)
+- `reason`: Why the file was overridden (required, positional arg)
+- `locked_version`: Content hash when the file was overridden
+- `last_updated`: Timestamp of when the override was created
 
 ## Advanced: Selective Merging
 
@@ -277,13 +286,12 @@ For advanced users who want to merge improvements:
 # 1. Force update to get latest
 project-guide update --force
 
-# 2. Use three-way merge
-# Original: version when you overrode
-# Yours: your customized version (now .bak)
-# Theirs: new version (now current)
+# 2. Compare your version with the new one
+# Your customized version is backed up as .bak.<timestamp>
+# The new version is now the current file
 
 # 3. Manually merge
-vim docs/guides/project-guide.md
+vim docs/project-guide/templates/modes/debug-mode.md
 # Incorporate improvements while keeping customizations
 
 # 4. Keep override

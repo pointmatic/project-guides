@@ -7,6 +7,8 @@ project-guide can be installed using pip, pipx, or from source.
 - Python 3.11 or higher
 - pip or pipx package manager
 
+project-guide depends on Jinja2 for its mode-driven templating system. This is installed automatically as a dependency.
+
 ## Install via pip
 
 The simplest way to install project-guide is using pip:
@@ -15,7 +17,7 @@ The simplest way to install project-guide is using pip:
 pip install project-guide
 ```
 
-This installs project-guide in your current Python environment.
+This installs project-guide and its dependencies (including Jinja2) in your current Python environment.
 
 ## Install via pipx (Recommended)
 

@@ -21,7 +21,7 @@ If you find a bug or have a feature request:
 
 ### Suggesting Improvements
 
-For guide improvements or new features:
+For template improvements or new features:
 
 1. Open a [GitHub Discussion](https://github.com/pointmatic/project-guide/discussions)
 2. Describe your suggestion and use case
@@ -90,9 +90,10 @@ For guide improvements or new features:
 ### Testing
 
 - Write tests for new features
-- Maintain or improve test coverage
+- Maintain or improve test coverage (minimum 85%, currently 91%)
 - Use pytest for testing
 - Test edge cases and error conditions
+- 129 tests across 7 test files
 
 ### Documentation
 
@@ -101,34 +102,64 @@ For guide improvements or new features:
 - Update CHANGELOG.md with your changes
 - Keep documentation clear and concise
 
-### Guide Improvements
+### Template Improvements
 
-When improving workflow guides:
+When improving templates:
 
-1. **Test with LLMs**: Verify guides work with actual LLMs
+1. **Test rendering**: Verify templates render correctly with `project-guide init` and mode selection
 2. **Be specific**: Provide concrete steps, not vague instructions
 3. **Include examples**: Show what good output looks like
 4. **Consider edge cases**: Handle common variations
-5. **Maintain consistency**: Follow existing guide structure
+5. **Maintain consistency**: Follow existing template structure
 
 ## Project Structure
 
 ```
 project-guide/
-├── project_guide/          # Main package
-│   ├── templates/          # Bundled guide templates
-│   │   └── guides/         # Workflow guides
-│   ├── cli.py             # CLI commands
-│   ├── config.py          # Configuration handling
-│   ├── sync.py            # Guide synchronization
-│   └── version.py         # Version information
-├── tests/                  # Test suite
-├── docs/                   # Documentation
-│   ├── guides/            # Developer guides
-│   ├── site/              # MkDocs documentation
-│   └── specs/             # Specifications
-└── pyproject.toml         # Package configuration
+├── project_guide/              # Main package
+│   ├── cli.py                  # CLI commands
+│   ├── config.py               # Configuration handling
+│   ├── metadata.py             # Metadata loading and validation
+│   ├── render.py               # Jinja2 template rendering
+│   ├── sync.py                 # File synchronization
+│   ├── exceptions.py           # Custom exception classes
+│   ├── version.py              # Version information
+│   └── templates/              # Bundled templates
+│       └── project-guide/      # Project guide templates
+│           ├── .metadata.yml   # Mode and artifact definitions
+│           ├── README.md       # Template README
+│           ├── developer/      # Developer guide templates
+│           └── templates/      # Jinja2 templates
+│               ├── modes/      # Mode templates (*.md)
+│               ├── artifacts/  # Artifact templates (*.md)
+│               └── go.md       # Go template
+├── tests/                      # Test suite (129 tests, 91% coverage)
+│   ├── test_cli.py             # CLI command tests (~60 tests)
+│   ├── test_sync.py            # Sync logic tests (~22 tests)
+│   ├── test_integration.py     # Integration tests (~6 tests)
+│   ├── test_render.py          # Render tests (~20 tests)
+│   ├── test_metadata.py        # Metadata tests (~9 tests)
+│   ├── test_config.py          # Configuration tests (~7 tests)
+│   └── test_purge.py           # Purge command tests (~5 tests)
+├── docs/                       # Documentation
+│   └── site/                   # MkDocs documentation
+└── pyproject.toml              # Package configuration
 ```
+
+### Dependencies
+
+**Runtime:**
+
+- click
+- jinja2
+- pyyaml
+- packaging
+
+**Development:**
+
+- ruff
+- mypy
+- pytest-cov
 
 ## Testing Locally
 

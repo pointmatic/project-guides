@@ -1,22 +1,23 @@
 # Commands Reference
 
-project-guide provides seven intuitive commands for managing LLM workflow guides across your projects.
+project-guide provides eight commands for managing LLM workflow files across your projects.
 
 ## Command Overview
 
 | Command | Purpose |
 |---------|---------|
-| `init` | Install guides into a new project |
-| `status` | Show which guides are current, outdated, or overridden |
-| `update` | Update non-overridden guides to latest versions |
-| `override` | Mark a guide as overridden to prevent updates |
-| `unoverride` | Remove override status from a guide |
-| `overrides` | List all overridden guides |
-| `purge` | Remove all guides and configuration |
+| `init` | Install files into a new project |
+| `mode` | Switch workflow mode or list available modes |
+| `status` | Show file status grouped by category |
+| `update` | Update non-overridden files to latest versions |
+| `override` | Mark a file as overridden to prevent updates |
+| `unoverride` | Remove override status from a file |
+| `overrides` | List all overridden files |
+| `purge` | Remove all files and configuration |
 
 ## init
 
-Install workflow guides into your project.
+Install workflow files into your project and render the initial `go.md` entry point.
 
 ```bash
 project-guide init [OPTIONS]
@@ -24,8 +25,8 @@ project-guide init [OPTIONS]
 
 ### Options
 
-- `--guides-dir PATH` - Custom directory for guides (default: `docs/guides`)
-- `--force` - Overwrite existing guides and configuration
+- `--target-dir PATH` - Custom directory for files (default: `docs/project-guide`)
+- `--force` - Overwrite existing files and configuration
 
 ### Examples
 
@@ -33,8 +34,8 @@ project-guide init [OPTIONS]
 # Initialize with default settings
 project-guide init
 
-# Use custom guides directory
-project-guide init --guides-dir documentation/workflows
+# Use custom target directory
+project-guide init --target-dir documentation/workflows
 
 # Force reinstall (overwrites existing files)
 project-guide init --force
@@ -42,40 +43,83 @@ project-guide init --force
 
 ### What It Does
 
-1. Creates the guides directory if it doesn't exist
-2. Copies all bundled guides to the directory
+1. Creates the `docs/project-guide/` directory if it doesn't exist
+2. Copies all bundled templates to the directory
 3. Creates `.project-guide.yml` configuration file
-4. Records the package version for each guide
+4. Renders `go.md` from templates based on the active mode
+5. Records the content hash for each file
+
+## mode
+
+Switch the active workflow mode or list available modes.
+
+```bash
+project-guide mode [MODE_NAME]
+```
+
+### Examples
+
+```bash
+# List all available modes
+project-guide mode
+
+# Switch to a specific mode
+project-guide mode plan_concept
+project-guide mode code_velocity
+project-guide mode debug
+```
+
+### What It Does
+
+1. When called with no argument, lists all 15 available modes
+2. When called with a mode name, switches the active mode
+3. Re-renders `go.md` to reflect the new mode's workflow
+4. Updates `.project-guide.yml` with the active mode
 
 ## status
 
-Display the status of all guides in your project.
+Display the status of all files in your project, grouped by category.
 
 ```bash
-project-guide status
+project-guide status [OPTIONS]
 ```
+
+### Options
+
+- `--verbose`, `-v` - Show detailed output for each file
 
 ### Output
 
-Shows each guide with:
-- **Current** ✓ - Guide is up to date
-- **Outdated** ⚠ - Newer version available
-- **Overridden** 🔒 - Guide is locked (won't be updated)
-- **Missing** ✗ - Guide not found in guides directory
+Shows files grouped into three sections:
+
+- **Mode** - The active workflow mode
+- **Guide** - The rendered `go.md` entry point
+- **Files** - All managed template files with their status
+
+Each file shows one of:
+
+- **Current** - File content matches the latest template
+- **Changed** - Content hash differs from the latest template
+- **Overridden** - File is locked and won't be updated
+- **Missing** - File not found in the target directory
 
 ### Example Output
 
 ```
-Guide Status:
-  project-guide.md         ✓ Current (v1.1.3)
-  best-practices-guide.md  ⚠ Outdated (v1.1.0 → v1.1.3)
-  debug-guide.md           🔒 Overridden (v1.1.0)
-  documentation-setup-guide.md  ✓ Current (v1.1.3)
+Mode: code_velocity
+
+Guide:
+  go.md                          Current
+
+Files:
+  developer/setup.md             Current
+  templates/modes/debug-mode.md  Changed
+  .metadata.yml                  Current
 ```
 
 ## update
 
-Update all non-overridden guides to the latest versions.
+Update all non-overridden files to the latest versions.
 
 ```bash
 project-guide update [OPTIONS]
@@ -83,78 +127,87 @@ project-guide update [OPTIONS]
 
 ### Options
 
-- `--force` - Update even overridden guides (creates `.bak` backups)
+- `--files FILE [FILE ...]` - Update only specific files
+- `--dry-run` - Show what would be updated without making changes
+- `--force` - Update even overridden files (creates `.bak` backups)
 
 ### Examples
 
 ```bash
-# Update non-overridden guides
+# Update all non-overridden files
 project-guide update
 
-# Force update all guides (including overridden)
+# Preview what would change
+project-guide update --dry-run
+
+# Update specific files only
+project-guide update --files templates/modes/debug-mode.md developer/setup.md
+
+# Force update all files (including overridden)
 project-guide update --force
 ```
 
 ### What It Does
 
-1. Checks each guide's version against the package version
-2. Updates outdated guides that are not overridden
-3. Skips overridden guides (unless `--force` is used)
-4. Creates `.bak` backups when updating overridden guides with `--force`
-5. Updates package version in configuration
+1. Compares each file's content hash against the latest template hash
+2. Updates files whose content has changed and are not overridden
+3. Skips overridden files (unless `--force` is used)
+4. Creates `.bak.<timestamp>` backups when updating overridden files with `--force`
+5. Re-renders `go.md` if the active mode's template changed
+6. Updates content hashes in configuration
 
 ## override
 
-Mark a guide as overridden to prevent automatic updates.
+Mark a file as overridden to prevent automatic updates.
 
 ```bash
-project-guide override <guide-name> [OPTIONS]
+project-guide override <FILE_NAME> <REASON>
 ```
 
-### Options
-
-- `--reason TEXT` - Optional reason for the override
+Both arguments are positional. File paths are template-relative.
 
 ### Examples
 
 ```bash
-# Mark guide as overridden
-project-guide override project-guide.md
+# Override a mode template
+project-guide override templates/modes/debug-mode.md "Added team-specific debugging steps"
 
-# With reason
-project-guide override project-guide.md --reason "Customized for our team workflow"
+# Override a developer file
+project-guide override developer/setup.md "Customized for our internal toolchain"
 ```
 
 ### What It Does
 
-1. Records the guide as overridden in `.project-guide.yml`
-2. Stores the current version
-3. Optionally stores the reason
-4. Future `update` commands will skip this guide
+1. Records the file as overridden in `.project-guide.yml`
+2. Stores the current content hash as `locked_version`
+3. Stores the reason and `last_updated` timestamp
+4. Future `update` commands will skip this file
 
 ## unoverride
 
-Remove override status from a guide, allowing it to be updated again.
+Remove override status from a file, allowing it to be updated again.
 
 ```bash
-project-guide unoverride <guide-name>
+project-guide unoverride <FILE_NAME>
 ```
+
+The file path is positional and template-relative.
 
 ### Examples
 
 ```bash
 # Remove override status
-project-guide unoverride project-guide.md
+project-guide unoverride templates/modes/debug-mode.md
 ```
 
 ### What It Does
 
-1. Removes the guide from the overrides list in `.project-guide.yml`
-2. The guide can now be updated with `project-guide update`
+1. Removes the file from the overrides list in `.project-guide.yml`
+2. The file can now be updated with `project-guide update`
 
 ## overrides
 
-List all currently overridden guides.
+List all currently overridden files.
 
 ```bash
 project-guide overrides
@@ -163,17 +216,19 @@ project-guide overrides
 ### Example Output
 
 ```
-Overridden Guides:
-  project-guide.md (v1.1.0)
-    Reason: Customized for our team workflow
-  
-  debug-guide.md (v1.1.2)
-    Reason: Added project-specific debugging steps
+Overridden Files:
+  templates/modes/debug-mode.md
+    Reason: Added team-specific debugging steps
+    Locked: 2026-03-15
+
+  developer/setup.md
+    Reason: Customized for our internal toolchain
+    Locked: 2026-04-01
 ```
 
 ## purge
 
-Remove all guides and configuration from the project.
+Remove all files and configuration from the project.
 
 ```bash
 project-guide purge [OPTIONS]
@@ -196,7 +251,7 @@ project-guide purge --force
 ### What It Does
 
 1. Prompts for confirmation (unless `--force` is used)
-2. Removes the entire guides directory
+2. Removes the entire `docs/project-guide/` directory
 3. Deletes `.project-guide.yml` configuration file
 
 !!! warning
@@ -212,7 +267,9 @@ All commands support these global options:
 ## Exit Codes
 
 - `0` - Success
-- `1` - Error (invalid arguments, file not found, etc.)
+- `1` - General error (invalid arguments, unexpected failure, etc.)
+- `2` - File I/O error (permission denied, disk full, etc.)
+- `3` - Configuration error (missing or invalid `.project-guide.yml`)
 
 ## Next Steps
 
