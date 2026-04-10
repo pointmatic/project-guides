@@ -1,4 +1,4 @@
-# Quick Start
+# Getting Started
 
 Get up and running with project-guide in minutes.
 
@@ -102,7 +102,7 @@ project-guide status
 
 ## Next Steps
 
-- [Commands Reference](../user-guide/commands.md) - Learn all available commands
-- [Workflow Guide](../user-guide/workflow.md) - Understand the complete workflow
-- [Configuration](configuration.md) - Customize project-guide behavior
-- [Override Management](../user-guide/overrides.md) - Master the override system
+- [Commands Reference](user-guide/commands.md) - Learn all available commands
+- [Workflow Guide](user-guide/workflow.md) - Understand the complete workflow
+- [Configuration](user-guide/configuration.md) - Customize project-guide behavior
+- [Override Management](user-guide/overrides.md) - Master the override system

@@ -39,11 +39,10 @@ theme:
 
 nav:
   - Home: index.html
-  - Getting Started:
-      - Installation: getting-started/installation.md
-      - Quick Start: getting-started/quick-start.md
-      - Configuration: getting-started/configuration.md
+  - Getting Started: getting-started.md
   - User Guide:
+      - Installation Options: user-guide/install-options.md
+      - Configuration: user-guide/configuration.md
       - Commands: user-guide/commands.md
       - Workflow: user-guide/workflow.md
       - Override Management: user-guide/overrides.md

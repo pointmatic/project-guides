@@ -302,4 +302,4 @@ vim docs/project-guide/templates/modes/debug-mode.md
 
 - [Commands Reference](commands.md) - Detailed command documentation
 - [Workflow Guide](workflow.md) - See overrides in action
-- [Configuration](../getting-started/configuration.md) - Understand configuration
+- [Configuration](configuration.md) - Understand configuration

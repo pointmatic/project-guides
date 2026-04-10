@@ -506,7 +506,7 @@ Contributions are welcome! Please follow these guidelines:
 
 ```bash
 # Create feature branch
-git checkout -b feature/your-feature-name
+git switch -c feature/your-feature-name
 
 # Make changes and test
 pytest tests/

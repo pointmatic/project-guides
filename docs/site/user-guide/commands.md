@@ -275,4 +275,4 @@ All commands support these global options:
 
 - [Workflow Guide](workflow.md) - See commands in action
 - [Override Management](overrides.md) - Learn override best practices
-- [Configuration](../getting-started/configuration.md) - Understand configuration options
+- [Configuration](configuration.md) - Understand configuration options

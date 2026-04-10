@@ -63,7 +63,7 @@ mypy project_guide
 ### 1. Create a Branch
 
 ```bash
-git checkout -b feature/your-feature-name
+git switch -c feature/your-feature-name
 ```
 
 ### 2. Make Changes
@@ -164,7 +164,7 @@ tests/
 ```
 docs/
 └── site/                     # MkDocs documentation
-    ├── getting-started/
+    ├── getting-started.md
     ├── user-guide/
     ├── developer-guide/
     └── about/

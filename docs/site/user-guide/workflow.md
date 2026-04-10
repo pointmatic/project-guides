@@ -326,4 +326,4 @@ project-guide override templates/modes/debug-mode.md "Restored customization"
 
 - [Commands Reference](commands.md) - Detailed command documentation
 - [Override Management](overrides.md) - Master the override system
-- [Configuration](../getting-started/configuration.md) - Customize behavior
+- [Configuration](configuration.md) - Customize behavior

@@ -69,6 +69,6 @@ You should see the version number displayed.
 
 ## Next Steps
 
-- [Quick Start Guide](quick-start.md) - Get started with your first project
+- [Getting Started](../getting-started.md) - Get started with your first project
 - [Configuration](configuration.md) - Learn about configuration options
-- [Commands](../user-guide/commands.md) - Explore all available commands
+- [Commands](commands.md) - Explore all available commands

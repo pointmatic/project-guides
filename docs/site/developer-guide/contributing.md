@@ -37,7 +37,7 @@ For template improvements or new features:
 
 2. **Create a branch**
    ```bash
-   git checkout -b feature/your-feature-name
+   git switch -c feature/your-feature-name
    ```
 
 3. **Set up development environment**

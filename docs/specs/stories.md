@@ -541,11 +541,11 @@ The file lives in `docs/project-guide/` — the directory provides context. The 
 - [x] Add prompt to 'Tell your LLM: Read docs/project-guide/go-project-guide.md'
 - [x] Bump version to 2.0.15
 
-### Story J.q: v2.0.16 Refactor Planning Docs and Documenation [Planned]
+### Story J.q: v2.0.16 Refactor Planning Docs and Documentation [Done]
 
 - [x] Clarify `refactor_*` modes and their purpose in `.metadata.yml`
 - [x] Update `refactor-plan-mode.md` and `refactor-document-mode.md`
-- [x] Update concept (`docs/specs/concepts.md`)
+- [x] Update concept (`docs/specs/concept.md`)
 - [x] Update features (`docs/specs/features.md`)
 - [x] Update tech-spec (`docs/specs/tech-spec.md`)
 - [x] Update README (`README.md`)
@@ -553,6 +553,28 @@ The file lives in `docs/project-guide/` — the directory provides context. The 
 - [x] Update MkDocs pages (`docs/site/*.md`)
 - [x] Update CHANGELOG (`CHANGELOG.md`)
 - [x] Bump version to 2.0.16
+
+### Story J.r: Restructure MkDocs Site Navigation [Done]
+
+No version bump — documentation-only changes.
+
+The Getting Started section had three pages (installation, quick-start, configuration) that overlapped with each other and with the landing page Quick Start section. Restructured to eliminate duplication.
+
+**File moves:**
+- [x] `docs/site/getting-started/quick-start.md` → `docs/site/getting-started.md` (top-level, content unchanged)
+- [x] `docs/site/getting-started/installation.md` → `docs/site/user-guide/install-options.md`
+- [x] `docs/site/getting-started/configuration.md` → `docs/site/user-guide/configuration.md`
+- [x] Removed empty `docs/site/getting-started/` directory
+
+**Navigation updates:**
+- [x] `mkdocs.yml`: Getting Started is now a single top-level page; Install Options and Configuration moved under User Guide
+- [x] `index.html`: Docs nav link updated to `/getting-started/`
+- [x] Updated cross-references in 6 files (getting-started.md, install-options.md, commands.md, workflow.md, overrides.md, development.md)
+
+**Other fixes:**
+- [x] `git checkout -b` → `git switch -c` in README.md, contributing.md, development.md
+- [x] Fixed `.gitignore` entries: removed stale `go-project-guide.md` paths, added `docs/project-guide/go.md` and `docs/project-guide/**/*.bak.*` under `# project-guide` comment
+- [x] Added `Tell your LLM: Read docs/project-guide/go.md` prompt to `status` Guide section
 
 ---
 
