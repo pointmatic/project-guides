@@ -67,6 +67,42 @@ project-guide --version
 
 You should see the version number displayed.
 
+## Shell Completion (Optional)
+
+Enable Tab completion for `project-guide` commands, flags, and mode names. Add the appropriate line to your shell's startup file.
+
+### Bash
+
+Add to `~/.bashrc`:
+
+```bash
+eval "$(_PROJECT_GUIDE_COMPLETE=bash_source project-guide)"
+```
+
+### Zsh
+
+Add to `~/.zshrc`:
+
+```bash
+eval "$(_PROJECT_GUIDE_COMPLETE=zsh_source project-guide)"
+```
+
+### Fish
+
+Add to `~/.config/fish/completions/project-guide.fish`:
+
+```bash
+_PROJECT_GUIDE_COMPLETE=fish_source project-guide | source
+```
+
+After updating your shell config, restart your shell (or `source` the file). Now you can:
+
+- `project-guide <TAB>` — complete command names (`init`, `mode`, `status`, etc.)
+- `project-guide mode <TAB>` — complete mode names (`default`, `plan_concept`, `code_velocity`, etc.) — reads `.metadata.yml` from your current project
+- `project-guide --<TAB>` — complete flags
+
+Mode name completion is dynamic and reads the active project's `.metadata.yml`, so it works correctly even if you have custom modes.
+
 ## Next Steps
 
 - [Getting Started](../getting-started.md) - Get started with your first project

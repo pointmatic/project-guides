@@ -68,7 +68,7 @@ def render_go_project_guide(
     }
 
     try:
-        template = env.get_template("go.md")
+        template = env.get_template("llm_entry_point.md")
         rendered = template.render(**context)
     except TemplateNotFound as e:
         raise RenderError(f"Template not found: {e}")

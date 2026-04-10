@@ -1,5 +1,3 @@
-# concept.md — {{ project_name }}
-
 Define the problem space (problem statement, why, pain points, target users, value criteria) and the solution space (solution statement, goals, scope, constraints), and pain point to solution mapping.
 
 {% include "modes/_header-sequence.md" %}

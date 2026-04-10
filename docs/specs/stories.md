@@ -685,9 +685,40 @@ New behavior: differing files are always backed up (`.bak.<timestamp>`) and over
 - [x] Bump `version.py` and `pyproject.toml` to `2.0.19`
 - [x] Update `CHANGELOG.md`
 
+### Story J.v: v2.0.20 Rename Template Source go.md → llm_entry_point.md, Add Shell Completion [Done]
+
+**Rename template source:**
+
+The Jinja2 template source and the rendered output were both named `go.md`, just in different directories (`templates/go.md` and `go.md`). When @-including files in an LLM chat window, this caused confusion ("which `go.md` is it? why are there two?"). Rename the template source to `llm_entry_point.md` to remove the ambiguity. The rendered output keeps its short, easy-to-type `go.md` name.
+
+- [x] Rename template file: `project_guide/templates/project-guide/templates/go.md` → `llm_entry_point.md`
+- [x] Update `render.py`: `get_template("llm_entry_point.md")`
+- [x] Update `tests/test_render.py` fixture: create `templates/llm_entry_point.md` instead of `templates/go.md`
+- [x] Update `tests/test_render.py`: docstring for `test_render_missing_entry_point`
+- [x] Update `tests/test_sync.py`: assert `templates/llm_entry_point.md` in tracked files
+- [x] Update `docs/specs/features.md`: file structure listing and architecture description
+
+**Add shell completion:**
+
+Click supports shell completion out of the box for command names and flags. Add a `shell_complete` callback for the `mode` argument so `project-guide mode <TAB>` dynamically completes mode names from the active project's `.metadata.yml`.
+
+- [x] Add `_complete_mode_names(ctx, param, incomplete)` callback in `cli.py` that loads metadata and returns matching mode names; returns `[]` on any error so completion never crashes the user's shell
+- [x] Wire `shell_complete=_complete_mode_names` to the `mode_name` argument
+- [x] Add tests: `test_mode_shell_completion_returns_all_modes`, `test_mode_shell_completion_filters_by_prefix`, `test_mode_shell_completion_no_config`, `test_mode_shell_completion_handles_errors_silently`
+- [x] Document shell completion setup in `docs/site/user-guide/install-options.md` (bash, zsh, fish)
+
+**Wrap-up:**
+- [x] Run full test suite — 131 tests pass
+- [x] Bump `version.py` and `pyproject.toml` to `2.0.20`
+- [x] Update `CHANGELOG.md`
+
 ---
 
 ## Future
+
+### Future Story: Test First flag [Deferred]
+
+Add a `--test-first` flag to the `init` command that causes coding to prefer `code_test_first` whenever `code_velocity` would have been chosen as a next step. This involves abstracting out the `code_*` mode and paves the way for a future `code_production` mode.
 
 ### Future Story: Code Production Mode [Deferred]
 

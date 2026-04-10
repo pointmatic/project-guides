@@ -73,7 +73,7 @@ def test_get_all_file_names_returns_all_files():
     assert "developer/codecov-setup-guide.md" in file_names
 
     # Entry point template should be included (it's a source file, not a rendered artifact)
-    assert "templates/go.md" in file_names
+    assert "templates/llm_entry_point.md" in file_names
 
     # Should be sorted
     assert file_names == sorted(file_names)

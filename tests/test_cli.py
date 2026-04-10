@@ -269,6 +269,58 @@ def test_mode_renders_output(runner, tmp_path):
         assert "debug mode" in content
 
 
+def test_mode_shell_completion_returns_all_modes(runner, tmp_path):
+    """Test shell completion returns all mode names when incomplete is empty."""
+    from project_guide.cli import _complete_mode_names
+
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+        result = _complete_mode_names(None, None, '')
+
+        assert "default" in result
+        assert "plan_concept" in result
+        assert "code_velocity" in result
+        assert "debug" in result
+        assert "refactor_plan" in result
+
+
+def test_mode_shell_completion_filters_by_prefix(runner, tmp_path):
+    """Test shell completion filters by prefix."""
+    from project_guide.cli import _complete_mode_names
+
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+        result = _complete_mode_names(None, None, 'plan_')
+
+        assert all(name.startswith('plan_') for name in result)
+        assert "plan_concept" in result
+        assert "plan_features" in result
+        assert "plan_tech_spec" in result
+        assert "default" not in result
+        assert "debug" not in result
+
+
+def test_mode_shell_completion_no_config(runner, tmp_path):
+    """Test shell completion returns empty list when no config exists."""
+    from project_guide.cli import _complete_mode_names
+
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        # No init — no config file
+        result = _complete_mode_names(None, None, '')
+        assert result == []
+
+
+def test_mode_shell_completion_handles_errors_silently(runner, tmp_path):
+    """Test shell completion never crashes — returns [] on any error."""
+    from project_guide.cli import _complete_mode_names
+
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        # Create a corrupt config so loading fails
+        Path(".project-guide.yml").write_text("not: valid: yaml: [[[")
+        result = _complete_mode_names(None, None, '')
+        assert result == []
+
+
 def test_status_with_overridden_guides(runner, tmp_path):
     """Test status command with overridden guides."""
     with runner.isolated_filesystem(temp_dir=tmp_path):

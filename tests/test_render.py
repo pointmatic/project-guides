@@ -31,7 +31,7 @@ def template_dir(tmp_path):
     modes_dir.mkdir()
 
     # Entry point template lives inside templates/
-    (templates_dir / "go.md").write_text(
+    (templates_dir / "llm_entry_point.md").write_text(
         "# Guide\n\n{% include 'modes/_header-common.md' %}\n\n{% include mode_template %}\n"
     )
 
@@ -98,7 +98,7 @@ def test_render_missing_templates_dir(tmp_path, sample_mode, sample_metadata):
 
 
 def test_render_missing_entry_point(tmp_path, sample_mode, sample_metadata):
-    """Test RenderError when go.md template is missing."""
+    """Test RenderError when llm_entry_point.md template is missing."""
     (tmp_path / "templates").mkdir()
     with pytest.raises(RenderError, match="Template not found"):
         render_go_project_guide(tmp_path, sample_mode, sample_metadata, tmp_path / "out.md")

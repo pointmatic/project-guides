@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.20] - 2026-04-10
+
+### Changed
+- **Renamed Jinja2 template source** `templates/go.md` → `templates/llm_entry_point.md`. The rendered output is still `go.md` (unchanged). This eliminates confusion when @-mentioning files in an LLM chat — there's now only one `go.md` (the rendered entry point the LLM reads).
+
+### Added
+- **Shell completion for `project-guide mode <TAB>`** — dynamically completes mode names from the active project's `.metadata.yml`. Click's built-in shell completion handles command names and flags automatically.
+- Setup instructions for bash, zsh, and fish in [Installation Options](https://pointmatic.github.io/project-guide/user-guide/install-options/).
+
 ## [2.0.19] - 2026-04-10
 
 ### Changed
