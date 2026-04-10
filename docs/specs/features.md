@@ -26,6 +26,7 @@ For a high-level concept (why), see `concept.md`. For implementation details (ho
 3. **Safety**: Never overwrite files without explicit consent; backups created on forced updates
 4. **Transparency**: Compact status output with grouped sections; verbose mode for details
 5. **Idempotency**: Running the same command multiple times produces the same result
+6. **Shell Completion**: Tab completion for command names, flags, and mode names (bash, zsh, fish)
 
 ### Quality Requirements
 
@@ -112,10 +113,10 @@ current_mode: default
 ```
 project-root/
 ├── .project-guide.yml              # Configuration
-├── .gitignore                      # Updated with go.md and .bak entries
+├── .gitignore                      # Updated with .bak entries
 └── docs/
     └── project-guide/
-        ├── go.md                   # Rendered entry point (gitignored)
+        ├── go.md                   # Rendered entry point (tracked in git)
         ├── .metadata.yml           # Mode definitions (hidden)
         ├── README.md               # Directory overview
         ├── developer/              # Developer reference docs
@@ -127,7 +128,7 @@ project-root/
         │   ├── production-github-guide.md
         │   └── project-guide.md
         └── templates/
-            ├── go.md               # Jinja2 entry point template
+            ├── llm_entry_point.md  # Jinja2 entry point template
             ├── modes/              # Mode templates + header partials
             │   ├── _header-common.md
             │   ├── _header-sequence.md
@@ -193,7 +194,7 @@ Files: 30 current, 2 need updating, 1 missing
 The system renders a single entry-point document (`go.md`) from Jinja2 templates based on the active mode.
 
 **Behavior:**
-1. Entry-point template (`templates/go.md`) includes `_header-common.md` and the active mode's template
+1. Entry-point template (`templates/llm_entry_point.md`) includes `_header-common.md` and the active mode's template
 2. Mode template includes the appropriate header partial (`_header-sequence.md` or `_header-cycle.md`)
 3. Context variables from `.metadata.yml` common block are available in all templates
 4. `target_dir` is passed as a Jinja2 context variable
@@ -226,7 +227,7 @@ The system renders a single entry-point document (`go.md`) from Jinja2 templates
 1. Copy template tree from package to target directory (default: `docs/project-guide`)
 2. Render `go.md` in `default` mode
 3. Create `.project-guide.yml` with current version, target directory, metadata file path, and `default` mode
-4. Add `go.md` and `*.bak.*` entries to `.gitignore` under a `# project-guide` comment
+4. Add `*.bak.*` entries to `.gitignore` under a `# project-guide` comment (the rendered `go.md` is tracked in git so the LLM can read it)
 5. Report number of files installed
 
 **Edge Cases:**
@@ -286,6 +287,20 @@ The system renders a single entry-point document (`go.md`) from Jinja2 templates
 1. Show what will be removed (config file and target directory)
 2. Confirm unless `--force`
 3. Remove target directory and config file
+
+### FR-7: Shell Completion
+
+Tab completion for `project-guide` commands, flags, and mode names in bash, zsh, and fish.
+
+**Behavior:**
+1. **Static completion** (commands and flags) is provided automatically by Click for any user who enables shell completion via the standard `_PROJECT_GUIDE_COMPLETE=<shell>_source` environment variable
+2. **Dynamic mode name completion**: `project-guide mode <TAB>` reads the active project's `.metadata.yml` and returns matching mode names; works with custom modes
+3. Completion callbacks never crash the user's shell — any error returns an empty list silently
+
+**Setup:**
+- bash: `eval "$(_PROJECT_GUIDE_COMPLETE=bash_source project-guide)"` in `~/.bashrc`
+- zsh: `eval "$(_PROJECT_GUIDE_COMPLETE=zsh_source project-guide)"` in `~/.zshrc`
+- fish: `_PROJECT_GUIDE_COMPLETE=fish_source project-guide | source` in `~/.config/fish/completions/project-guide.fish`
 
 ---
 
@@ -381,6 +396,7 @@ modes:
 5. `project-guide override/unoverride` manages file locks correctly
 6. `project-guide purge` cleanly removes all project-guide files
 7. All 15 modes render without errors (parametrized test)
-8. Works on macOS, Linux, and Windows
-9. Test coverage is ≥85%
-10. Package is published to PyPI as `project-guide`
+8. Shell completion (Tab) works for commands, flags, and mode names in bash/zsh/fish after one-line setup
+9. Works on macOS, Linux, and Windows
+10. Test coverage is ≥85%
+11. Package is published to PyPI as `project-guide`

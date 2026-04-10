@@ -37,7 +37,8 @@ When you customize a file for your project, mark it as overridden so future pack
 - **Custom File Lock** - Lock customized files to prevent update overwrites
 - **Gentle Force Updates** - Automatic `.bak` files created if you `--force` update a custom file
 - **CLI Interface** - Eight intuitive commands for all operations
-- **Well Tested** - 91% test coverage with 129 comprehensive tests
+- **Shell Completion** - Tab completion for commands, flags, and mode names (bash, zsh, fish)
+- **Well Tested** - 91% test coverage with 131 comprehensive tests
 - **Zero Configuration** - Works with sensible defaults out of the box
 - **Cross-Platform** - Runs on macOS, Linux, and Windows with Python 3.11+
 
@@ -58,6 +59,20 @@ pipx install project-guide
 ### Dependencies
 
 click, jinja2, pyyaml, packaging
+
+### Shell Completion (Optional)
+
+Enable Tab completion for commands, flags, and mode names. Add to your shell startup file:
+
+```bash
+# bash (~/.bashrc)
+eval "$(_PROJECT_GUIDE_COMPLETE=bash_source project-guide)"
+
+# zsh (~/.zshrc)
+eval "$(_PROJECT_GUIDE_COMPLETE=zsh_source project-guide)"
+```
+
+See [Installation Options](https://pointmatic.github.io/project-guide/user-guide/install-options/#shell-completion-optional) for fish and full details.
 
 ## Quick Start
 

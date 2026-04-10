@@ -85,6 +85,33 @@ target_dir: "custom/path"
 
 All commands will respect this setting.
 
+## Shell Completion
+
+project-guide supports Tab completion for commands, flags, and mode names in bash, zsh, and fish. Completion is opt-in — add a one-line `eval` to your shell startup file.
+
+**Bash** (`~/.bashrc`):
+```bash
+eval "$(_PROJECT_GUIDE_COMPLETE=bash_source project-guide)"
+```
+
+**Zsh** (`~/.zshrc`):
+```bash
+eval "$(_PROJECT_GUIDE_COMPLETE=zsh_source project-guide)"
+```
+
+**Fish** (`~/.config/fish/completions/project-guide.fish`):
+```bash
+_PROJECT_GUIDE_COMPLETE=fish_source project-guide | source
+```
+
+After updating your shell config, restart your shell (or `source` the file). Then:
+
+- `project-guide <TAB>` completes command names (`init`, `mode`, `status`, etc.)
+- `project-guide mode <TAB>` completes mode names from the active project's `.metadata.yml` (dynamic — works with any custom modes)
+- `project-guide --<TAB>` completes flags
+
+See [Installation Options](install-options.md#shell-completion-optional) for more details.
+
 ## Content Hash Sync
 
 project-guide uses content hashing (not version numbers) to track file state. This enables smart updates that:

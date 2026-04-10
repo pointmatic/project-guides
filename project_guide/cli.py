@@ -162,8 +162,25 @@ def _ensure_gitignore_entry(target_dir: str) -> None:
         gitignore_path.write_text(lines)
 
 
+def _complete_mode_names(ctx, param, incomplete):
+    """Shell completion for mode names. Reads metadata at completion time.
+
+    Returns an empty list on any error so completion never crashes the user's shell.
+    """
+    try:
+        config_path = Path(".project-guide.yml")
+        if not config_path.exists():
+            return []
+        config = Config.load(str(config_path))
+        metadata_path = Path(config.target_dir) / config.metadata_file
+        metadata = load_metadata(metadata_path)
+        return [name for name in metadata.list_mode_names() if name.startswith(incomplete)]
+    except Exception:
+        return []
+
+
 @main.command(name="mode")
-@click.argument("mode_name", required=False)
+@click.argument("mode_name", required=False, shell_complete=_complete_mode_names)
 def set_mode(mode_name: str | None):
     """Set or show the active development mode."""
     config_path = Path(".project-guide.yml")

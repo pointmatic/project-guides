@@ -36,8 +36,10 @@ When you have completed the steps, pause for the developer to review, correct, r
 
 ---
 
+# plan_concept mode (sequence)
 
-# concept.md — {{ project_name }}
+> Generate a high-level concept (problem and solution space)
+
 
 Define the problem space (problem statement, why, pain points, target users, value criteria) and the solution space (solution statement, goals, scope, constraints), and pain point to solution mapping.
 
