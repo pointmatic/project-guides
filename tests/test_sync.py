@@ -170,7 +170,7 @@ def test_sync_files_with_no_overrides(tmp_path):
     )
 
     # Sync a subset of files
-    updated, skipped, current, missing, modified = sync_files(
+    updated, skipped, current, missing = sync_files(
         config,
         files=["README.md", "templates/modes/debug-mode.md"]
     )
@@ -196,7 +196,7 @@ def test_sync_files_with_overrides_skipped(tmp_path):
     )
     config.add_override("templates/modes/debug-mode.md", "Custom content", "0.5.0")
 
-    updated, skipped, current, missing, modified = sync_files(
+    updated, skipped, current, missing = sync_files(
         config,
         files=["README.md", "templates/modes/debug-mode.md"]
     )
@@ -222,7 +222,7 @@ def test_sync_files_with_force_flag(tmp_path):
     (target_dir / "templates/modes/debug-mode.md").write_text("Custom content")
     config.add_override("templates/modes/debug-mode.md", "Custom content", "0.5.0")
 
-    updated, skipped, current, missing, modified = sync_files(
+    updated, skipped, current, missing = sync_files(
         config,
         files=["templates/modes/debug-mode.md"],
         force=True
@@ -244,7 +244,7 @@ def test_sync_files_dry_run_mode(tmp_path):
         target_dir=str(tmp_path / "project-guide")
     )
 
-    updated, skipped, current, missing, modified = sync_files(
+    updated, skipped, current, missing = sync_files(
         config,
         files=["README.md"],
         dry_run=True
@@ -272,7 +272,7 @@ def test_sync_files_current_version(tmp_path):
     # Create existing file
     copy_file("README.md", target_dir)
 
-    updated, skipped, current, missing, modified = sync_files(
+    updated, skipped, current, missing = sync_files(
         config,
         files=["README.md"]
     )
@@ -295,7 +295,7 @@ def test_sync_files_detects_missing_files(tmp_path):
     )
 
     # Don't create any files - they should be detected as missing
-    updated, skipped, current, missing, modified = sync_files(
+    updated, skipped, current, missing = sync_files(
         config,
         files=["README.md", "templates/modes/debug-mode.md"]
     )
@@ -312,7 +312,7 @@ def test_sync_files_detects_missing_files(tmp_path):
 
 
 def test_sync_files_detects_user_modifications(tmp_path):
-    """Test that user-modified files are detected."""
+    """Test that user-modified files are auto-updated with backup."""
     from project_guide.version import __version__
 
     target_dir = tmp_path / "project-guide"
@@ -329,17 +329,20 @@ def test_sync_files_detects_user_modifications(tmp_path):
     with open(target_file, 'a') as f:
         f.write("\n# User added content\n")
 
-    updated, skipped, current, missing, modified = sync_files(
+    updated, skipped, current, missing = sync_files(
         config,
         files=["README.md"]
     )
 
-    # Modified file should be in modified list (awaiting user decision)
-    assert len(modified) == 1
-    assert "README.md" in modified
-    assert len(updated) == 0
+    # Modified file should be auto-updated with backup
+    assert len(updated) == 1
+    assert "README.md" in updated
     assert len(current) == 0
     assert len(missing) == 0
+
+    # Verify a backup was created
+    backup_files = list(target_dir.glob("README.md.bak.*"))
+    assert len(backup_files) == 1
 
 
 def test_sync_files_force_overwrites_modified_with_backup(tmp_path):
@@ -359,7 +362,7 @@ def test_sync_files_force_overwrites_modified_with_backup(tmp_path):
     with open(target_file, 'a') as f:
         f.write("\n# User added content\n")
 
-    updated, skipped, current, missing, modified = sync_files(
+    updated, skipped, current, missing = sync_files(
         config,
         files=["README.md"],
         force=True
@@ -368,7 +371,6 @@ def test_sync_files_force_overwrites_modified_with_backup(tmp_path):
     # With --force, modified file should be backed up and updated
     assert len(updated) == 1
     assert "README.md" in updated
-    assert len(modified) == 0
 
     # Verify a backup was created
     backup_files = list(target_dir.glob("README.md.bak.*"))

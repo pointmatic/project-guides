@@ -51,8 +51,8 @@ def test_full_init_override_update_workflow(runner, tmp_path):
         # Step 4: Modify a non-overridden file to trigger update
         Path("docs/project-guide/templates/modes/plan-concept-mode.md").write_text("Modified")
 
-        # Step 5: Update (should skip overridden file, prompt for modified)
-        result = runner.invoke(main, ['update'], input="y\n")
+        # Step 5: Update (should skip overridden file, auto-backup and update modified)
+        result = runner.invoke(main, ['update'])
         assert result.exit_code == 0
         assert "templates/modes/plan-concept-mode.md" in result.output
 
@@ -177,7 +177,7 @@ def test_dry_run_doesnt_modify_files(runner, tmp_path):
         # Dry-run update
         result = runner.invoke(main, ['update', '--dry-run'])
         assert result.exit_code == 0
-        assert "Modified" in result.output or "would prompt" in result.output.lower()
+        assert "Would update" in result.output
         assert "Run without --dry-run to apply changes" in result.output
 
         # Verify file wasn't modified
@@ -194,8 +194,8 @@ def test_specific_file_update(runner, tmp_path):
         Path("docs/project-guide/templates/modes/debug-mode.md").write_text("Modified")
         Path("docs/project-guide/templates/modes/plan-concept-mode.md").write_text("Modified")
 
-        # Update only specific files, approve prompts
-        result = runner.invoke(main, ['update', '--files', 'templates/modes/debug-mode.md', '--files', 'templates/modes/plan-concept-mode.md'], input="y\ny\n")
+        # Update only specific files (auto-backup and overwrite)
+        result = runner.invoke(main, ['update', '--files', 'templates/modes/debug-mode.md', '--files', 'templates/modes/plan-concept-mode.md'])
         assert result.exit_code == 0
         assert "templates/modes/debug-mode.md" in result.output
         assert "templates/modes/plan-concept-mode.md" in result.output

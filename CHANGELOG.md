@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.19] - 2026-04-10
+
+### Changed
+- **`update` no longer prompts for modified files** — files whose content differs from the bundled template are now auto-backed-up (`.bak.<timestamp>`) and overwritten without asking. The previous prompt was misleading because hash-based sync can't distinguish "user modified the file" from "the bundled template changed in this version" — both look identical.
+- Use `project-guide override <file> <reason>` to lock files that should not be touched by `update`.
+- Removed "Modified files detected" / "Skipped (user declined)" / "Updated (approved by user)" output sections.
+
+### Removed
+- `sync_files()` no longer returns a `modified` list — its 5-tuple is now a 4-tuple `(updated, skipped, current, missing)`. Files that previously went into `modified` now go into `updated` (with backups).
+- `apply_file_update` is no longer used in `cli.py` (still exported from `sync.py` for internal use)
+
 ## [2.0.18] - 2026-04-10
 
 ### Fixed

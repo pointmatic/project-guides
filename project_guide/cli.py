@@ -24,7 +24,6 @@ from project_guide.exceptions import ConfigError, MetadataError, RenderError, Sy
 from project_guide.metadata import load_metadata
 from project_guide.render import render_go_project_guide
 from project_guide.sync import (
-    apply_file_update,
     file_matches_template,
     get_all_file_names,
     sync_files,
@@ -413,43 +412,16 @@ def update(files: tuple, dry_run: bool, force: bool):
         click.echo()
 
     try:
-        updated, skipped, current, missing, modified = sync_files(config, files_list, force, dry_run)
+        updated, skipped, current, missing = sync_files(config, files_list, force, dry_run)
     except SyncError as e:
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(2)  # File I/O error exit code
 
-    # Handle modified files - prompt user for each one
-    user_approved: list[str] = []
-    user_declined: list[str] = []
-    user_backed_up: list[str] = []
-
-    if modified and not dry_run:
-        click.secho("Modified files detected:", fg='yellow')
-        for f in modified:
-            click.secho(f"  ⚠ {f} has been modified locally.", fg='yellow')
-            if click.confirm(f"    Backup and overwrite {f}?", default=False):
-                try:
-                    apply_file_update(f, config, make_backup=True)
-                    user_approved.append(f)
-                except SyncError as e:
-                    click.secho(f"  Error updating {f}: {e}", fg='red', err=True)
-            else:
-                user_declined.append(f)
-    elif modified and dry_run:
-        click.secho("Modified (would prompt: backup and overwrite?):", fg='yellow')
-        for f in modified:
-            click.secho(f"  ⚠ {f}", fg='yellow')
-
-    # Print other results
+    # Print results
     if updated:
-        action = "Would update (backed up)" if (dry_run and force) else ("Updated (backed up)" if force else ("Would update" if dry_run else "Updated"))
+        action = "Would update (backed up)" if dry_run else "Updated (backed up)"
         click.secho(f"{action}:", fg='green')
         for f in updated:
-            click.secho(f"  ✓ {f}", fg='green')
-
-    if user_approved:
-        click.secho("Updated (approved by user):", fg='green')
-        for f in user_approved:
             click.secho(f"  ✓ {f}", fg='green')
 
     if missing:
@@ -457,11 +429,6 @@ def update(files: tuple, dry_run: bool, force: bool):
         click.secho(f"{action} (missing files):", fg='cyan')
         for f in missing:
             click.secho(f"  + {f}", fg='cyan')
-
-    if user_declined:
-        click.secho("Skipped (user declined):", fg='yellow')
-        for f in user_declined:
-            click.secho(f"  ⊘ {f}", fg='yellow')
 
     if skipped:
         click.secho("Skipped (overridden):", fg='yellow')
@@ -475,7 +442,7 @@ def update(files: tuple, dry_run: bool, force: bool):
             click.echo(f"  • {f}")
 
     # Update config if not dry-run and any updates were made
-    all_updated = updated + user_approved + missing
+    all_updated = updated + missing
     if not dry_run and all_updated:
         config.installed_version = __version__
         config.save(str(config_path))
@@ -498,33 +465,26 @@ def update(files: tuple, dry_run: bool, force: bool):
     click.echo()
     if dry_run:
         total_changes = len(updated) + len(missing)
-        if total_changes > 0 or modified:
+        if total_changes > 0:
             parts = []
             if updated:
                 parts.append(f"update {len(updated)}")
             if missing:
                 parts.append(f"create {len(missing)}")
-            if modified:
-                parts.append(f"prompt for {len(modified)} modified")
             click.echo(f"Would {', '.join(parts)}.")
             click.echo("Run without --dry-run to apply changes.")
         else:
             click.echo("No updates needed.")
     else:
-        total_changes = len(updated) + len(user_approved) + len(missing)
+        total_changes = len(updated) + len(missing)
         if total_changes > 0:
             parts = []
-            if updated + user_approved:
-                n = len(updated) + len(user_approved)
-                parts.append(f"updated {n}")
+            if updated:
+                parts.append(f"updated {len(updated)}")
             if missing:
                 parts.append(f"created {len(missing)}")
             click.secho(f"✓ Successfully {' and '.join(parts)} file{'s' if total_changes != 1 else ''}.", fg='green')
-            if user_backed_up:
-                click.echo(f"  {len(user_backed_up)} backup(s) created.")
-        elif user_declined and not skipped and not current:
-            click.echo("No files updated (all modifications declined).")
-        elif skipped and not current and not user_declined:
+        elif skipped and not current:
             click.echo("All files are overridden. Use --force to update anyway.")
         else:
             click.echo("All files are up to date.")

@@ -651,6 +651,40 @@ Fix: add a single mode heading to `_header-common.md` (rendered for every mode) 
 - [x] Bump `version.py` and `pyproject.toml` to `2.0.18`
 - [x] Update `CHANGELOG.md`
 
+### Story J.u: v2.0.19 Auto-Backup Modified Files on Update [Done]
+
+`update` was prompting for each file whose content differed from the bundled template, with the message "X has been modified locally. Backup and overwrite?". This was misleading: with hash-based sync, we can't distinguish "user modified the file" from "the bundled template changed in this package version" — both look identical.
+
+The prompt was also painful — modifying many files (e.g., after a package upgrade) meant approving each one individually.
+
+New behavior: differing files are always backed up (`.bak.<timestamp>`) and overwritten without prompting. Users who want to lock specific files should use `project-guide override`.
+
+**`sync_files()` simplification:**
+- [x] Remove `modified` from return tuple — 5-tuple → 4-tuple `(updated, skipped, current, missing)`
+- [x] Files whose content differs are added to `updated` and auto-backed-up via `apply_file_update(make_backup=True)`
+- [x] Update docstring to reflect new behavior
+
+**`update` command simplification:**
+- [x] Remove `modified` handling and prompt loop from `cli.py` `update`
+- [x] Remove `user_approved` / `user_declined` tracking
+- [x] Remove "Modified files detected" / "Skipped (user declined)" / "Updated (approved by user)" output sections
+- [x] Remove unused `apply_file_update` import from `cli.py`
+- [x] Adjust summary output (`total_changes` no longer counts user_approved separately)
+
+**Tests:**
+- [x] Update all `test_sync_files_*` tests: 5-tuple → 4-tuple unpacking
+- [x] Replace `test_sync_files_detects_user_modifications` to assert auto-update + backup behavior
+- [x] Replace `test_update_modified_file_user_approves`/`_user_declines` with `test_update_modified_file_auto_backup`
+- [x] Replace `test_update_all_declined_message` with `test_update_bulk_auto_backup`
+- [x] Update `test_update_with_dry_run` and `test_update_dry_run_with_modified_file` assertions
+- [x] Remove obsolete `test_update_modified_file_apply_sync_error`
+- [x] Update `test_dry_run_doesnt_modify_files` and integration test prompt-input cleanup
+- [x] 127 tests pass at 91% coverage
+
+**Wrap-up:**
+- [x] Bump `version.py` and `pyproject.toml` to `2.0.19`
+- [x] Update `CHANGELOG.md`
+
 ---
 
 ## Future

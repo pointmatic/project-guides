@@ -190,30 +190,30 @@ def sync_files(
     files: list[str] | None = None,
     force: bool = False,
     dry_run: bool = False
-) -> tuple[list[str], list[str], list[str], list[str], list[str]]:
+) -> tuple[list[str], list[str], list[str], list[str]]:
     """
     Sync tracked files to latest version using content hash comparison.
+
+    Files whose content differs from the bundled template are always backed up
+    and overwritten. Use `override` to lock files that should not be touched.
 
     Args:
         config: Project configuration
         files: List of specific files to sync, or None for all files
-        force: If True, update even overridden/modified files (creates backups)
+        force: If True, update even overridden files (creates backups)
         dry_run: If True, show what would change without applying
 
     Returns:
-        Tuple of (updated, skipped, current, missing, modified) file name lists
-        - updated: Files that were updated (force mode only)
+        Tuple of (updated, skipped, current, missing) file name lists
+        - updated: Files whose content differed and were backed up + overwritten
         - skipped: Files skipped due to override (unless force=True)
         - current: Files whose content matches the bundled template
         - missing: Files that don't exist and were/will be created
-        - modified: Files whose content differs from the bundled template
-                    These are NOT automatically updated; caller must handle them
     """
     updated = []
     skipped = []
     current = []
     missing = []
-    modified = []
 
     # Get list of files to sync
     files_to_sync = get_all_file_names() if files is None else files
@@ -238,13 +238,10 @@ def sync_files(
         # File exists - use content hash to determine freshness
         if file_matches_template(target_file, file_name):
             current.append(file_name)
-        elif force:
-            # --force: backup and overwrite without prompting
+        else:
+            # Content differs - always backup and overwrite
             if not dry_run:
                 apply_file_update(file_name, config, make_backup=True)
             updated.append(file_name)
-        else:
-            # Content differs - defer to caller to prompt
-            modified.append(file_name)
 
-    return (updated, skipped, current, missing, modified)
+    return (updated, skipped, current, missing)

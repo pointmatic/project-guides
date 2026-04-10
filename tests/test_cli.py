@@ -440,7 +440,7 @@ def test_update_with_dry_run(runner, tmp_path):
 
         assert result.exit_code == 0
         assert "Dry-run mode" in result.output
-        assert "Modified" in result.output or "would prompt" in result.output.lower()
+        assert "Would update" in result.output
         assert "Run without --dry-run to apply changes" in result.output
 
         # Verify file was NOT changed (dry-run)
@@ -609,35 +609,23 @@ def test_update_sync_error_exits_with_code_2(runner, tmp_path):
             assert "Disk full" in result.output
 
 
-def test_update_modified_file_user_approves(runner, tmp_path):
-    """Test update with modified file when user confirms backup and overwrite."""
+def test_update_modified_file_auto_backup(runner, tmp_path):
+    """Test update auto-backs-up and overwrites modified files."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(main, ['init'])
 
-        # Modify a guide so it's detected as modified
+        # Modify a file so its hash differs
         Path("docs/project-guide/templates/modes/debug-mode.md").write_text("User-modified content")
 
-        # User says yes to the prompt
-        result = runner.invoke(main, ['update'], input="y\n")
+        result = runner.invoke(main, ['update'])
 
         assert result.exit_code == 0
-        assert "Updated (approved by user)" in result.output
+        assert "Updated (backed up)" in result.output
         assert "templates/modes/debug-mode.md" in result.output
 
-
-def test_update_modified_file_user_declines(runner, tmp_path):
-    """Test update with modified file when user declines."""
-    with runner.isolated_filesystem(temp_dir=tmp_path):
-        runner.invoke(main, ['init'])
-
-        # Modify a guide
-        Path("docs/project-guide/templates/modes/debug-mode.md").write_text("User-modified content")
-
-        # User says no to the prompt
-        result = runner.invoke(main, ['update'], input="n\n")
-
-        assert result.exit_code == 0
-        assert "Skipped (user declined)" in result.output
+        # Verify backup was created
+        backups = list(Path("docs/project-guide/templates/modes").glob("debug-mode.md.bak.*"))
+        assert len(backups) == 1
 
 
 def test_update_dry_run_with_modified_file(runner, tmp_path):
@@ -651,7 +639,7 @@ def test_update_dry_run_with_modified_file(runner, tmp_path):
         result = runner.invoke(main, ['update', '--dry-run'])
 
         assert result.exit_code == 0
-        assert "would prompt" in result.output.lower()
+        assert "Would update" in result.output
         # File should not have changed
         assert Path("docs/project-guide/templates/modes/debug-mode.md").read_text(encoding="utf-8") == original
 
@@ -670,21 +658,24 @@ def test_update_dry_run_with_missing_files(runner, tmp_path):
         assert "Would create" in result.output
 
 
-def test_update_all_declined_message(runner, tmp_path):
-    """Test update message when all modified guides are declined."""
+def test_update_bulk_auto_backup(runner, tmp_path):
+    """Test that update auto-backs-up many modified files in one pass."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(main, ['init'])
 
-        # Modify all guides so they all appear as modified
-        guides_dir = Path("docs/project-guide")
-        for guide in guides_dir.rglob("*.md"):
-            guide.write_text("Modified content")
+        # Modify all .md files so they all appear modified
+        target_dir = Path("docs/project-guide")
+        for f in target_dir.rglob("*.md"):
+            f.write_text("Modified content")
 
-        # Decline all prompts (enough for all modified guides)
-        result = runner.invoke(main, ['update'], input=("n\n" * 50))
+        result = runner.invoke(main, ['update'])
 
         assert result.exit_code == 0
-        assert "No files updated" in result.output or "declined" in result.output
+        assert "Updated (backed up)" in result.output
+
+        # Verify backups were created
+        backups = list(target_dir.rglob("*.bak.*"))
+        assert len(backups) > 0
 
 
 def test_update_all_overridden_message(runner, tmp_path):
@@ -818,20 +809,6 @@ def test_purge_missing_guides_directory(runner, tmp_path):
         assert result.exit_code == 0
         assert "not found (skipped)" in result.output
         assert not Path(".project-guide.yml").exists()
-
-
-def test_update_modified_file_apply_sync_error(runner, tmp_path):
-    """Test update when apply_file_update raises SyncError during user-approved update."""
-    with runner.isolated_filesystem(temp_dir=tmp_path):
-        runner.invoke(main, ['init'])
-
-        Path("docs/project-guide/templates/modes/debug-mode.md").write_text("User-modified content")
-
-        with patch("project_guide.cli.apply_file_update", side_effect=SyncError("Write failed")):
-            result = runner.invoke(main, ['update'], input="y\n")
-
-            assert result.exit_code == 0
-            assert "Error updating" in result.output
 
 
 def test_update_dry_run_no_changes(runner, tmp_path):
