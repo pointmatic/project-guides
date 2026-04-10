@@ -619,6 +619,38 @@ The workflow guide was 376 lines and mostly duplicated content from `getting-sta
 - [x] Update `CHANGELOG.md`
 - [x] Run full test suite — 129 tests pass (parametrized mode test confirms `project_scaffold` renders)
 
+### Story J.t: v2.0.18 Stop Gitignoring go.md, Fix Mode Heading Bug [Done]
+
+**Stop gitignoring `go.md`:**
+
+The rendered `docs/project-guide/go.md` was added to `.gitignore` since it's a generated file. But agentic LLMs that respect gitignore patterns can't read the file, breaking the entire workflow. Fix: track `go.md` in git. Mode switches will create small commits, which is actually a useful git history footprint.
+
+- [x] Remove `f"{target_dir}/go.md"` from `_ensure_gitignore_entry()` in `cli.py`
+- [x] Remove `docs/project-guide/go.md` from project root `.gitignore`
+
+**Fix mode heading bug:**
+
+The 5 planning mode templates (`plan-concept`, `plan-features`, `plan-tech-spec`, `plan-stories`, `plan-phase`) started with a heading like `# concept.md — {{ project_name }}`. This was wrong on multiple levels:
+- Looked like an artifact file title, not a mode heading
+- `project_name` is not a defined Jinja2 variable, so it rendered as the literal `{{ project_name }}`
+- Not useful for the LLM (project name is meaningless for instructions)
+
+Other mode templates had their own H1 headings (e.g., `# Velocity Coding Mode`, `# Debug Guide for LLMs`) that varied in style and weren't tied to the actual mode metadata.
+
+Fix: add a single mode heading to `_header-common.md` (rendered for every mode) using `{{ mode_name }}`, `{{ sequence_or_cycle }}`, and `{{ mode_info }}`. Strip the H1 from every individual mode template since the header now provides one.
+
+- [x] Add `# {{ mode_name }} mode ({{ sequence_or_cycle }})` heading and `> {{ mode_info }}` blockquote to end of `_header-common.md`
+- [x] Strip H1 from `plan-concept-mode.md`, `plan-features-mode.md`, `plan-tech-spec-mode.md`, `plan-stories-mode.md`, `plan-phase-mode.md`
+- [x] Strip H1 from `code-velocity-mode.md`, `code-test-first-mode.md`, `debug-mode.md`
+- [x] Strip H1 from `default-mode.md`, `document-brand-mode.md`, `document-landing-mode.md`
+- [x] Strip H1 from `project-scaffold-mode.md`, `refactor-plan-mode.md`, `refactor-document-mode.md`
+- [x] Update `test_mode_renders_output` test: `"Debug Guide"` → `"debug mode"` (matches new generated heading)
+
+**Wrap-up:**
+- [x] Run full test suite — 129 tests pass
+- [x] Bump `version.py` and `pyproject.toml` to `2.0.18`
+- [x] Update `CHANGELOG.md`
+
 ---
 
 ## Future

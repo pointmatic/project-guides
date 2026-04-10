@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.18] - 2026-04-10
+
+### Fixed
+- **`go.md` is no longer gitignored** — agentic LLMs that respect gitignore patterns couldn't read the rendered entry point, breaking the entire workflow. The file is now tracked in git, which also gives mode switches a useful git history footprint.
+- **Mode heading bug** — planning mode templates rendered `# concept.md — {{ project_name }}` (with the literal Jinja2 placeholder, since `project_name` was never defined). Replaced with a single mode heading in `_header-common.md` that uses actual metadata: `# {{ mode_name }} mode ({{ sequence_or_cycle }})` followed by a `> {{ mode_info }}` blockquote.
+
+### Changed
+- `_ensure_gitignore_entry()` no longer adds `go.md` to `.gitignore` (only `*.bak.*` patterns remain)
+- All 14 mode templates stripped of their individual H1 headings in favor of the centralized mode heading from `_header-common.md`
+
 ## [2.0.17] - 2026-04-09
 
 ### Changed

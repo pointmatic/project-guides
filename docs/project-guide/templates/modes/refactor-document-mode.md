@@ -1,63 +1,81 @@
 # Refactor Documentation Artifacts
 
-Migrate existing documentation files into the v2.x format. This covers brand descriptions, the landing page, and MkDocs configuration/pages.
+Update existing documentation files because of new features, improvements, or to migrate legacy formats into the v2.x structure. Covers README, brand descriptions, the landing page, and MkDocs configuration.
 
 {% include "modes/_header-cycle.md" %}
 
 ## Targets
 
-The following documents should be refactored (in order):
+The following documents may need updating (in order):
 
-1. `{{ spec_artifacts_path }}/descriptions.md` → `{{ spec_artifacts_path }}/brand-descriptions.md` (format from `templates/artifacts/brand-descriptions.md`)
-2. `{{ web_root }}/index.html` → updated structure from `document-landing-mode.md`
-3. MkDocs configuration (`mkdocs.yml`) and documentation pages (`{{ web_root }}/*.md`)
+1. `README.md` — project README at the repository root
+2. `{{ spec_artifacts_path }}/brand-descriptions.md` — artifact template: `templates/artifacts/brand-descriptions.md`
+3. `{{ web_root }}/index.html` — project landing page
+4. MkDocs configuration (`mkdocs.yml`) and documentation pages (`{{ web_root }}/*.md`)
 
-Skip any document that does not exist. If a document already matches the target format, confirm with the developer and skip.
+Skip any document that does not exist. If a document already reflects the current state of the project, confirm with the developer and skip.
+
+**Note:** If the project has a legacy `{{ spec_artifacts_path }}/descriptions.md`, it should be migrated to `brand-descriptions.md` using the artifact template format.
 
 ## Cycle Steps (for each document)
 
-### Step 1: Backup
+### Step 1: Understand the Change
 
-Move the existing document to a backup:
+Ask the developer what needs updating and why. This could be:
+- **New features or improvements** — documentation needs to reflect new capabilities, updated descriptions, or revised messaging
+- **Legacy migration** — the document predates the v2.x format and needs restructuring (e.g., `descriptions.md` → `brand-descriptions.md`)
+
+### Step 2: Backup
+
+Copy the existing document to a backup before making changes:
 
 ```
-docs/specs/descriptions.md → docs/specs/descriptions_old.md
+README.md → README_old.md
+docs/specs/brand-descriptions.md → docs/specs/brand-descriptions_old.md
 docs/site/index.html → docs/site/index_old.html
 ```
 
-For MkDocs files, no backup is needed — they are updated in place.
+For MkDocs configuration files, no backup is needed — they are updated in place.
 
-### Step 2: Read and Extract
+This protects against uncommitted work being overwritten.
 
-Read the old document as the primary source of information. Map its content to the sections defined in the corresponding artifact template or mode template.
+### Step 3: Read and Extract
 
-**For `descriptions.md` → `brand-descriptions.md`:**
-- Map existing description sections to the brand-descriptions artifact template
-- Sections: Name, Tagline, Long Tagline, One-liner, Friendly Brief Description, Two-clause Technical Description, Benefits, Technical Description, Keywords, Feature Cards, Usage Notes
+Read the old document as the primary source of information. For documents with artifact templates, read the corresponding template to understand the target structure.
+
+**For `README.md`:**
+- Extract project description, installation instructions, usage examples, badges
+- Update to reflect current features and version
+
+**For `brand-descriptions.md`:**
+- Map to artifact template sections: Name, Tagline, Long Tagline, One-liner, Friendly Brief Description, Two-clause Technical Description, Benefits, Technical Description, Keywords, Feature Cards, Usage Notes
 
 **For `index.html`:**
 - Extract hero text, feature cards, quick start content
-- Map to the structure defined in `document-landing-mode.md`
 
 **For MkDocs:**
-- Review `mkdocs.yml` configuration
-- Review documentation pages for consistency with new mode system
+- Review `mkdocs.yml` configuration and documentation pages for consistency
 
-### Step 3: Fill Gaps
+Note what needs to change based on the developer's instructions from Step 1.
 
-If any sections required by the target format are missing from the old document:
+### Step 4: Fill Gaps
 
-1. Note which sections are missing
+If any sections required by the target format are missing or need new content:
+
+1. Note which sections are missing or outdated
 2. Ask the developer for the missing information
 3. Wait for the developer's response before proceeding
 
 Do not invent content — only use information from the old document or the developer.
 
-### Step 4: Generate New Document
+### Step 5: Generate Updated Document
 
-Write the new document using the target format, populated with content from the old document and any developer-provided additions.
+Write the updated document using the target format, incorporating:
+- Existing content that is still accurate
+- Updates based on the developer's instructions
+- Any new information provided by the developer
 
-### Step 5: Legacy Content
+### Step 6: Legacy Content
 
 If any information from the old document does not fit into the target format sections, append it to the end:
 
@@ -73,16 +91,16 @@ For HTML files, add legacy content as an HTML comment at the bottom.
 
 If all content mapped cleanly, omit this section.
 
-### Step 6: Present for Approval
+### Step 7: Present for Approval
 
 Present the completed document to the developer. Show:
-- Which sections were populated from the old document
-- Which sections required new information from the developer
+- What changed and why
+- Which sections were preserved, updated, or added
 - Whether a Legacy Content section was added
-- For `descriptions.md` → `brand-descriptions.md`: note the filename change
+- For legacy migrations: note any filename changes (e.g., `descriptions.md` → `brand-descriptions.md`)
 
 Iterate as needed until the developer approves. Then proceed to the next document in the targets list.
 
-### Step 7: Cleanup
+### Step 8: Cleanup
 
 After the developer approves, backup files (`_old.md`, `_old.html`) can be deleted at the developer's discretion. Do not delete them automatically.

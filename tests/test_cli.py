@@ -266,7 +266,7 @@ def test_mode_renders_output(runner, tmp_path):
         output = Path("docs/project-guide/go.md")
         assert output.exists()
         content = output.read_text(encoding="utf-8")
-        assert "Debug Guide" in content
+        assert "debug mode" in content
 
 
 def test_status_with_overridden_guides(runner, tmp_path):

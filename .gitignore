@@ -29,5 +29,4 @@ build/
 /site/
 
 # project-guide
-docs/project-guide/go.md
 docs/project-guide/**/*.bak.*

@@ -142,7 +142,6 @@ def _ensure_gitignore_entry(target_dir: str) -> None:
     """Add project-guide entries to .gitignore if not already present."""
     gitignore_path = Path(".gitignore")
     entries = [
-        f"{target_dir}/go.md",
         f"{target_dir}/**/*.bak.*",
     ]
 

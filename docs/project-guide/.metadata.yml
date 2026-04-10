@@ -62,7 +62,7 @@ modes:
     sequence_or_cycle: sequence
     generation_type: document
     mode_template: "{{mode_templates_path}}/plan-stories-mode.md"
-    next_mode: project_setup
+    next_mode: project_scaffold
     artifacts:
       - file: "{{spec_artifacts_path}}/stories.md"
         action: create
@@ -89,13 +89,13 @@ modes:
       - "{{spec_artifacts_path}}/tech-spec.md"
       - "{{spec_artifacts_path}}/stories.md"
 
-  # Setup
-  - name: project_setup
+  # Scaffold
+  - name: project_scaffold
     info: Scaffold the project foundation (LICENSE, headers, manifest, README, CHANGELOG)
-    description: One-time project setup after planning. Creates license, copyright headers, package manifest, README with badges, CHANGELOG, and .gitignore based on decisions made during planning.
+    description: One-time project scaffolding after planning. Creates license, copyright headers, package manifest, README with badges, CHANGELOG, and .gitignore based on decisions made during planning.
     sequence_or_cycle: sequence
     generation_type: document
-    mode_template: "{{mode_templates_path}}/project-setup-mode.md"
+    mode_template: "{{mode_templates_path}}/project-scaffold-mode.md"
     next_mode: "{{default_code_mode}}"
     files_exist:
       - "{{spec_artifacts_path}}/concept.md"
@@ -163,14 +163,14 @@ modes:
 
   # Refactoring modes
   - name: refactor_plan
-    info: Migrate planning artifacts (concept, features, tech-spec) to v2.x format
-    description: Refactor existing planning documents into the v2.x artifact template format, preserving all information while restructuring into standardized sections.
+    info: Update planning artifacts (concept, features, tech-spec)
+    description: Rewrite or update existing planning documents because of new features or improvements, including concept, features, and tech-spec. You can also migrate legacy project-guide planning documents--it will preserve information while restructuring into standardized sections.
     sequence_or_cycle: cycle
     generation_type: document
     mode_template: "{{mode_templates_path}}/refactor-plan-mode.md"
   - name: refactor_document
-    info: Migrate documentation artifacts (README, brand descriptions, landing page, MkDocs) to v2.x format
-    description: Refactor existing documentation files into the v2.x format, covering brand descriptions, landing page, and MkDocs configuration.
+    info: Update documentation artifacts (README, brand descriptions, landing page, MkDocs)
+    description: Update existing documentation files because of new features or improvements, including README, brand descriptions, landing page, and MkDocs configuration. You can also migrate legacy project-guide documentation--it will preserve information while restructuring into standardized sections.
     sequence_or_cycle: cycle
     generation_type: document
     mode_template: "{{mode_templates_path}}/refactor-document-mode.md"
