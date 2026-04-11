@@ -37,9 +37,32 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, Undefined
 
 from project_guide.exceptions import ActionError, MetadataError
+
+
+class _LenientUndefined(Undefined):
+    """
+    Jinja2 undefined that renders as `{{ name }}` instead of blank.
+
+    Used by `render_fresh_stories_artifact` so that, if the caller cannot
+    supply `project_name` / `programming_language` (e.g. when archiving a
+    project that has no extractable header), the fresh output preserves
+    the placeholders verbatim rather than silently emitting empty strings.
+
+    Mirrors `project_guide.render._LenientUndefined` — kept local here to
+    avoid a dependency loop between actions.py and render.py.
+    """
+
+    def __str__(self) -> str:
+        return f"{{{{ {self._undefined_name} }}}}" if self._undefined_name else ""
+
+    def __iter__(self):
+        return iter([])
+
+    def __bool__(self) -> bool:
+        return False
 
 
 class ActionType(StrEnum):
@@ -115,6 +138,32 @@ _PHASE_RE = re.compile(r"^##\s+Phase\s+([A-Z]+):", re.M)
 # Matches the `## Future` heading and everything following it to EOF.
 _FUTURE_RE = re.compile(r"^##\s+Future\s*$.*", re.M | re.S)
 
+# Matches the stories.md first-line header:
+#   `# stories.md -- <project-name> (<programming-language>)`
+# Both the em-dash variant and the double-hyphen variant are tolerated.
+_STORIES_HEADER_RE = re.compile(
+    r"^#\s+stories\.md\s*(?:--|—)\s*(?P<project_name>[^(]+?)\s*\((?P<programming_language>[^)]+)\)\s*$",
+    re.M,
+)
+
+
+def extract_stories_header_context(text: str) -> dict[str, str]:
+    """
+    Parse the stories.md first-line header and return `project_name` and
+    `programming_language` if found, otherwise an empty dict.
+
+    The archive pipeline uses this so the fresh re-render preserves the
+    original header values — falling back to lenient placeholders when
+    extraction fails.
+    """
+    m = _STORIES_HEADER_RE.search(text)
+    if not m:
+        return {}
+    return {
+        "project_name": m.group("project_name").strip(),
+        "programming_language": m.group("programming_language").strip(),
+    }
+
 
 def detect_latest_version(text: str) -> tuple[int, int, int]:
     """
@@ -176,6 +225,7 @@ def render_fresh_stories_artifact(
     env = Environment(
         loader=FileSystemLoader(str(artifact_template.parent), encoding="utf-8"),
         keep_trailing_newline=True,
+        undefined=_LenientUndefined,
     )
     template = env.get_template(artifact_template.name)
     rendered = template.render(phases_and_stories="", **context)
@@ -228,6 +278,11 @@ def perform_archive(
     phase_letter = detect_latest_phase_letter(text)
     future = extract_future_section(text)
 
+    # Auto-extract header context from the source so the fresh re-render
+    # preserves `project_name` / `programming_language`. The caller's
+    # context takes precedence if both provide a value.
+    merged_context = {**extract_stories_header_context(text), **context}
+
     archive_dir = source.parent / ".archive"
     archive_dir.mkdir(exist_ok=True)
     archive_target = archive_dir / f"{source.stem}-{version}{source.suffix}"
@@ -238,7 +293,7 @@ def perform_archive(
     shutil.move(str(source), str(archive_target))
 
     try:
-        fresh = render_fresh_stories_artifact(artifact_template, context, future)
+        fresh = render_fresh_stories_artifact(artifact_template, merged_context, future)
         source.write_text(fresh, encoding="utf-8")
     except Exception as exc:
         # Best-effort rollback so we don't leave the workspace with the

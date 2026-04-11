@@ -56,16 +56,19 @@ Add a new `archive` action type to the metadata schema and action handler. Carri
 - [x] Unit tests for the archive action against a fixture `stories.md` — 6 tests: happy path, no-Future case, missing source, existing archive target, missing template, no-versions-in-source, plus a real-file round-trip against `.archive/stories-v2.0.20.md` (Phase J)
 - [x] Verify: existing `create` and `modify` action types still work unchanged — 3 new metadata tests (valid archive, valid create/modify round-trip, missing action tolerated, unknown action rejected)
 
-### Story K.d: v2.1.3 archive_stories Mode [Planned]
+### Story K.d: v2.1.3 archive_stories Mode [Done]
 
 Productionize the `archive_stories` mode using the `archive` action type and `_phase-letters.md` include from prior stories.
 
-- [ ] Create `project_guide/templates/project-guide/templates/modes/archive-stories-mode.md` (sequence-style, uses `_header-sequence.md`)
-- [ ] Mode steps: read `stories.md`, warn if any non-`[Done]` stories, show planned archive path, await confirmation, perform archive, suggest `plan_phase`
-- [ ] Add `archive_stories` entry to `project_guide/templates/project-guide/.metadata.yml` under the `# Post-Release` section with `action: archive` on `stories.md` and `next_mode: plan_phase`
-- [ ] Integration test: render `archive_stories` mode, execute against a fixture, verify the archived file and the fresh `stories.md`
-- [ ] Delete `scripts/spike_archive_stories.py` (now superseded)
-- [ ] Verify: `project-guide mode archive_stories` works end-to-end on a clean test project
+- [x] Create `project_guide/templates/project-guide/templates/modes/archive-stories-mode.md` (sequence-style, uses `_header-sequence.md` and `_phase-letters.md`)
+- [x] Mode steps: read `stories.md`, warn if any non-`[Done]` stories, show planned archive path, await confirmation, perform archive, suggest `plan_phase`
+- [x] Add `archive_stories` entry to `project_guide/templates/project-guide/.metadata.yml` under the `# Post-Release` section with `action: archive` on `stories.md`, `next_mode: plan_phase`, and `files_exist: [stories.md]` prerequisite
+- [x] Integration test: render `archive_stories` mode, execute against a fixture, verify the archived file and the fresh `stories.md` (new `tests/test_archive_stories_mode.py` — 9 tests covering mode rendering, prereq warning, happy path, no-Future fallback, and 4 error paths)
+- [x] Delete `scripts/spike_archive_stories.py` (now superseded); empty `scripts/` directory also removed
+- [x] Verify: `project-guide mode archive_stories` + `project-guide archive-stories` works end-to-end on a clean test project
+- [x] **Additional scope**: new `project-guide archive-stories` CLI command introduced to bridge the LLM-facing mode template and the deterministic `perform_archive` action. The mode template instructs the LLM to run this command after developer approval. Clean separation: template = conversational, CLI = transactional.
+- [x] **Additional scope**: `render_fresh_stories_artifact` now uses a local `_LenientUndefined` so missing Jinja context variables render as `{{ name }}` placeholders instead of empty strings.
+- [x] **Additional scope**: new `extract_stories_header_context(text)` parser in `actions.py` auto-extracts `project_name` and `programming_language` from the source stories.md first-line header (`# stories.md -- <name> (<lang>)`); `perform_archive` merges extracted values with the caller's context (caller wins) so the fresh re-render preserves the header.
 
 ### Story K.e: v2.1.4 plan_phase Post-Archive Support [Planned]
 

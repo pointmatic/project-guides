@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.3] - 2026-04-10
+
+### Added
+- **`archive_stories` mode** (Story K.d) — new sequence-style mode productionizes the archive pipeline from K.a/K.c:
+  - New mode template `project_guide/templates/project-guide/templates/modes/archive-stories-mode.md` walks the LLM through reading the current `stories.md`, warning about any non-`[Done]` stories, showing the planned archive path, awaiting developer approval, running the archive command, and suggesting `plan_phase` as the next mode. Includes the `_phase-letters.md` shared include from K.b.
+  - New `archive_stories` entry in `.metadata.yml` under the Post-Release section with `action: archive` on `stories.md`, `next_mode: plan_phase`, and a `files_exist: [stories.md]` prerequisite that surfaces a warning when the source is missing.
+- **`project-guide archive-stories` CLI command** — new subcommand that wraps `project_guide.actions.perform_archive`. Loads the project's `.project-guide.yml`, looks up the `archive_stories` mode, finds its archive artifact, resolves the bundled `stories.md` template (always uses the package-bundled copy, not the project's installed templates, so the re-render is not affected by any local template edits), and invokes `perform_archive` with the merged metadata context. Prints a summary: archived path, version, last phase letter, and whether a Future section was carried.
+- **`extract_stories_header_context(text)` helper** in `actions.py` — parses the stories.md first-line header (`# stories.md -- <project-name> (<programming-language>)`) into a context dict. `perform_archive` merges extracted values with the caller's context (caller wins) so the fresh re-render preserves the header even when the caller doesn't supply `project_name`/`programming_language` explicitly.
+
+### Changed
+- **`render_fresh_stories_artifact` uses lenient undefined rendering.** Missing Jinja context variables now render as `{{ name }}` placeholders instead of empty strings, preventing header corruption like `# stories.md --  (Python)` when a project's metadata doesn't include `project_name`. Implemented via a local `_LenientUndefined` class in `actions.py` (mirrors `render.py._LenientUndefined`; kept local to avoid an import cycle).
+
+### Removed
+- **`scripts/spike_archive_stories.py`** — the K.a throwaway script is now superseded by `project_guide.actions.perform_archive` + `project-guide archive-stories`. The empty `scripts/` directory was removed as well.
+
+### Tests
+- New `tests/test_archive_stories_mode.py` — 9 end-to-end integration tests using `click.testing.CliRunner`:
+  - **Mode template rendering**: `mode archive_stories` renders a go.md containing the mode-specific content, the `project-guide archive-stories` command, the phase-letters include, and the `plan_phase` next-mode suggestion.
+  - **Prerequisite warning**: missing `stories.md` surfaces the "Prerequisites not yet met" warning.
+  - **Happy path**: `archive-stories` moves the source to `.archive/stories-v1.0.0.md`, preserves the source byte-for-byte, re-renders a fresh `stories.md` with carried Future section and preserved `demo-project` header.
+  - **No-Future fallback**: source without a Future section falls back to the template default (HTML-comment explainer present).
+  - **Error paths**: missing config, missing source, pre-existing archive target (idempotency guard), no versioned story headings. Each error path verifies the source is left untouched.
+- **177 tests pass** (up from 168 after K.c refactor).
+
+### Notes
+- The mode template is LLM-conversational (read/warn/show/approve), but the actual mutation is Python-deterministic (`project-guide archive-stories` shelling to `perform_archive`). This keeps the file-mutation logic testable and transactional while the decision-making stays in the LLM conversation.
+
 ## [2.1.2] - 2026-04-10
 
 ### Added

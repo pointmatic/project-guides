@@ -19,8 +19,9 @@ from pathlib import Path
 
 import click
 
+from project_guide.actions import ActionType, perform_archive
 from project_guide.config import Config
-from project_guide.exceptions import ConfigError, MetadataError, RenderError, SyncError
+from project_guide.exceptions import ActionError, ConfigError, MetadataError, RenderError, SyncError
 from project_guide.metadata import load_metadata
 from project_guide.render import render_go_project_guide
 from project_guide.sync import (
@@ -253,6 +254,105 @@ def set_mode(mode_name: str | None):
         click.secho("  Prerequisites not yet met:", fg='yellow')
         for f in missing_prereqs:
             click.secho(f"    ✗ {f}", fg='yellow')
+
+
+@main.command(name="archive-stories")
+def archive_stories_cmd():
+    """Archive docs/specs/stories.md and re-render a fresh one.
+
+    Wraps the deterministic archive action declared on the `archive_stories`
+    mode: moves the current stories.md to
+    `<spec_artifacts_path>/.archive/stories-vX.Y.Z.md` (version derived from
+    the latest story in the file) and re-renders a fresh stories.md from the
+    bundled artifact template, preserving the `## Future` section verbatim.
+
+    This command is intended to be run by the LLM after the developer has
+    approved the archive in `project-guide mode archive_stories`.
+    """
+    config_path = Path(".project-guide.yml")
+    if not config_path.exists():
+        click.secho(
+            "Error: No .project-guide.yml found. Run 'project-guide init' first.",
+            fg='red',
+            err=True,
+        )
+        raise click.Abort()
+
+    try:
+        config = Config.load(str(config_path))
+    except ConfigError as e:
+        click.secho(f"Error: {e}", fg='red', err=True)
+        sys.exit(3)
+
+    target_dir = Path(config.target_dir)
+    metadata_path = target_dir / config.metadata_file
+    try:
+        metadata = load_metadata(metadata_path)
+        mode = metadata.get_mode("archive_stories")
+    except MetadataError as e:
+        click.secho(f"Error: {e}", fg='red', err=True)
+        sys.exit(3)
+
+    # Find the artifact with action: archive. The schema allows multiple
+    # archive artifacts in principle; we only support one for now and error
+    # if there are more.
+    archive_artifacts = [a for a in mode.artifacts if a.action is ActionType.ARCHIVE]
+    if not archive_artifacts:
+        click.secho(
+            "Error: archive_stories mode has no artifact with action: archive.",
+            fg='red',
+            err=True,
+        )
+        sys.exit(3)
+    if len(archive_artifacts) > 1:
+        click.secho(
+            "Error: archive_stories mode declares multiple archive artifacts; "
+            "only one is supported.",
+            fg='red',
+            err=True,
+        )
+        sys.exit(3)
+
+    artifact = archive_artifacts[0]
+    if not artifact.file:
+        click.secho(
+            "Error: archive_stories artifact must specify a 'file' target.",
+            fg='red',
+            err=True,
+        )
+        sys.exit(3)
+
+    source = Path(artifact.file)
+
+    # Resolve the bundled stories.md artifact template. We deliberately use
+    # the package-bundled copy rather than the project's installed template
+    # directory so that the archive re-render is not affected by any
+    # project-local overrides or modifications.
+    template_ref = importlib.resources.files("project_guide.templates").joinpath(
+        "project-guide/templates/artifacts/stories.md"
+    )
+    with importlib.resources.as_file(template_ref) as template_path:
+        template = Path(template_path)
+        try:
+            result = perform_archive(source, template, dict(metadata.common))
+        except ActionError as e:
+            click.secho(f"Error: {e}", fg='red', err=True)
+            sys.exit(2)
+
+    click.secho("✓ Archived stories.md", fg='green', bold=True)
+    click.echo(f"  From:        {source}")
+    click.echo(f"  To:          {result.archived_to}")
+    click.echo(f"  Version:     {result.version}")
+    click.echo(f"  Last phase:  {result.phase_letter}")
+    future_status = "carried from source" if result.future_carried else "template default"
+    click.echo(f"  Future:      {future_status}")
+
+    if mode.next_mode:
+        click.echo()
+        click.secho(
+            f"  Next: run `project-guide mode {mode.next_mode}` to plan the next phase.",
+            dim=True,
+        )
 
 
 @main.command()
