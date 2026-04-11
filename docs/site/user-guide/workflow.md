@@ -40,6 +40,8 @@ There are several kinds of modes to choose from. See details in [Modes](modes.md
 - **Targeted Development**: Work from a specific story in `docs/project-guide/stories.md`.
   - **Debug**: Use `debug` mode for a test-first then fix approach.
   - **Improve**: Plan a new phase with `plan_phase` which follows a mini Ready-Set-Go sequence.
+- **Post-Release**: Wrap up a completed phase before planning the next one.
+  - **Archive Stories**: Use `archive_stories` to move the completed `docs/specs/stories.md` to `docs/specs/.archive/stories-vX.Y.Z.md` and re-render a fresh empty file. Phase letters continue across the archive boundary, so the next `plan_phase` picks up where the archived file left off.
 - **Documentation**:
   - **Brand Descriptions**: Use `document_brand` to develop your marketing messaging.
   - **Landing Page**: Use `document_landing` to help other developers understand and use your project.
@@ -67,6 +69,7 @@ Mode switching is the core of the workflow. Common transitions:
 |-----------|-----------|
 | Finished planning, ready to build | `code_velocity` or `code_test_first` |
 | Bug discovered during build | `debug` |
+| All stories `[Done]`, want a clean slate before next phase | `archive_stories` |
 | New feature phase needed | `plan_phase` |
 | Existing planning docs need updates | `refactor_plan` |
 | Existing documentation needs updates | `refactor_document` |
@@ -81,7 +84,7 @@ When you customize a file for project-specific needs, lock it with `project-guid
 ## Next Steps
 
 - [Getting Started](../getting-started.md) - Install and initialize
-- [Modes](modes.md) - Detailed reference for all 15 modes
+- [Modes](modes.md) - Detailed reference for all 16 modes
 - [Commands Reference](commands.md) - All CLI commands
 - [Override Management](overrides.md) - Lock customized files
 - [Configuration](configuration.md) - `.project-guide.yml` reference

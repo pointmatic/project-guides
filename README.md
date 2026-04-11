@@ -32,13 +32,13 @@ When you customize a file for your project, mark it as overridden so future pack
 
 ## Key Features
 - **Battle-Tested Workflows** - Crafted workflow prompts from concept through production release in one place
-- **Mode-Driven Templates** - 15 modes rendered via Jinja2 so `go.md` always matches your current task
+- **Mode-Driven Templates** - 16 modes rendered via Jinja2 so `go.md` always matches your current task
 - **Content-Hash Sync** - SHA-256 hash comparison detects changes without relying on version numbers
 - **Custom File Lock** - Lock customized files to prevent update overwrites
 - **Gentle Force Updates** - Automatic `.bak` files created if you `--force` update a custom file
-- **CLI Interface** - Eight intuitive commands for all operations
+- **CLI Interface** - Nine intuitive commands for all operations
 - **Shell Completion** - Tab completion for commands, flags, and mode names (bash, zsh, fish)
-- **Well Tested** - 91% test coverage with 131 comprehensive tests
+- **Well Tested** - Comprehensive test coverage across CLI, rendering, and action modules
 - **Zero Configuration** - Works with sensible defaults out of the box
 - **Cross-Platform** - Runs on macOS, Linux, and Windows with Python 3.11+
 
@@ -106,9 +106,11 @@ project-guide mode plan_features     # Define requirements
 project-guide mode plan_tech_spec    # Define architecture
 project-guide mode plan_stories      # Break into stories
 project-guide mode plan_phase        # Add a new phase to stories
+project-guide mode project_scaffold  # Scaffold license, manifest, README, CHANGELOG
 project-guide mode code_velocity     # Implement stories fast
 project-guide mode code_test_first   # TDD red-green-refactor
 project-guide mode debug             # Debug with test-first approach
+project-guide mode archive_stories   # Archive completed stories.md before next phase
 project-guide mode document_brand    # Brand descriptions
 project-guide mode document_landing  # GitHub Pages + MkDocs docs
 project-guide mode refactor_plan     # Plan a refactor
@@ -208,6 +210,26 @@ project-guide mode code_velocity
 # Switch to debugging mode
 project-guide mode debug
 ```
+
+### `archive-stories`
+
+Archive `docs/specs/stories.md` and re-render a fresh one for the next phase. Wraps the deterministic `archive` action declared on the `archive_stories` mode.
+
+```bash
+project-guide archive-stories
+```
+
+This command:
+
+1. Reads the latest version from the highest `### Story X.y: vN.N.N` heading in `stories.md`.
+2. Detects the highest `## Phase <Letter>:` heading (informational only).
+3. Extracts the `## Future` section verbatim if present.
+4. Moves `stories.md` to `<spec_artifacts_path>/.archive/stories-vX.Y.Z.md`.
+5. Re-renders a fresh empty `stories.md` from the bundled artifact template, carrying the `## Future` section over.
+
+If any pre-check fails (no versioned stories, archive target already exists, source file missing) the command errors and leaves the workspace untouched. If the re-render fails after the move, the source is rolled back from `.archive/`.
+
+This command is intended to be run by the LLM after the developer has approved the archive in `project-guide mode archive_stories`.
 
 ### `status`
 
@@ -383,6 +405,12 @@ overrides:
 |------|---------|--------|
 | **Branding** | `project-guide mode document_brand` | `docs/specs/brand-descriptions.md` |
 | **Landing Page** | `project-guide mode document_landing` | GitHub Pages + MkDocs docs |
+
+### Post-Release Modes
+
+| Mode | Command | Purpose |
+|------|---------|---------|
+| **Archive Stories** | `project-guide mode archive_stories` | Move completed `stories.md` to `.archive/` and re-render an empty one for the next phase |
 
 ### Refactoring Modes
 

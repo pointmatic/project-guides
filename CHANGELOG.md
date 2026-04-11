@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.6] - 2026-04-10
+
+### Added
+- **Phase K documentation pass** (Story K.g) — `archive_stories` mode is now reflected across all user-facing documentation:
+  - `docs/site/user-guide/modes.md` — new "Post-Release Modes" section with a full `archive_stories` reference entry (Type, Next, Artifact, Prerequisites, the conversational-vs-deterministic split between the mode template and the `archive-stories` CLI command). The `plan_phase` entry now explains that it handles two `stories.md` shapes (populated and empty post-archive) and continues phase letters across the archive boundary. The Ongoing Project Flow bullet list gains an `archive_stories` entry.
+  - `docs/site/user-guide/workflow.md` — new Post-Release bullet in the Modes section; new "When to Switch Modes" row for `archive_stories`; reference count updated from "15 modes" to "16 modes".
+  - `project_guide/templates/project-guide/templates/modes/default-mode.md` — new "Post-Release (sequence)" table in the "All Available Modes" section with `archive_stories`.
+- **README updates**:
+  - New "Post-Release Modes" table in the Available Modes section.
+  - New `archive-stories` CLI command reference describing the 5-step archive pipeline, pre-check failure behavior, rollback-on-failure semantics, and the LLM-runs-after-developer-approval usage pattern.
+  - Quick Start mode list: added `archive_stories` (and `project_scaffold`, which had been missing from this list in earlier versions).
+
+### Changed
+- **README Key Features**:
+  - "15 modes" → "16 modes".
+  - "Eight intuitive commands" → "Nine intuitive commands" (new `archive-stories` command).
+  - "91% test coverage with 131 comprehensive tests" → "Comprehensive test coverage across CLI, rendering, and action modules" (drops hard-coded counts that went stale every story and will continue to drift).
+
+### Notes
+- Verified via `click.testing.CliRunner`: `project-guide --help` lists `archive-stories`; `project-guide mode` (after `init`) lists `archive_stories` in the mode catalogue; `project-guide archive-stories --help` works.
+- All existing tests continue to pass unchanged (193). Phase K (`v2.1.0`–`v2.1.6`) is now complete.
+
 ## [2.1.5] - 2026-04-10
 
 ### Added

@@ -87,3 +87,8 @@ This is a fresh project. Direct the developer to `project-guide mode plan_concep
 |------|---------|--------|
 | **Branding** | `project-guide mode document_brand` | `docs/specs/brand-descriptions.md` |
 | **Landing Page** | `project-guide mode document_landing` | GitHub Pages + MkDocs docs |
+
+### Post-Release (sequence)
+| Mode | Command | Purpose |
+|------|---------|---------|
+| **Archive Stories** | `project-guide mode archive_stories` | Move completed `stories.md` to `.archive/` and re-render an empty one for the next phase |

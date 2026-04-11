@@ -93,13 +93,17 @@ Teach `default` mode to detect when all stories are `[Done]` and prompt the deve
 - [x] If at least one story is non-`[Done]`, the existing default lifecycle suggestions apply unchanged (the at-least-one-non-Done branch defers to the existing project lifecycle table at the top of the mode)
 - [x] Verify by manually rendering `default` mode against (a) a fresh project (verified via `runner.isolated_filesystem` — rendered guide contains "fresh project" hint and the all-Done section), (b) an in-progress project (LLM-runtime branch — verified by reading the rendered template language), (c) a fully-`[Done]` project (LLM-runtime branch — verified by reading the rendered template language). All three scenarios are LLM-driven at read time per the v2 architecture; the rendered template contains the prompt language for all three branches simultaneously.
 
-### Story K.g: v2.1.6 Phase K Documentation and CHANGELOG [Planned]
+### Story K.g: v2.1.6 Phase K Documentation and CHANGELOG [Done]
 
-- [ ] Add `archive_stories` to the modes catalogue (whichever source doc lists modes — confirm location during the story; do not edit `docs/project-guide/` since it is the installed copy)
-- [ ] Update `project_guide/templates/project-guide/templates/modes/default-mode.md` "All Available Modes" table with the new mode under Post-Release
-- [ ] Update `CHANGELOG.md` with v2.1.0–v2.1.5 entries
-- [ ] Update README if any user-facing wording references the lifecycle workflow
-- [ ] Verify: `project-guide mode archive_stories` appears in `project-guide --help` mode list (if applicable)
+- [x] Add `archive_stories` to the modes catalogue (sources identified: `docs/site/user-guide/modes.md` gets a new "Post-Release Modes" section with a full `archive_stories` reference entry; `docs/site/user-guide/workflow.md` gets a new Post-Release bullet in the Modes section and a new row in the "When to Switch Modes" table; `plan_phase` entry in `modes.md` updated to mention the two `stories.md` shapes — populated vs empty post-archive — and the archive-boundary lookup)
+- [x] Update `project_guide/templates/project-guide/templates/modes/default-mode.md` "All Available Modes" table with the new mode under a new "Post-Release (sequence)" section
+- [x] Update `CHANGELOG.md` with v2.1.0–v2.1.5 entries (already present from prior stories) and add a v2.1.6 entry for the K.g documentation pass
+- [x] Update README if any user-facing wording references the lifecycle workflow:
+  - Key Features: "15 modes" → "16 modes"; "Eight intuitive commands" → "Nine"; "91% test coverage with 131 comprehensive tests" → "Comprehensive test coverage across CLI, rendering, and action modules" (avoids future drift from hard-coded counts)
+  - Quick Start mode list: added `archive_stories` and `project_scaffold` (the latter was already missing — fixed during this story)
+  - Available Modes section: added a new "Post-Release Modes" table with `archive_stories`
+  - Command Reference: new `archive-stories` CLI section describing the 5-step pipeline, pre-check failure behavior, rollback-on-failure semantics, and the LLM-runs-after-approval usage pattern
+- [x] Verify: `project-guide --help` lists `archive-stories` as a top-level command; `project-guide mode` (when initialized) lists `archive_stories` in the mode catalogue; `project-guide archive-stories --help` works (all three verified via `click.testing.CliRunner`)
 
 ### Story K.h: v2.1.7 project-essentials.md Placeholder and Render Hook [Planned]
 

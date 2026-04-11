@@ -105,8 +105,34 @@ project-guide mode plan_stories
 
 Generate a feature phase prompt for an existing project. Combines mini-concept, features, and technical details to describe a gap to fill, then adds a new phase to the existing stories document.
 
+`plan_phase` handles two `stories.md` shapes: **populated** (existing phases — append after the highest) and **empty post-archive** (header + `## Future` only — read `docs/specs/.archive/stories-vX.Y.Z.md` to find the highest archived phase letter and continue from there). Phase letters continue across the archive boundary.
+
 ```bash
 project-guide mode plan_phase
+```
+
+---
+
+### Post-Release Modes
+
+#### archive_stories
+
+| Field | Value |
+|-|-|
+| **Type** | Sequence |
+| **Next** | `plan_phase` |
+| **Artifact** | `docs/specs/stories.md` (`action: archive`) |
+| **Prerequisites** | `stories.md` |
+
+Archive the completed `docs/specs/stories.md` so the next phase can start with a clean slate. The current file is moved to `docs/specs/.archive/stories-vX.Y.Z.md` (version derived from the latest story) and a fresh empty `stories.md` is re-rendered from the artifact template, preserving the `## Future` section verbatim.
+
+The mode is conversational (warns about non-`[Done]` stories, shows the planned archive path, awaits approval) but the actual mutation runs through `project-guide archive-stories`, which wraps a deterministic transactional action with rollback on failure.
+
+Run this when all stories in the current phase are `[Done]` and you want each completed phase as a self-contained file in `.archive/` for cleaner planning.
+
+```bash
+project-guide mode archive_stories
+project-guide archive-stories  # after developer approval
 ```
 
 ---
@@ -260,7 +286,8 @@ Once in a coding cycle, switch to specialized modes as needed:
 
 - **`debug`** — when something breaks
 - **`code_test_first`** — for critical correctness
-- **`plan_phase`** — when adding a new feature phase
+- **`archive_stories`** — when all stories in the current phase are `[Done]` and you want a clean slate before planning the next phase
+- **`plan_phase`** — when adding a new feature phase (works with both populated and post-archive `stories.md`)
 - **`refactor_plan`** / **`refactor_document`** — when planning artifacts or docs need updating
 - **`document_brand`** / **`document_landing`** — when preparing for release
 
