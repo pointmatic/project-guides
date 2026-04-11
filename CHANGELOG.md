@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.4] - 2026-04-10
+
+### Added
+- **`plan_phase` mode handles post-archive empty `stories.md`** (Story K.e):
+  - Step 1 of the mode template now distinguishes two `stories.md` shapes — "Populated" (one or more `## Phase <Letter>:` sections) vs "Empty (post-archive)" (header + `## Future` only). For the empty case, the template instructs the LLM to look in `docs/specs/.archive/` for `stories-vX.Y.Z.md` files, read the highest-version one, and use its highest phase letter as the basis for the next.
+  - Step 5 explicitly describes the next-phase-letter algorithm (populated → successor of highest; empty + archive → successor of archived highest; neither → start at `A`) and tells the LLM to insert the new phase as the first phase when `stories.md` was empty.
+  - Phase letters **continue across the archive boundary** — they do not reset.
+- **`increment_phase_letter(letter)` helper** in `actions.py` — pure function returning the base-26-no-zero successor of a phase letter. Examples: `A→B`, `Z→AA`, `AZ→BA`, `ZZ→AAA`. Raises `ActionError` on invalid input (empty string, lowercase, non-letter characters).
+- **`next_phase_letter(stories_text, archive_dir)` helper** in `actions.py` — implements the post-archive lookup algorithm in Python so future tooling can call it directly (e.g., a future `status` command or a Python-driven `plan_phase` action). The current `plan_phase` mode template describes the same algorithm in prose so the LLM can perform it directly without invoking Python (consistent with v2 architecture).
+- **`_find_latest_archived_stories(archive_dir)` helper** — filters `.archive/` to files matching `stories-vX.Y.Z.md` (any stem starting with `stories`), ignoring unrelated archived artifacts like `phase-j-modes-plan.md` or `ux-problems-v2.0.10.md`. Returns the file with the highest semver version, or `None` if none exist.
+
+### Tests
+- 16 new tests in `tests/test_actions.py`:
+  - **`extract_stories_header_context`** — 3 tests (double-hyphen, em-dash, missing → empty dict).
+  - **`increment_phase_letter`** — 7 tests covering simple advance, `Z→AA` carry, two-letter advance, `ZZ→AAA` carry, three-letter advance, and three invalid-input cases.
+  - **`next_phase_letter`** — 6 fixture tests covering: populated stories.md returns successor (and ignores `.archive/`), empty stories.md + Phase J archive → `K` (using the real `docs/specs/.archive/stories-v2.0.20.md` fixture), empty stories.md + missing `.archive/` → `A`, empty + empty `.archive/` → `A`, empty + `.archive/` containing only non-stories files → `A`, and empty + multiple archived stories versions picks the highest-version one.
+- **193 tests pass** (up from 177).
+
+### Notes
+- The `next_phase_letter` Python helper duplicates an algorithm that the LLM can also perform from the rendered mode template. The duplication is deliberate: the v2 architecture prefers LLM-driven detection at read time, but having a Python implementation tested against the same fixture means future code (a `status` validator, a Python-driven plan_phase, or an end-to-end test of the full archive→plan_phase flow) can rely on the algorithm without re-implementing it. The tests assert both implementations stay in sync via the Phase J fixture.
+
 ## [2.1.3] - 2026-04-10
 
 ### Added

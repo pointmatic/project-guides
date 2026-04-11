@@ -24,6 +24,9 @@ from project_guide.actions import (
     detect_latest_phase_letter,
     detect_latest_version,
     extract_future_section,
+    extract_stories_header_context,
+    increment_phase_letter,
+    next_phase_letter,
     perform_archive,
     render_fresh_stories_artifact,
 )
@@ -437,3 +440,169 @@ def test_perform_archive_round_trip_against_phase_j_fixture(tmp_path):
     assert "## Future" in fresh
     # The Phase J Future section had specific deferred-story content
     assert "Deferred" in fresh
+
+
+# ---------------------------------------------------------------------------
+# extract_stories_header_context
+# ---------------------------------------------------------------------------
+
+
+def test_extract_stories_header_context_double_hyphen():
+    text = "# stories.md -- demo-project (Python)\n\nrest\n"
+    assert extract_stories_header_context(text) == {
+        "project_name": "demo-project",
+        "programming_language": "Python",
+    }
+
+
+def test_extract_stories_header_context_em_dash():
+    text = "# stories.md — project-guide (Python)\n\nrest\n"
+    assert extract_stories_header_context(text) == {
+        "project_name": "project-guide",
+        "programming_language": "Python",
+    }
+
+
+def test_extract_stories_header_context_missing_returns_empty():
+    text = "## Phase A: Foundation\n"
+    assert extract_stories_header_context(text) == {}
+
+
+# ---------------------------------------------------------------------------
+# increment_phase_letter — base-26-no-zero successor
+# ---------------------------------------------------------------------------
+
+
+def test_increment_phase_letter_simple():
+    assert increment_phase_letter("A") == "B"
+    assert increment_phase_letter("J") == "K"
+    assert increment_phase_letter("Y") == "Z"
+
+
+def test_increment_phase_letter_carry_z_to_aa():
+    assert increment_phase_letter("Z") == "AA"
+
+
+def test_increment_phase_letter_two_letter_advance():
+    assert increment_phase_letter("AA") == "AB"
+    assert increment_phase_letter("AY") == "AZ"
+    assert increment_phase_letter("AZ") == "BA"
+
+
+def test_increment_phase_letter_carry_zz_to_aaa():
+    assert increment_phase_letter("ZZ") == "AAA"
+
+
+def test_increment_phase_letter_three_letter_advance():
+    assert increment_phase_letter("AAA") == "AAB"
+    assert increment_phase_letter("AAZ") == "ABA"
+
+
+def test_increment_phase_letter_rejects_invalid():
+    with pytest.raises(ActionError, match="Invalid phase letter"):
+        increment_phase_letter("")
+    with pytest.raises(ActionError, match="Invalid phase letter"):
+        increment_phase_letter("a")  # lowercase
+    with pytest.raises(ActionError, match="Invalid phase letter"):
+        increment_phase_letter("A1")  # not all letters
+
+
+# ---------------------------------------------------------------------------
+# next_phase_letter — plan_phase post-archive lookup
+# ---------------------------------------------------------------------------
+
+
+def test_next_phase_letter_populated_stories_returns_successor(tmp_path):
+    """When stories.md has phases, return the successor of the highest one."""
+    text = (
+        "## Phase A: Foundation\n\n"
+        "## Phase B: Core\n\n"
+        "## Phase C: Polish\n"
+    )
+    archive_dir = tmp_path / ".archive"
+    # Archive dir doesn't exist — must not be consulted when stories.md has phases
+    assert next_phase_letter(text, archive_dir) == "D"
+
+
+def test_next_phase_letter_empty_stories_with_phase_j_archive_returns_k(tmp_path):
+    """
+    Fixture test (story checklist): empty stories.md + .archive/stories-v2.0.20.md
+    containing Phase J → next phase letter is K.
+    """
+    repo_root = Path(__file__).resolve().parent.parent
+    phase_j_fixture = repo_root / "docs" / "specs" / ".archive" / "stories-v2.0.20.md"
+    if not phase_j_fixture.exists():
+        pytest.skip(f"Phase J fixture not present: {phase_j_fixture}")
+
+    archive_dir = tmp_path / ".archive"
+    archive_dir.mkdir()
+    target = archive_dir / "stories-v2.0.20.md"
+    target.write_text(phase_j_fixture.read_text(encoding="utf-8"), encoding="utf-8")
+
+    empty_stories = (
+        "# stories.md -- project-guide (Python)\n\n---\n\n## Future\n"
+    )
+    assert next_phase_letter(empty_stories, archive_dir) == "K"
+
+
+def test_next_phase_letter_empty_stories_no_archive_returns_a(tmp_path):
+    """
+    Fixture test (story checklist): empty stories.md + no .archive/ → next phase A.
+    """
+    archive_dir = tmp_path / ".archive"
+    # Deliberately do NOT create archive_dir
+    empty_stories = (
+        "# stories.md -- demo (Python)\n\n---\n\n## Future\n"
+    )
+    assert next_phase_letter(empty_stories, archive_dir) == "A"
+    assert not archive_dir.exists()
+
+
+def test_next_phase_letter_empty_stories_empty_archive_returns_a(tmp_path):
+    """Empty stories.md + an empty .archive/ directory still yields A."""
+    archive_dir = tmp_path / ".archive"
+    archive_dir.mkdir()
+    empty_stories = "# stories.md -- demo (Python)\n\n---\n"
+    assert next_phase_letter(empty_stories, archive_dir) == "A"
+
+
+def test_next_phase_letter_empty_stories_archive_with_unrelated_files(tmp_path):
+    """
+    Empty stories.md + .archive/ containing only non-stories files → A.
+    The archive lookup must filter to `stories-vX.Y.Z.md` and ignore everything
+    else (e.g., `phase-j-modes-plan.md`, `ux-problems-v2.0.10.md`).
+    """
+    archive_dir = tmp_path / ".archive"
+    archive_dir.mkdir()
+    (archive_dir / "phase-j-modes-plan.md").write_text("not a stories file", encoding="utf-8")
+    (archive_dir / "ux-problems-v2.0.10.md").write_text("also not stories", encoding="utf-8")
+    empty_stories = "# stories.md -- demo (Python)\n\n---\n"
+    assert next_phase_letter(empty_stories, archive_dir) == "A"
+
+
+def test_next_phase_letter_empty_stories_picks_highest_archive_version(tmp_path):
+    """
+    When multiple archived stories files exist, the highest-version one wins
+    and its highest phase letter is the basis for the successor.
+    """
+    archive_dir = tmp_path / ".archive"
+    archive_dir.mkdir()
+    # Older archive: Phase A only
+    (archive_dir / "stories-v0.5.0.md").write_text(
+        "## Phase A: Old foundation\n",
+        encoding="utf-8",
+    )
+    # Newer archive: Phase A through C — this one should win
+    (archive_dir / "stories-v1.10.0.md").write_text(
+        "## Phase A: Foundation\n\n## Phase B: Core\n\n## Phase C: Polish\n",
+        encoding="utf-8",
+    )
+    empty_stories = "# stories.md -- demo (Python)\n\n---\n"
+    assert next_phase_letter(empty_stories, archive_dir) == "D"
+
+
+def test_next_phase_letter_populated_stories_post_z(tmp_path):
+    """A populated stories.md with phases past Z continues the base-26 sequence."""
+    text = "## Phase Y: One\n\n## Phase Z: Two\n"
+    archive_dir = tmp_path / ".archive"
+    assert next_phase_letter(text, archive_dir) == "AA"

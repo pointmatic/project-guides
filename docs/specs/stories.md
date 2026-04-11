@@ -70,16 +70,18 @@ Productionize the `archive_stories` mode using the `archive` action type and `_p
 - [x] **Additional scope**: `render_fresh_stories_artifact` now uses a local `_LenientUndefined` so missing Jinja context variables render as `{{ name }}` placeholders instead of empty strings.
 - [x] **Additional scope**: new `extract_stories_header_context(text)` parser in `actions.py` auto-extracts `project_name` and `programming_language` from the source stories.md first-line header (`# stories.md -- <name> (<lang>)`); `perform_archive` merges extracted values with the caller's context (caller wins) so the fresh re-render preserves the header.
 
-### Story K.e: v2.1.4 plan_phase Post-Archive Support [Planned]
+### Story K.e: v2.1.4 plan_phase Post-Archive Support [Done]
 
 Update `plan_phase` to handle an empty `stories.md` and continue phase letters from `.archive/` when present.
 
-- [ ] Update `project_guide/templates/project-guide/templates/modes/plan-phase-mode.md` to handle the empty-`stories.md` case explicitly
-- [ ] Document the `.archive/` lookup: read `.archive/stories-vX.Y.Z.md` (latest by version) and parse the highest phase letter to determine the next letter
-- [ ] Reference `_phase-letters.md` for the letter rules rather than restating them
-- [ ] Add a fixture test: empty `stories.md` + `.archive/stories-v2.0.20.md` containing Phase J → next phase letter is `K`
-- [ ] Add a fixture test: empty `stories.md` + no `.archive/` → next phase letter is `A`
-- [ ] Verify: rendered `plan_phase` mode correctly references the include and the archive lookup
+- [x] Update `project_guide/templates/project-guide/templates/modes/plan-phase-mode.md` to handle the empty-`stories.md` case explicitly (Step 1 now distinguishes "Populated" vs "Empty (post-archive)" shapes; Step 5 instructs the LLM to insert the new phase as the first phase if `stories.md` was empty)
+- [x] Document the `.archive/` lookup: read `.archive/stories-vX.Y.Z.md` (latest by version) and parse the highest phase letter to determine the next letter (template prose plus a Python implementation: `next_phase_letter(stories_text, archive_dir)` in `actions.py` for future tooling use)
+- [x] Reference `_phase-letters.md` for the letter rules rather than restating them (Step 5 prose says "see the Phase and Story ID Scheme below"; the include is rendered once at the end of the mode template)
+- [x] Add a fixture test: empty `stories.md` + `.archive/stories-v2.0.20.md` containing Phase J → next phase letter is `K` (`test_next_phase_letter_empty_stories_with_phase_j_archive_returns_k`)
+- [x] Add a fixture test: empty `stories.md` + no `.archive/` → next phase letter is `A` (`test_next_phase_letter_empty_stories_no_archive_returns_a`)
+- [x] Verify: rendered `plan_phase` mode correctly references the include and the archive lookup (manually verified via `runner.isolated_filesystem` invocation: contains `## Phase and Story ID Scheme` exactly once, mentions `.archive/`, "Empty (post-archive)", and "continue across the archive boundary")
+- [x] **Additional scope**: new `increment_phase_letter(letter)` helper in `actions.py` implements the base-26-no-zero successor algorithm (`A→B`, `Z→AA`, `ZZ→AAA`); tested with 7 cases including invalid inputs.
+- [x] **Additional scope**: new `_find_latest_archived_stories(archive_dir)` helper filters `.archive/` to `stories-vX.Y.Z.md` files only, ignoring unrelated artifacts (`phase-j-modes-plan.md`, `ux-problems-v2.0.10.md`); tested with mixed-content archive directories.
 
 ### Story K.f: v2.1.5 Default Mode All-Stories-Done Suggestion [Planned]
 

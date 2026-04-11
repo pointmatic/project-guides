@@ -147,6 +147,117 @@ _STORIES_HEADER_RE = re.compile(
 )
 
 
+def increment_phase_letter(letter: str) -> str:
+    """
+    Return the successor of `letter` in the base-26-no-zero sequence.
+
+    Examples:
+        A → B, Y → Z, Z → AA, AA → AB, AZ → BA, ZZ → AAA
+
+    The scheme is base-26 with no zero, so a "carry" advances to the next
+    length once `Z` is exceeded (`Z` → `AA`, `ZZ` → `AAA`, etc.). This
+    matches `_phase-letters.md` and the ordering used by
+    `detect_latest_phase_letter`.
+    """
+    if not letter or not letter.isalpha() or not letter.isupper():
+        raise ActionError(
+            f"Invalid phase letter '{letter}': must be one or more uppercase A-Z"
+        )
+
+    chars = list(letter)
+    i = len(chars) - 1
+    while i >= 0:
+        if chars[i] != "Z":
+            chars[i] = chr(ord(chars[i]) + 1)
+            return "".join(chars)
+        chars[i] = "A"
+        i -= 1
+    # All positions were 'Z' — carry into a new leading 'A'.
+    return "A" + "".join(chars)
+
+
+def next_phase_letter(stories_text: str, archive_dir: Path) -> str:
+    """
+    Determine the next phase letter for a `plan_phase` operation.
+
+    Lookup order:
+      1. If `stories_text` contains any `## Phase <Letter>:` headings, return
+         the successor of the highest one.
+      2. Else, scan `archive_dir` for files matching `stories-vX.Y.Z.md` (or
+         `stories-vX.Y.Z<suffix>` for the same stem). If any exist, read the
+         one with the highest version, find its highest phase letter, and
+         return the successor.
+      3. Else, return `'A'` (fresh project, no archive).
+
+    This mirrors the algorithm documented in `_phase-letters.md` and is
+    intended to be callable from future plan_phase tooling. The current
+    plan_phase mode template describes the same algorithm in prose so the
+    LLM can perform it directly without invoking Python.
+
+    Args:
+        stories_text: Contents of `docs/specs/stories.md` (may be empty body).
+        archive_dir: Path to `docs/specs/.archive/` (may not exist).
+
+    Returns:
+        The next phase letter as a string (e.g., `'A'`, `'K'`, `'AA'`).
+    """
+    # Case 1: stories.md already has phases — advance from the highest.
+    try:
+        current = detect_latest_phase_letter(stories_text)
+        return increment_phase_letter(current)
+    except ActionError:
+        pass  # No phases in stories.md — fall through to archive lookup.
+
+    # Case 2: empty stories.md — look in the archive directory.
+    if archive_dir.exists() and archive_dir.is_dir():
+        archived = _find_latest_archived_stories(archive_dir)
+        if archived is not None:
+            try:
+                last_phase = detect_latest_phase_letter(
+                    archived.read_text(encoding="utf-8")
+                )
+                return increment_phase_letter(last_phase)
+            except ActionError:
+                pass  # Archived file has no phases — treat as fresh.
+
+    # Case 3: no phases anywhere — fresh project.
+    return "A"
+
+
+# Matches archived stories filenames: `stories-vX.Y.Z.md`, allowing any
+# stem prefix and any suffix so this also works for `stories-tmp-v1.0.0.md`
+# style names.
+_ARCHIVED_STORIES_RE = re.compile(
+    r"^(?P<stem>.+)-v(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\.md$"
+)
+
+
+def _find_latest_archived_stories(archive_dir: Path) -> Path | None:
+    """
+    Return the archived stories file with the highest version, or None if
+    no archived stories files are present.
+
+    Considers only files whose name starts with `stories-` to avoid picking
+    up unrelated archived artifacts.
+    """
+    candidates: list[tuple[tuple[int, int, int], Path]] = []
+    for path in archive_dir.iterdir():
+        if not path.is_file():
+            continue
+        m = _ARCHIVED_STORIES_RE.match(path.name)
+        if not m:
+            continue
+        if not m.group("stem").startswith("stories"):
+            continue
+        version = (int(m.group("major")), int(m.group("minor")), int(m.group("patch")))
+        candidates.append((version, path))
+
+    if not candidates:
+        return None
+    candidates.sort()
+    return candidates[-1][1]
+
+
 def extract_stories_header_context(text: str) -> dict[str, str]:
     """
     Parse the stories.md first-line header and return `project_name` and
