@@ -33,8 +33,10 @@ Before planning a new phase, the following should exist:
 4. Present the phase plan to the developer for approval.
 
 5. After approval, add a new phase section and stories to `docs/specs/stories.md`:
-   - Determine the next phase letter
+   - Determine the next phase letter (see the Phase and Story ID Scheme below)
    - Break the phase into stories following the standard story format
    - Include a spike story if the phase introduces a new integration boundary
 
 6. Present the updated stories to the developer for approval.
+
+{% include "modes/_phase-letters.md" %}

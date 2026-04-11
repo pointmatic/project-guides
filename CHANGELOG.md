@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-04-10
+
+### Added
+- **Phase and Story ID Scheme shared include** (Story K.b) — new template `project_guide/templates/project-guide/templates/modes/_phase-letters.md` documents the base-26-no-zero phase letter scheme (`A`–`Z`, `AA`–`ZZ`, `AAA`–…), the matching story sub-letter scheme, and the rule that letters continue across `archive_stories` boundaries by consulting `docs/specs/.archive/`. The include is now rendered once inside both `plan_stories` and `plan_phase` so the rules live in one place.
+- **`## Future` section in the stories artifact template** — `project_guide/templates/project-guide/templates/artifacts/stories.md` now renders a `## Future` section after `{{phases_and_stories}}` with an inline note describing what belongs there (deferred stories, future phases, project-level out-of-scope items). This gives `archive_stories` a canonical place to preserve the "carry-over" section across archive cycles.
+- **Tests**: two new tests in `tests/test_render.py` verify the artifact template renders a `## Future` section when `phases_and_stories` is empty and when it is populated (with the Future section appearing after the phases content). 133 tests pass.
+
 ## [2.1.0] - 2026-04-10
 
 ### Added

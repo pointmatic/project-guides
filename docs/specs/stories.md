@@ -28,20 +28,20 @@ Wire the full archive pipeline end-to-end as a throwaway script in `scripts/`, b
 - [x] Verify: archived file matches original; new `stories.md` is empty body + carried `## Future`
 - [x] Document spike findings in the story's commit message (decisions to carry into K.c/K.d)
 
-### Story K.b: v2.1.1 Codify Phase Letter Scheme and Future Section [Planned]
+### Story K.b: v2.1.1 Codify Phase Letter Scheme and Future Section [Done]
 
 Move the phase letter rules into a shared include and codify the `## Future` section in the stories artifact template so both planning and post-archive flows reference one source.
 
-- [ ] Create `project_guide/templates/project-guide/templates/modes/_phase-letters.md` shared include
-  - [ ] Document phase letter scheme: `A`–`Z`, then `AA`, `AB`, …, `AZ`, `BA`, … (base-26, no zero)
-  - [ ] Document story sub-letter scheme: `A.a`–`A.z`, then `A.aa`, `A.ab`, …
-  - [ ] Note that letters continue across archive boundaries (read `.archive/` to find the latest)
-- [ ] Update `project_guide/templates/project-guide/templates/artifacts/stories.md` to include a `## Future` section after `{{ phases_and_stories }}`
-  - [ ] Add a brief inline note describing what belongs there (deferred stories, future phases, project-level out-of-scope items)
-- [ ] Update `project_guide/templates/project-guide/templates/modes/plan-stories-mode.md` to include `_phase-letters.md`
-- [ ] Update `project_guide/templates/project-guide/templates/modes/plan-phase-mode.md` to include `_phase-letters.md`
-- [ ] Verify: rendered `default` mode and `plan_phase` mode both contain the phase letter rules exactly once
-- [ ] Add tests for the updated `stories.md` artifact template (renders with empty and populated `## Future`)
+- [x] Create `project_guide/templates/project-guide/templates/modes/_phase-letters.md` shared include
+  - [x] Document phase letter scheme: `A`–`Z`, then `AA`, `AB`, …, `AZ`, `BA`, … (base-26, no zero)
+  - [x] Document story sub-letter scheme: `A.a`–`A.z`, then `A.aa`, `A.ab`, …
+  - [x] Note that letters continue across archive boundaries (read `.archive/` to find the latest)
+- [x] Update `project_guide/templates/project-guide/templates/artifacts/stories.md` to include a `## Future` section after `{{ phases_and_stories }}`
+  - [x] Add a brief inline note describing what belongs there (deferred stories, future phases, project-level out-of-scope items)
+- [x] Update `project_guide/templates/project-guide/templates/modes/plan-stories-mode.md` to include `_phase-letters.md`
+- [x] Update `project_guide/templates/project-guide/templates/modes/plan-phase-mode.md` to include `_phase-letters.md`
+- [x] Verify: rendered `plan_stories` mode and `plan_phase` mode both contain the phase letter rules exactly once (story originally said `default`, corrected — `default` was a typo for `plan_stories`, which is where the rules belong)
+- [x] Add tests for the updated `stories.md` artifact template (renders with empty and populated `## Future`)
 
 ### Story K.c: v2.1.2 Archive Action Type [Planned]
 

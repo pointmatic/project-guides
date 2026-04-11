@@ -150,6 +150,49 @@ def _get_all_mode_names():
     return metadata.list_mode_names()
 
 
+def _render_artifact_stories_template(**context):
+    """Render the bundled stories.md artifact template with the given context."""
+    import importlib.resources
+
+    from jinja2 import Environment, FileSystemLoader
+
+    template_ref = importlib.resources.files("project_guide.templates").joinpath(
+        "project-guide/templates/artifacts/stories.md"
+    )
+    with importlib.resources.as_file(template_ref) as template_path:
+        env = Environment(
+            loader=FileSystemLoader(str(template_path.parent)),
+            keep_trailing_newline=True,
+        )
+        template = env.get_template(template_path.name)
+        return template.render(**context)
+
+
+def test_artifact_stories_template_includes_future_when_empty():
+    """The stories.md artifact template renders a Future section even when phases_and_stories is empty."""
+    rendered = _render_artifact_stories_template(
+        project_name="test-project",
+        programming_language="Python",
+        phases_and_stories="",
+    )
+    assert "## Future" in rendered
+    assert "test-project" in rendered
+
+
+def test_artifact_stories_template_includes_future_when_populated():
+    """The stories.md artifact template renders a Future section after populated phases."""
+    phases = "## Phase A: Foundation\n\n### Story A.a: v0.1.0 Hello World [Planned]\n\n- [ ] Print hello\n"
+    rendered = _render_artifact_stories_template(
+        project_name="test-project",
+        programming_language="Python",
+        phases_and_stories=phases,
+    )
+    assert "## Phase A: Foundation" in rendered
+    assert "## Future" in rendered
+    # Future section must appear AFTER the phases content
+    assert rendered.index("## Phase A") < rendered.index("## Future")
+
+
 @pytest.mark.parametrize("mode_name", _get_all_mode_names())
 def test_every_mode_renders_successfully(mode_name):
     """Every mode in the bundled metadata must render without errors.
