@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-04-11
+
+### Added
+- **`project-essentials.md` artifact and render hook** (Story M.a) — a new per-project artifact that captures must-know facts future LLMs need to avoid blunders (workflow rules, architecture quirks, domain conventions, hidden coupling, dogfooding notes). When present and non-empty, its content is injected verbatim under a `## Project Essentials` section in **every** rendered mode via `_header-common.md`, making the facts visible no matter which mode the developer is in. This story lays the rails; the `plan_tech_spec` / `refactor_plan` / `plan_phase` modes will be wired to populate it in stories M.c–M.e.
+- **`project_guide/templates/project-guide/templates/artifacts/project-essentials.md`** — the new artifact template. Ships as a comment-block-only file documenting what belongs there (workflow rules with concrete examples, architecture quirks, domain conventions, hidden coupling, dogfooding notes) and explicitly noting that an empty file is acceptable. The template deliberately omits a top-level `#` heading — the wrapper in `_header-common.md` provides the `## Project Essentials` heading, and content uses `###` for subsections to nest cleanly.
+- **`_read_project_essentials()` helper in `project_guide/render.py`** — reads `<spec_artifacts_path>/project-essentials.md` (resolved from `metadata.common["spec_artifacts_path"]`, typically `docs/specs`). Returns an empty string when the path is missing, the file does not exist, or the file is whitespace-only. `render_go_project_guide` now calls this helper and passes the result as the `project_essentials` Jinja2 context variable.
+- **`{% if project_essentials %}` guard in `_header-common.md`** — renders the `## Project Essentials` section (with the file's content and a `---` separator) only when the variable is non-empty. Empty/missing files omit the section entirely, so projects that don't want to maintain this file render cleanly.
+- **`docs/specs/project-essentials.md` for this project** (dogfooding) — populated with the current must-know facts: pyve two-environment workflow rules (`pyve run` / `pyve test` / `pyve testenv run`), the dogfooding rule (edit templates in `project_guide/templates/project-guide/`, never `docs/project-guide/`), v2 mode-driven architecture, the Phase K release-lifecycle pattern, the Phase L `--no-input` contract, and the commit/version style conventions.
+
+### Tests
+- **6 new tests in `tests/test_render.py`** under the "Story M.a" heading, all using a new `essentials_template_dir` fixture that faithfully reproduces the `{% if %}` guard shape and a new `essentials_metadata` fixture with `spec_artifacts_path`:
+  - `test_project_essentials_rendered_when_file_non_empty` — populated file → section appears between the header and the mode body.
+  - `test_project_essentials_omitted_when_file_empty` — zero-length file → section omitted.
+  - `test_project_essentials_omitted_when_file_whitespace_only` — whitespace-only file → section omitted (treated as empty).
+  - `test_project_essentials_omitted_when_file_missing` — no file at all → section omitted, no error.
+  - `test_project_essentials_omitted_when_spec_artifacts_path_not_in_metadata` — minimal metadata without `spec_artifacts_path` → lookup is skipped, section omitted.
+  - `test_project_essentials_never_renders_literal_placeholder` — **temporary regression guard** (scheduled for removal by M.b once the general post-render placeholder validator lands). Exercises all four file shapes and asserts the literal string `{{ project_essentials }}` never appears in the output. Catches a future template edit that removes the `{% if %}` guard, since `_LenientUndefined.__str__` would otherwise render the placeholder verbatim. See `render.py:83-99` for the lenient-undefined contract.
+
+### Notes
+- The M.a story deliberately does **not** add `project-essentials.md` to any mode's `.metadata.yml` `artifacts` list — that wiring is M.c–M.e's responsibility (population via `plan_tech_spec`, refresh via `refactor_plan`, append via `plan_phase`). M.a only establishes the render-time lookup, the guarded section, and the dogfooded content for this project.
+- The existing `test_every_mode_renders_successfully` parametrized test continues to pass unchanged. It runs every bundled mode through an isolated filesystem where no `docs/specs/project-essentials.md` exists, so the section is omitted and the render produces valid output — this is the implicit cross-mode regression guard.
+- Full test suite: **236 passed** (`pyve test`). Ruff clean across `project_guide/` and `tests/`. mypy clean on `project_guide/render.py`.
+- Verified end-to-end by re-rendering `docs/project-guide/go.md` under both `default` and `code_velocity` modes; the `## Project Essentials` section appears between the `**Rules**` block and the mode heading, with the `###` subsection nesting rendering correctly.
+
 ## [2.2.3] - 2026-04-11
 
 ### Fixed

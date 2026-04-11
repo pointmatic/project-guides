@@ -55,6 +55,15 @@ def render_go_project_guide(
     if "modes/" in mode_template_rel:
         mode_template_rel = "modes/" + mode_template_rel.split("modes/")[-1]
 
+    # Read the optional project-essentials.md artifact. When present and
+    # non-empty, _header-common.md renders its content as a top-level
+    # "Project Essentials" section visible to every mode. When missing or
+    # empty, the section is omitted entirely. The lookup is resolved against
+    # the `spec_artifacts_path` common variable (typically `docs/specs`) and
+    # is always optional — a project that chooses not to maintain this file
+    # renders cleanly.
+    project_essentials = _read_project_essentials(metadata.common.get("spec_artifacts_path"))
+
     # Build context variables for Jinja2
     context = {
         "mode_name": mode.name,
@@ -64,6 +73,7 @@ def render_go_project_guide(
         "next_mode": mode.next_mode or "",
         "mode_template": mode_template_rel,
         "target_dir": str(template_dir),
+        "project_essentials": project_essentials,
         **metadata.common,
     }
 
@@ -97,3 +107,31 @@ class _LenientUndefined(Undefined):
 
     def __bool__(self):
         return False
+
+
+def _read_project_essentials(spec_artifacts_path: str | None) -> str:
+    """Read the optional project-essentials.md artifact.
+
+    Returns the file's content as a string, or an empty string if the file is
+    missing, empty (whitespace-only), or if ``spec_artifacts_path`` is not set.
+    An empty return value causes ``_header-common.md`` to omit the
+    "Project Essentials" section entirely via a ``{% if %}`` guard.
+
+    Resolution rules:
+    - When ``spec_artifacts_path`` is ``None`` (e.g., unit tests with minimal
+      metadata): return ``""``.
+    - When the file does not exist: return ``""`` silently (not an error).
+    - When the file exists but is whitespace-only: return ``""``. This lets
+      a project keep the file around with just a comment block and still
+      have the rendered section suppressed.
+    - Otherwise: return the file's full UTF-8 content.
+    """
+    if not spec_artifacts_path:
+        return ""
+    path = Path(spec_artifacts_path) / "project-essentials.md"
+    if not path.exists():
+        return ""
+    content = path.read_text(encoding="utf-8")
+    if not content.strip():
+        return ""
+    return content

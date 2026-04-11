@@ -203,34 +203,32 @@ Establish `docs/specs/project-essentials.md` as a per-project artifact that capt
 
 Out of scope (deferred or already covered): a dedicated `refactor_essentials` mode (not needed; the three planning modes cover the lifecycle), a `create_or_modify` action type (mode templates handle existence-checking conversationally), validation/linting of `project-essentials.md` content (the artifact is freeform by design), support for literal `{{ var }}` strings as rendered output (documented as a known M.b limitation).
 
-### Story M.a: v2.3.0 project-essentials.md Placeholder and Render Hook [Planned]
+### Story M.a: v2.3.0 project-essentials.md Placeholder and Render Hook [Done]
 
 Establish a per-project `project-essentials.md` artifact that gets injected into every rendered mode via `_header-common.md`. Empty/missing renders cleanly, content (when present) appears as a `## Project Essentials` section in every mode. This story lays the rails and dogfoods it for this project; M.c–M.e wire the planning modes to populate it. *(Originally planned as Phase K story K.h.)*
 
-- [ ] Create `project_guide/templates/project-guide/templates/artifacts/project-essentials.md`
-  - [ ] Empty body with a brief comment block describing what belongs there: workflow rules, architecture quirks, domain conventions, hidden coupling, dogfooding/meta notes
-  - [ ] Note that an empty file is acceptable
-- [ ] Update `project_guide/render.py` to read `<spec_artifacts_path>/project-essentials.md` if present
-  - [ ] Pass content as the `project_essentials` Jinja2 context variable
-  - [ ] Default to empty string when the file is missing or empty (no error)
-- [ ] Update `project_guide/templates/project-guide/templates/modes/_header-common.md`
-  - [ ] After the **Rules** section and before the `# {{ mode_name }} mode` heading, render `{% if project_essentials %}## Project Essentials\n\n{{ project_essentials }}\n\n---\n{% endif %}` (or equivalent — section omitted entirely when empty)
-- [ ] Tests in `tests/test_render.py`:
-  - [ ] Rendered output contains `## Project Essentials` when fixture file is non-empty
-  - [ ] Rendered output omits the section when fixture file is empty
-  - [ ] Rendered output omits the section when fixture file is missing (no error)
-  - [ ] **Regression guard** (temporary — removed by M.b once the general validator is in place): rendered output never contains the literal string `{{ project_essentials }}` in any of the above cases. This catches a future template edit that removes the `{% if %}` guard, since `_LenientUndefined.__str__` would otherwise render the placeholder verbatim. See `render.py:83-99`.
-- [ ] Populate `docs/specs/project-essentials.md` for this project with current must-know facts:
-  - [ ] Dogfooding rule: edit templates under `project_guide/templates/project-guide/`, never `docs/project-guide/` (the installed copy)
-  - [ ] Workflow rule: pyve has **two** environments — main `.venv/` (runtime only) and `.pyve/testenv/venv/` (dev tools: pytest, ruff, mypy). Canonical commands:
-    - Runtime code: `pyve run python ...`, `pyve run project-guide ...`
-    - Tests: `pyve test [pytest args]` (NOT `pyve run pytest` — pytest is not in the main venv)
-    - Lint / type-check: `.pyve/testenv/venv/bin/ruff check ...`, `.pyve/testenv/venv/bin/mypy ...`
-    - Install dev tools: `pyve testenv --install -r requirements-dev.txt` (NEVER `pip install -e ".[dev]"` into the main venv — that pollutes runtime deps)
-  - [ ] `docs/project-guide/go.md` is dynamically re-rendered by the `mode` command — never hand-edit
-  - [ ] (Add others if any surface during the story)
-- [ ] Verify by running `project-guide mode default` (or any mode) and inspecting `docs/project-guide/go.md` for the rendered Project Essentials section
-- [ ] Note: do **not** add `project-essentials.md` as a tracked artifact in any mode's `.metadata.yml` entry yet — that wiring is M.c–M.e's responsibility
+- [x] Create `project_guide/templates/project-guide/templates/artifacts/project-essentials.md`
+  - [x] Empty body with a brief comment block describing what belongs there: workflow rules, architecture quirks, domain conventions, hidden coupling, dogfooding/meta notes
+  - [x] Note that an empty file is acceptable
+  - [x] **Additional scope**: template explicitly documents the no-top-level-heading convention — the wrapper in `_header-common.md` provides `## Project Essentials`, so file content should use `###` for subsections to avoid heading-level collision in rendered `go.md`
+- [x] Update `project_guide/render.py` to read `<spec_artifacts_path>/project-essentials.md` if present (new `_read_project_essentials()` helper)
+  - [x] Pass content as the `project_essentials` Jinja2 context variable
+  - [x] Default to empty string when the file is missing or empty (no error) — also treats whitespace-only files as empty, and handles the unit-test case where `spec_artifacts_path` is absent from metadata.common
+- [x] Update `project_guide/templates/project-guide/templates/modes/_header-common.md`
+  - [x] After the **Rules** section and before the `# {{ mode_name }} mode` heading, render `{% if project_essentials %}## Project Essentials\n\n{{ project_essentials }}\n\n---\n{% endif %}` (section omitted entirely when empty)
+- [x] Tests in `tests/test_render.py` (6 new tests under a Story M.a heading, with new `essentials_template_dir` and `essentials_metadata` fixtures):
+  - [x] Rendered output contains `## Project Essentials` when fixture file is non-empty
+  - [x] Rendered output omits the section when fixture file is empty (zero-length)
+  - [x] Rendered output omits the section when fixture file is whitespace-only (additional edge case)
+  - [x] Rendered output omits the section when fixture file is missing (no error)
+  - [x] Rendered output omits the section when `spec_artifacts_path` is absent from metadata.common (the minimal-metadata unit-test path)
+  - [x] **Regression guard** (temporary — removed by M.b once the general validator is in place): rendered output never contains the literal string `{{ project_essentials }}` in any of the above cases. Exercises all four file shapes inside a single test. Catches a future template edit that removes the `{% if %}` guard, since `_LenientUndefined.__str__` would otherwise render the placeholder verbatim. See `render.py:83-99`.
+- [x] Populate `docs/specs/project-essentials.md` for this project with current must-know facts:
+  - [x] Dogfooding rule: edit templates under `project_guide/templates/project-guide/`, never `docs/project-guide/` (the installed copy); `docs/project-guide/go.md` is dynamically re-rendered by `mode`
+  - [x] Workflow rule: pyve two-environment pattern — runtime (`pyve run python ...`), tests (`pyve test`), dev tools (`pyve testenv run ruff/mypy ...`), never `pip install -e ".[dev]"` into the main venv
+  - [x] **Additional scope**: v2 mode-driven Jinja2 templating architecture note, Phase K release-lifecycle split (`archive_stories` mode vs `archive-stories` CLI), phase letter continuity across archive boundaries, Phase L `--no-input` contract (`should_skip_input()` + `_require_setting()` pinned by the contract test), and commit/version style conventions
+- [x] Verify by running `project-guide mode default` (and `project-guide mode code_velocity`) and inspecting `docs/project-guide/go.md` for the rendered Project Essentials section — section appears between the `**Rules**` block and the mode heading in both modes; `###` subsection nesting renders correctly
+- [x] Note: do **not** add `project-essentials.md` as a tracked artifact in any mode's `.metadata.yml` entry yet — that wiring is M.c–M.e's responsibility
 
 ### Story M.b: v2.3.1 Render Output Validation — Fail on Unrendered Placeholders [Planned]
 

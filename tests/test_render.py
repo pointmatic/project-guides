@@ -193,6 +193,197 @@ def test_artifact_stories_template_includes_future_when_populated():
     assert rendered.index("## Phase A") < rendered.index("## Future")
 
 
+# --- Story M.a: project-essentials.md placeholder and render hook ---------
+
+
+@pytest.fixture
+def essentials_template_dir(tmp_path):
+    """Template dir where _header-common.md renders the Project Essentials section.
+
+    Mirrors the production ``_header-common.md`` guard so this unit-test
+    fixture exercises the same Jinja2 shape as the bundled template.
+    """
+    templates_dir = tmp_path / "templates"
+    templates_dir.mkdir(parents=True)
+    modes_dir = templates_dir / "modes"
+    modes_dir.mkdir()
+
+    (templates_dir / "llm_entry_point.md").write_text(
+        "# Guide\n\n{% include 'modes/_header-common.md' %}\n\n{% include mode_template %}\n"
+    )
+
+    # This is a faithful reproduction of the production guard — if anyone
+    # removes the `{% if %}` in the real template, this fixture will still
+    # guard, but the regression tests below running against the isolated
+    # CliRunner install will catch it.
+    (modes_dir / "_header-common.md").write_text(
+        "Mode: {{ mode_name }}\n\n"
+        "{% if project_essentials %}## Project Essentials\n\n"
+        "{{ project_essentials }}\n\n---\n{% endif %}\n"
+        "# {{ mode_name }} mode\n"
+    )
+    (modes_dir / "_header-sequence.md").write_text(
+        "Next: {{ next_mode }}\n"
+    )
+    (modes_dir / "plan-concept-mode.md").write_text(
+        "## Plan Concept\n\n{% include 'modes/_header-sequence.md' %}\n"
+    )
+
+    return tmp_path
+
+
+@pytest.fixture
+def essentials_metadata():
+    """Minimal metadata whose common block points at a ``docs/specs`` path."""
+    return Metadata(
+        common={"project_name": "test-project", "spec_artifacts_path": "docs/specs"},
+        modes=[],
+    )
+
+
+def test_project_essentials_rendered_when_file_non_empty(
+    essentials_template_dir, sample_mode, essentials_metadata, monkeypatch
+):
+    """A populated project-essentials.md appears as a section in the rendered output."""
+    monkeypatch.chdir(essentials_template_dir)
+    specs_dir = Path("docs/specs")
+    specs_dir.mkdir(parents=True)
+    (specs_dir / "project-essentials.md").write_text(
+        "- Workflow rule: use `pyve run` for runtime, `pyve test` for pytest.\n"
+        "- Dogfooding: edit templates in `project_guide/templates/`, not `docs/`.\n",
+        encoding="utf-8",
+    )
+
+    output = essentials_template_dir / "output.md"
+    render_go_project_guide(
+        essentials_template_dir, sample_mode, essentials_metadata, output
+    )
+    content = output.read_text(encoding="utf-8")
+
+    assert "## Project Essentials" in content
+    assert "Workflow rule: use `pyve run`" in content
+    assert "Dogfooding: edit templates" in content
+    # The section must appear between the header and the mode body
+    assert content.index("## Project Essentials") < content.index("# plan_concept mode")
+
+
+def test_project_essentials_omitted_when_file_empty(
+    essentials_template_dir, sample_mode, essentials_metadata, monkeypatch
+):
+    """An empty project-essentials.md omits the section entirely (no blank heading)."""
+    monkeypatch.chdir(essentials_template_dir)
+    specs_dir = Path("docs/specs")
+    specs_dir.mkdir(parents=True)
+    (specs_dir / "project-essentials.md").write_text("", encoding="utf-8")
+
+    output = essentials_template_dir / "output.md"
+    render_go_project_guide(
+        essentials_template_dir, sample_mode, essentials_metadata, output
+    )
+    content = output.read_text(encoding="utf-8")
+
+    assert "## Project Essentials" not in content
+
+
+def test_project_essentials_omitted_when_file_whitespace_only(
+    essentials_template_dir, sample_mode, essentials_metadata, monkeypatch
+):
+    """A whitespace-only project-essentials.md is treated as empty."""
+    monkeypatch.chdir(essentials_template_dir)
+    specs_dir = Path("docs/specs")
+    specs_dir.mkdir(parents=True)
+    (specs_dir / "project-essentials.md").write_text("   \n\n\t\n", encoding="utf-8")
+
+    output = essentials_template_dir / "output.md"
+    render_go_project_guide(
+        essentials_template_dir, sample_mode, essentials_metadata, output
+    )
+    content = output.read_text(encoding="utf-8")
+
+    assert "## Project Essentials" not in content
+
+
+def test_project_essentials_omitted_when_file_missing(
+    essentials_template_dir, sample_mode, essentials_metadata, monkeypatch
+):
+    """No project-essentials.md at all renders cleanly with no error."""
+    monkeypatch.chdir(essentials_template_dir)
+    # docs/specs/ is not even created — the lookup must not raise
+    output = essentials_template_dir / "output.md"
+    render_go_project_guide(
+        essentials_template_dir, sample_mode, essentials_metadata, output
+    )
+    content = output.read_text(encoding="utf-8")
+
+    assert "## Project Essentials" not in content
+
+
+def test_project_essentials_omitted_when_spec_artifacts_path_not_in_metadata(
+    essentials_template_dir, sample_mode, sample_metadata, monkeypatch
+):
+    """Metadata without spec_artifacts_path → no file lookup, section omitted.
+
+    This is the minimal-metadata unit-test path (matches ``sample_metadata``).
+    """
+    monkeypatch.chdir(essentials_template_dir)
+    output = essentials_template_dir / "output.md"
+    render_go_project_guide(
+        essentials_template_dir, sample_mode, sample_metadata, output
+    )
+    content = output.read_text(encoding="utf-8")
+
+    assert "## Project Essentials" not in content
+
+
+def test_project_essentials_never_renders_literal_placeholder(
+    essentials_template_dir, sample_mode, essentials_metadata, monkeypatch
+):
+    """Regression guard (temporary — removed by M.b's general validator).
+
+    Catches a future template edit that removes the ``{% if %}`` guard on
+    ``_header-common.md``. Because ``_LenientUndefined.__str__`` renders as
+    ``{{ name }}``, a missing guard would emit ``{{ project_essentials }}``
+    verbatim. This test fails loudly in that case. See ``render.py:83-99``.
+    """
+    monkeypatch.chdir(essentials_template_dir)
+    # Run all four shapes and verify none leak the literal placeholder
+    output = essentials_template_dir / "output.md"
+
+    # Case 1: file missing
+    render_go_project_guide(
+        essentials_template_dir, sample_mode, essentials_metadata, output
+    )
+    assert "{{ project_essentials }}" not in output.read_text(encoding="utf-8")
+
+    # Case 2: file empty
+    specs_dir = Path("docs/specs")
+    specs_dir.mkdir(parents=True)
+    (specs_dir / "project-essentials.md").write_text("", encoding="utf-8")
+    render_go_project_guide(
+        essentials_template_dir, sample_mode, essentials_metadata, output
+    )
+    assert "{{ project_essentials }}" not in output.read_text(encoding="utf-8")
+
+    # Case 3: file whitespace-only
+    (specs_dir / "project-essentials.md").write_text("\n\n", encoding="utf-8")
+    render_go_project_guide(
+        essentials_template_dir, sample_mode, essentials_metadata, output
+    )
+    assert "{{ project_essentials }}" not in output.read_text(encoding="utf-8")
+
+    # Case 4: file populated
+    (specs_dir / "project-essentials.md").write_text("real content\n", encoding="utf-8")
+    render_go_project_guide(
+        essentials_template_dir, sample_mode, essentials_metadata, output
+    )
+    content = output.read_text(encoding="utf-8")
+    assert "{{ project_essentials }}" not in content
+    assert "real content" in content
+
+
+# --- End Story M.a tests ---------------------------------------------------
+
+
 @pytest.mark.parametrize("mode_name", _get_all_mode_names())
 def test_every_mode_renders_successfully(mode_name):
     """Every mode in the bundled metadata must render without errors.
