@@ -170,6 +170,27 @@ Add the `--no-input` flag to `init`, land the shared `should_skip_input()` helpe
 - [x] Verify: `project-guide init --help` shows the new `--no-input` flag and correct help text (help text matches FR-L1/FR-L2 exactly — verified via the test_cli.py L.b test suite)
 - [x] Verify: the rendered `default` mode (and any planning mode) is unchanged by this phase — Phase L touches only `cli.py`, `runtime.py`, and docs (230 tests pass unchanged; no template edits in this phase)
 
+### Story L.d: v2.2.3 MkDocs commands.md Catch-up for archive-stories [Done]
+
+Close a K.g carryover gap discovered during the L.c documentation pass: the MkDocs command reference at `docs/site/user-guide/commands.md` was not updated when the `archive-stories` CLI command shipped in v2.1.3 (Story K.d). The K.g docs pass updated the README's Command Reference, `modes.md`, `workflow.md`, and `default-mode.md`, but `commands.md` was not on that checklist and so still reflects the pre-v2.1.3 command surface. This story is a small, focused catch-up — scoped narrowly to the missing `archive-stories` content plus the stale count on the first line. It is deliberately *not* a general `commands.md` audit; any other drift in that file is out of scope and should be addressed in its own follow-up.
+
+**Why in Phase L and not a Phase K hotfix:** roll forward, not backward. The K.g commit (`0766528 v2.1.6 Phase K Documentation and CHANGELOG`) has shipped and Phase K is closed; adding retroactive tasks to a done phase would muddy the lifecycle boundary that Phase K's `archive_stories` mode was built to protect. Threading this through Phase L as L.d keeps the commit history monotonic and gives pyve a clean upstream version to cite (v2.2.3) if it ever needs to.
+
+- [x] Update `docs/site/user-guide/commands.md` line 3: "eight commands" → "nine commands" (reflects the `archive-stories` command added in v2.1.3)
+- [x] Update the "Command Overview" table in `docs/site/user-guide/commands.md` to add an `archive-stories` row. Inserted between `mode` and `status` to match the README's Command Reference ordering, since `archive-stories` is a post-release/lifecycle command that sits closer to `mode` than to the file-sync commands.
+- [x] Add a new `## archive-stories` section to `docs/site/user-guide/commands.md`, placed after `## mode` and before `## status` to match the overview table ordering. Content adapted from the canonical README section at `README.md` `### archive-stories` — the README has the authoritative prose describing the 5-step archive pipeline, pre-check failure behavior, rollback-on-failure semantics, and the LLM-runs-after-developer-approval usage pattern. Wording preserved; lightly adapted for MkDocs heading structure (`### What It Does`, `### Failure Modes`, `### Usage` subsections).
+- [x] The new section covers: command synopsis (`project-guide archive-stories`), what it does (the 5-step list), failure modes (pre-check failure leaves workspace untouched; rollback on re-render failure), and the "run by the LLM after the developer has approved the archive in `project-guide mode archive_stories`" usage note. Also calls out the conversational-vs-deterministic split between the mode template and the CLI command.
+- [x] Verify: MkDocs renders `commands.md` without broken links or heading-level issues. Visual inspection confirms the new `##` section fits the existing heading hierarchy (consistent with the `## init`, `## mode`, `## status`, etc. pattern). No MkDocs build step was run — visual inspection sufficient per the story's fallback clause.
+- [x] Verify: every command that `project-guide --help` lists is present in both the `commands.md` overview table and has its own `##` section. Enumerated against `pyve run python -m project_guide --help`: 9 commands (`archive-stories`, `init`, `mode`, `override`, `overrides`, `purge`, `status`, `unoverride`, `update`) — all 9 have both an overview table row and a dedicated `##` section after this story. No *other* commands drift was discovered.
+- [x] Update `CHANGELOG.md` with a v2.2.3 entry under `### Fixed`. Entry explicitly cites K.g as the origin of the gap and L.c as the discovery point for provenance.
+- [x] Update `docs/specs/stories.md`: mark L.d `[Done]` on completion
+
+**Out of scope** (do not expand this story):
+- Any other stale content in `commands.md` beyond the `archive-stories` gap (e.g., test-count drift, feature-count drift, outdated screenshots). Those are separate gaps and should be tracked separately if found.
+- A general MkDocs-vs-README consistency audit across the rest of the `docs/site/user-guide/` tree. Legitimate future work, but not here.
+- Changes to the `archive-stories` CLI command itself or the `archive_stories` mode — this story is documentation-only.
+- Updates to `project_guide/templates/project-guide/templates/modes/default-mode.md` or any other template — this story does not touch rendered-output sources.
+
 ---
 
 ## Phase M: Project Essentials Integration (v2.3.0)

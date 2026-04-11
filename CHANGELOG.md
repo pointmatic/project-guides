@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.3] - 2026-04-11
+
+### Fixed
+- **MkDocs commands reference catch-up for `archive-stories`** (Story L.d) — closes a K.g documentation carryover gap discovered during the L.c documentation pass. The `archive-stories` CLI command shipped in v2.1.3 (Story K.d), and the K.g docs pass (v2.1.6) updated the README's Command Reference, `modes.md`, `workflow.md`, and `default-mode.md` — but `docs/site/user-guide/commands.md` was not on the K.g checklist, so the MkDocs command reference still reflected the pre-v2.1.3 command surface. Rather than retroactively patch the closed Phase K, this fix rolls forward as Phase L's final story.
+  - `docs/site/user-guide/commands.md` line 3: "eight commands" → "nine commands".
+  - Command Overview table: new `archive-stories` row, inserted between `mode` and `status` to match the README's Command Reference ordering (post-release/lifecycle commands group with `mode` rather than with the file-sync commands).
+  - New `## archive-stories` section placed after `## mode` and before `## status`. Content adapted from the canonical `README.md` `### archive-stories` section (which has the authoritative prose from K.g): synopsis, 5-step "What It Does" pipeline, "Failure Modes" (pre-check failure leaves workspace untouched; rollback on re-render failure), and "Usage" note explaining the conversational-vs-deterministic split between the `archive_stories` mode template and the CLI command.
+- Verified: every command listed by `project-guide --help` (9 total: `archive-stories`, `init`, `mode`, `override`, `overrides`, `purge`, `status`, `unoverride`, `update`) now has both a row in the `commands.md` overview table and a dedicated `##` section. No other commands drift detected during the audit.
+
+### Notes
+- Documentation-only release. No code or test changes. All 230 tests continue to pass unchanged.
+- Phase L (`v2.2.0`–`v2.2.3`) is now complete. The pyve post-hook integration path is fully unblocked, documented in both the README and MkDocs command references, and the MkDocs command surface now matches the CLI.
+- **Provenance note for future docs-audit work:** this fix catches one specific K.g gap (the missing `archive-stories` content). It is deliberately *not* a general `commands.md` audit — any other drift in that file (stale counts, outdated output samples, etc.) was out of scope and should be tracked separately if discovered. The story's out-of-scope section in `docs/specs/stories.md` documents this boundary.
+
 ## [2.2.2] - 2026-04-11
 
 ### Added

@@ -1,6 +1,6 @@
 # Commands Reference
 
-project-guide provides eight commands for managing LLM workflow files across your projects.
+project-guide provides nine commands for managing LLM workflow files across your projects.
 
 ## Command Overview
 
@@ -8,6 +8,7 @@ project-guide provides eight commands for managing LLM workflow files across you
 |---------|---------|
 | `init` | Install files into a new project |
 | `mode` | Switch workflow mode or list available modes |
+| `archive-stories` | Archive `stories.md` and re-render a fresh one for the next phase |
 | `status` | Show file status grouped by category |
 | `update` | Update non-overridden files to latest versions |
 | `override` | Mark a file as overridden to prevent updates |
@@ -103,6 +104,30 @@ project-guide mode debug
 2. When called with a mode name, switches the active mode
 3. Re-renders `go.md` to reflect the new mode's workflow
 4. Updates `.project-guide.yml` with the active mode
+
+## archive-stories
+
+Archive `docs/specs/stories.md` and re-render a fresh one for the next phase. Wraps the deterministic `archive` action declared on the `archive_stories` mode (shipped in v2.1.3).
+
+```bash
+project-guide archive-stories
+```
+
+### What It Does
+
+1. Reads the latest version from the highest `### Story X.y: vN.N.N` heading in `stories.md`.
+2. Detects the highest `## Phase <Letter>:` heading (informational only).
+3. Extracts the `## Future` section verbatim if present.
+4. Moves `stories.md` to `<spec_artifacts_path>/.archive/stories-vX.Y.Z.md`.
+5. Re-renders a fresh empty `stories.md` from the bundled artifact template, carrying the `## Future` section over.
+
+### Failure Modes
+
+If any pre-check fails (no versioned stories in the source, archive target already exists, source file missing) the command errors and leaves the workspace untouched. If the re-render fails after the move, the source is rolled back from `.archive/`.
+
+### Usage
+
+This command is intended to be run by the LLM after the developer has approved the archive in `project-guide mode archive_stories`. The conversational-vs-deterministic split is deliberate: the mode template walks the developer through the decision; the CLI command performs the transaction.
 
 ## status
 
