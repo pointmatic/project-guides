@@ -14,19 +14,19 @@ Close the lifecycle gap so the next phase can start with a clean slate. Introduc
 
 Out of scope (deferred to later phases): release/version-bump/tag automation (developer works across multiple git flows and prefers tool-agnostic), `code_production` mode and `code_*` abstraction, audit modes.
 
-### Story K.a: v2.1.0 End-to-End Spike — archive_stories Flow [Planned]
+### Story K.a: v2.1.0 End-to-End Spike — archive_stories Flow [Done]
 
 Wire the full archive pipeline end-to-end as a throwaway script in `scripts/`, before any productionized mode template, metadata entry, or new action type. Validates the critical path: detect latest version from a fixture `stories.md`, detect latest phase letter, move to `.archive/stories-vX.Y.Z.md`, re-render an empty `stories.md` with the carried-over `## Future` section.
 
-- [ ] Create `scripts/spike_archive_stories.py` (throwaway, not part of the package)
-- [ ] Implement latest-version detection by scanning `stories.md` for `v\d+\.\d+\.\d+` story headings
-- [ ] Implement latest-phase-letter detection by scanning `## Phase <Letter>:` headings
-- [ ] Implement `## Future` section extraction (everything from `## Future` to EOF)
-- [ ] Implement archive move: create `.archive/` if missing, move `stories.md` → `.archive/stories-vX.Y.Z.md`
-- [ ] Implement fresh `stories.md` re-render from the artifact template with the extracted `## Future` content re-injected
-- [ ] Run against a fixture `stories.md` (copy of pre-archive Phase J file) and verify round-trip
-- [ ] Verify: archived file matches original; new `stories.md` is empty body + carried `## Future`
-- [ ] Document spike findings in the story's commit message (decisions to carry into K.c/K.d)
+- [x] Create `scripts/spike_archive_stories.py` (throwaway, not part of the package)
+- [x] Implement latest-version detection by scanning `stories.md` for `v\d+\.\d+\.\d+` story headings
+- [x] Implement latest-phase-letter detection by scanning `## Phase <Letter>:` headings
+- [x] Implement `## Future` section extraction (everything from `## Future` to EOF)
+- [x] Implement archive move: create `.archive/` if missing, move `stories.md` → `.archive/stories-vX.Y.Z.md`
+- [x] Implement fresh `stories.md` re-render from the artifact template with the extracted `## Future` content re-injected
+- [x] Run against a fixture `stories.md` (copy of pre-archive Phase J file) and verify round-trip
+- [x] Verify: archived file matches original; new `stories.md` is empty body + carried `## Future`
+- [x] Document spike findings in the story's commit message (decisions to carry into K.c/K.d)
 
 ### Story K.b: v2.1.1 Codify Phase Letter Scheme and Future Section [Planned]
 
@@ -115,7 +115,11 @@ Establish a per-project `project-essentials.md` artifact that gets injected into
   - [ ] **Regression guard**: rendered output never contains the literal string `{{ project_essentials }}` in any of the above cases. This catches a future template edit that removes the `{% if %}` guard, since `_LenientUndefined.__str__` would otherwise render the placeholder verbatim. See `render.py:83-99`.
 - [ ] Populate `docs/specs/project-essentials.md` for this project with current must-know facts:
   - [ ] Dogfooding rule: edit templates under `project_guide/templates/project-guide/`, never `docs/project-guide/` (the installed copy)
-  - [ ] Workflow rule: prefix Python tools with `pyve run` (e.g., `pyve run pytest`, `pyve run ruff check`)
+  - [ ] Workflow rule: pyve has **two** environments — main `.venv/` (runtime only) and `.pyve/testenv/venv/` (dev tools: pytest, ruff, mypy). Canonical commands:
+    - Runtime code: `pyve run python ...`, `pyve run project-guide ...`
+    - Tests: `pyve test [pytest args]` (NOT `pyve run pytest` — pytest is not in the main venv)
+    - Lint / type-check: `.pyve/testenv/venv/bin/ruff check ...`, `.pyve/testenv/venv/bin/mypy ...`
+    - Install dev tools: `pyve testenv --install -r requirements-dev.txt` (NEVER `pip install -e ".[dev]"` into the main venv — that pollutes runtime deps)
   - [ ] `docs/project-guide/go.md` is dynamically re-rendered by the `mode` command — never hand-edit
   - [ ] (Add others if any surface during the story)
 - [ ] Verify by running `project-guide mode default` (or any mode) and inspecting `docs/project-guide/go.md` for the rendered Project Essentials section
@@ -155,12 +159,16 @@ Out of scope (deferred or already covered): a dedicated `refactor_essentials` mo
 After the tech-spec is approved, prompt the developer to capture any project-specific must-know facts and write them to `docs/specs/project-essentials.md`.
 
 - [ ] Update `project_guide/templates/project-guide/templates/modes/plan-tech-spec-mode.md` to add a final step after tech-spec approval
-- [ ] Step asks the developer for project-essentials content with concrete examples in the prompt:
-  - Workflow rules (e.g., tool wrappers, virtual env conventions)
-  - Architecture quirks (e.g., source vs generated/installed file locations)
-  - Domain conventions (e.g., money in cents, dates in UTC)
-  - Hidden coupling (e.g., auto-generated files, regenerated outputs)
-  - Skip if there are none — empty is fine
+- [ ] Step asks the developer for project-essentials content with **concrete worked examples** in the prompt (not just abstract categories — the LLM should put these specific scenarios in front of the developer to jog their memory):
+  - **Workflow rules — tool wrappers and environment conventions.** A common source of "random walks" by LLMs: multiple invocation forms all *work*, but only one is canonical. Capture which form to use so the LLM doesn't pick whatever happens to succeed first:
+    - *Python invocation*: wrapper command (e.g., `pyve run python ...`, `poetry run python ...`, `hatch run python ...`, `uv run python ...`) vs `python -m ...` vs `.venv/bin/python ...`. All may execute, but only one matches the project's setup.
+    - *Dev tool installation*: dedicated dev/test environment (e.g., `pyve testenv --install`, `poetry install --with dev`, `uv sync --extra dev`) vs `pip install -e ".[dev]"` into the main venv. Different isolation guarantees — the latter pollutes the runtime venv.
+    - *Test invocation*: project-specific runner (e.g., `pyve test`, `poetry run pytest`, `make test`) vs bare `pytest`. Bare `pytest` may fail because the tool isn't in the active venv — that's a signal to use the wrapper, not to `pip install pytest`.
+    - **Principle:** legitimate alternatives exist, but they should be intentional choices, not a random walk to whatever works.
+  - **Architecture quirks** (e.g., source-of-truth vs generated/installed file locations — edit the source, not the copy; build outputs that get regenerated)
+  - **Domain conventions** (e.g., money stored in cents, all timestamps UTC, IDs are strings not ints)
+  - **Hidden coupling** (e.g., files that mirror each other, auto-generated code, regenerated outputs that look hand-edited)
+  - **Skip if there are none — empty is fine**
 - [ ] Generate `docs/specs/project-essentials.md` from the artifact template only if the developer provides facts; otherwise leave the file empty (or skip creation entirely)
 - [ ] Add `project-essentials.md` to `plan_tech_spec`'s `artifacts` list in `project_guide/templates/project-guide/.metadata.yml` with `action: create`
 - [ ] Tests for the rendered mode template containing the new prompt
@@ -171,8 +179,14 @@ After the tech-spec is approved, prompt the developer to capture any project-spe
 When `refactor_plan` updates the concept/features/tech-spec, give the developer a chance to refresh `project-essentials.md` for any architecture or workflow changes that affect must-know facts.
 
 - [ ] Update `project_guide/templates/project-guide/templates/modes/refactor-plan-mode.md` to add a cycle step (or extend Step 1) for revisiting project-essentials
-- [ ] Prompt: "Did any of these refactor changes affect facts that future LLMs must know? (e.g., new tool wrapper, renamed module, changed conventions). Update project-essentials.md if so."
-- [ ] Mode template handles the case where `project-essentials.md` does not yet exist (legacy project): create from artifact template, then populate
+- [ ] Prompt should ask whether the refactor changed any facts the LLM must know, with **concrete worked examples** (not just "tool wrapper, renamed module, changed conventions"):
+  - *Switched or added an environment manager* (e.g., adopted `pyve`, `uv`, `poetry`, `hatch` — capture the canonical Python invocation and dev-tool install commands)
+  - *Split runtime from dev environment* (e.g., dev tools moved out of main venv into a dedicated testenv — capture which commands target which env, and explicitly note the **anti-pattern** to avoid like `pip install -e ".[dev]"` into the runtime venv)
+  - *Renamed module or moved source-of-truth* (e.g., template source moved from `docs/` to `project_guide/templates/` — capture so the LLM doesn't edit the installed copy)
+  - *Changed domain conventions* (e.g., money representation changed from float to cents)
+  - *New auto-generated or hidden-coupling files* (e.g., a new build step regenerates a file that looks hand-edited)
+  - **Principle**: if the refactor introduced a fork-in-the-road where the wrong choice still "works," that's a project-essential.
+- [ ] Mode template handles the case where `project-essentials.md` does not yet exist (legacy project): create from artifact template, then populate. Legacy projects are the most likely to need a first-time capture of these conventions, so the prompt should be especially explicit in that branch.
 - [ ] Mode template handles the case where it exists: read, modify, write
 - [ ] Add `project-essentials.md` to `refactor_plan`'s `artifacts` list in `.metadata.yml` with `action: modify`
 - [ ] Tests for the rendered mode template
@@ -202,15 +216,19 @@ When `plan_phase` plans a new phase, prompt the developer to append any new must
 
 ## Future
 
-### Future Story: Test First flag [Deferred]
+### Change "code_velocity" to "code_direct" [Deferred]
 
-Add a `--test-first` flag to the `init` command that causes coding to prefer `code_test_first` whenever `code_velocity` would have been chosen as a next step. This involves abstracting out the `code_*` mode and paves the way for a future `code_production` mode.
+"velocity" isn't the right word and doesn't pair well with "code_test_first". The "direct" mode should be the default mode for coding.
 
-### Future Story: Code Production Mode [Deferred]
+### Test First flag [Deferred]
+
+Add a `--test-first` flag to the `init` command that causes coding to prefer `code_test_first` whenever `code_direct` would have been chosen as a next step. This involves abstracting out the `code_*` mode and paves the way for a future `code_production` mode.
+
+### Code Production Mode [Deferred]
 
 Implement the `code_production` mode...TBD
 
-### Future Story: Audit Modes [Deferred]
+### Audit Modes [Deferred]
 
 Future modes (deferred): `audit_security`, `audit_architecture`, `audit_performance`, `audit_best_practices`, `audit_modularity`, `audit_patterns`
 

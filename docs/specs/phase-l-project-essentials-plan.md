@@ -22,7 +22,7 @@ Without that wiring, every project would need to hand-craft `project-essentials.
 ## Feature Requirements (What)
 
 ### F1. `plan_tech_spec` populates `project-essentials.md`
-- After the developer approves `tech-spec.md`, the mode prompts for project-essentials content with concrete category examples (workflow rules, architecture quirks, domain conventions, hidden coupling).
+- After the developer approves `tech-spec.md`, the mode prompts for project-essentials content with **concrete worked examples** in the prompt — not just abstract category names like "workflow rules" or "architecture quirks". The prompt surfaces specific scenarios (e.g., `pyve run python ...` vs `python -m ...` vs `.venv/bin/python ...`; `pyve testenv --install` vs `pip install -e ".[dev]"`) so the developer is reminded of forks-in-the-road where the wrong choice still "works" but isn't canonical. See Story L.a's checklist for the full example list.
 - If the developer provides facts, write them to `docs/specs/project-essentials.md`.
 - If the developer has nothing to add, leave the file empty (or skip creation entirely — the render hook handles both).
 - The mode declares `project-essentials.md` as a `create` artifact in `.metadata.yml`.
@@ -40,7 +40,11 @@ Without that wiring, every project would need to hand-craft `project-essentials.
 
 ### F4. Self-documenting prompt language
 - All three modes use consistent prompt language and consistent example categories so the developer learns what belongs in the file regardless of which mode they happen to use first.
-- Concrete examples in the prompt itself reduce the "what should I put here?" friction.
+- **Worked examples, not abstract categories.** The prompt names specific anti-patterns the developer (and the LLM) might otherwise commit:
+  - *Tool wrapper conventions*: pyve/poetry/hatch/uv invocation forms vs `python -m ...` vs direct `.venv/bin/...`. All execute, but only one is canonical.
+  - *Runtime vs dev environment splits*: dedicated test environment vs `pip install -e ".[dev]"` into the runtime venv. Different isolation guarantees.
+  - *Source vs installed/generated copies*: editing the installed copy when the source is elsewhere.
+- **Underlying principle:** legitimate alternatives exist for each fork, but they should be intentional choices, not a random walk to whatever happens to work first. The project-essentials.md content should make the canonical choice unambiguous so future LLMs don't drift.
 
 ## Technical Changes (How)
 

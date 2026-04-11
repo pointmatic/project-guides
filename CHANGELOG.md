@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-04-10
+
+### Added
+- **Spike: archive_stories pipeline** (Story K.a) — throwaway script `scripts/spike_archive_stories.py` exercises the full archive flow end-to-end (latest-version detection, latest-phase-letter detection, `## Future` extraction, archive move, fresh `stories.md` re-render). Validates the critical path before the productionized `archive_stories` mode lands in K.c/K.d. Verified round-trip against a copy of `.archive/stories-v2.0.20.md` (Phase J file): archived file byte-matches the original, fresh `stories.md` contains the carried `## Future` section. Will be deleted in K.d once superseded.
+
 ## [2.0.20] - 2026-04-10
 
 ### Changed
