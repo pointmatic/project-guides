@@ -6,711 +6,197 @@ Stories with code changes include a version number (e.g., v0.1.0). Stories with 
 
 ---
 
-## Phase I: Rename and Publish Package
+## Phase K: Release & Phase Lifecycle (v2.1.0)
 
-Rename the package from `project-guides` to `project-guide` (singular). The goals are: reserve the PyPI name immediately with a minimal publish, then progressively clean up the codebase over subsequent stories. The old `project-guides` CLI entry point is kept alive through Story I.c to avoid breaking existing users mid-rename.
+Close the lifecycle gap so the next phase can start with a clean slate. Introduce `archive_stories` mode, codify the phase letter scheme and `## Future` section, teach `default` mode to suggest a next move when all stories are `[Done]`, and update `plan_phase` to continue phase letters across an archive boundary. See `phase-k-release-lifecycle-plan.md` for full details.
 
-### Story I.a: v1.4.0 Reserve PyPI Name [Done]
+**Implementation strategy:** Spike first (K.a) with a throwaway script that exercises the full archive flow end-to-end — version derivation, file move, template re-render, `## Future` carry-over — before introducing the new `archive` action type or the productionized mode.
 
-Publish the package under the new name `project-guide` on PyPI. This is the minimal change needed to secure the name. The old `project-guides` CLI command continues to work — no regressions for existing users.
+Out of scope (deferred to later phases): release/version-bump/tag automation (developer works across multiple git flows and prefers tool-agnostic), `code_production` mode and `code_*` abstraction, audit modes.
 
-- [x] Update `pyproject.toml`
-  - [x] Change `name` from `"project-guides"` to `"project-guide"`
-  - [x] Add `project-guide = "project_guides.cli:main"` entry point alongside existing `project-guides`
-  - [x] Bump version to `1.4.0`
-  - [ ] Update description if needed
-- [x] Update `project_guides/version.py` to `"1.4.0"`
-- [x] Update `CHANGELOG.md` with v1.4.0 entry
-- [x] Publish to PyPI via GitHub Actions
-  - [x] Commit and push changes
-  - [x] Create and publish a GitHub Release tagged `v1.4.0`
-  - [x] Confirm the `Publish to PyPI` Actions workflow passes
-- [x] Verify: `pip install project-guide` installs successfully
-- [x] Verify: both `project-guide --help` and `project-guides --help` work
+### Story K.a: v2.1.0 End-to-End Spike — archive_stories Flow [Planned]
 
-### Story I.b: v1.4.1 Rename Config File [Done]
+Wire the full archive pipeline end-to-end as a throwaway script in `scripts/`, before any productionized mode template, metadata entry, or new action type. Validates the critical path: detect latest version from a fixture `stories.md`, detect latest phase letter, move to `.archive/stories-vX.Y.Z.md`, re-render an empty `stories.md` with the carried-over `## Future` section.
 
-Rename `.project-guides.yml` to `.project-guide.yml` everywhere: the template, all code references, and all documentation. Add a one-time migration so existing users' config files are renamed automatically with a printed notice.
+- [ ] Create `scripts/spike_archive_stories.py` (throwaway, not part of the package)
+- [ ] Implement latest-version detection by scanning `stories.md` for `v\d+\.\d+\.\d+` story headings
+- [ ] Implement latest-phase-letter detection by scanning `## Phase <Letter>:` headings
+- [ ] Implement `## Future` section extraction (everything from `## Future` to EOF)
+- [ ] Implement archive move: create `.archive/` if missing, move `stories.md` → `.archive/stories-vX.Y.Z.md`
+- [ ] Implement fresh `stories.md` re-render from the artifact template with the extracted `## Future` content re-injected
+- [ ] Run against a fixture `stories.md` (copy of pre-archive Phase J file) and verify round-trip
+- [ ] Verify: archived file matches original; new `stories.md` is empty body + carried `## Future`
+- [ ] Document spike findings in the story's commit message (decisions to carry into K.c/K.d)
 
-- [x] Rename template file
-  - [x] `project_guides/templates/.project-guides.yml.template` → `.project-guide.yml.template`
-- [x] Update `config.py`
-  - [x] Change the config filename constant from `.project-guides.yml` to `.project-guide.yml`
-- [x] Update `cli.py`
-  - [x] Add migration logic in the `main` group or a shared helper: if `.project-guides.yml` exists and `.project-guide.yml` does not, rename it and print: `"Renamed .project-guides.yml → .project-guide.yml"`
-  - [x] Update all string references to the old config filename
-- [x] Update `sync.py` references if any
-- [x] Update `tests/` — all fixtures and assertions using the old filename
-- [x] Update `README.md` and all guide docs referencing `.project-guides.yml`
-- [x] Bump `version.py` and `pyproject.toml` to `1.4.1`
-- [x] Update `CHANGELOG.md`
-- [x] Verify: existing project with `.project-guides.yml` runs any command and gets renamed automatically
-- [x] Verify: new `project-guide init` creates `.project-guide.yml`
+### Story K.b: v2.1.1 Codify Phase Letter Scheme and Future Section [Planned]
 
-### Story I.c: v1.5.0 Complete CLI Rename [In Progress]
+Move the phase letter rules into a shared include and codify the `## Future` section in the stories artifact template so both planning and post-archive flows reference one source.
 
-Remove the old `project-guides` CLI entry point. Update all user-facing strings, documentation, and guide content to use `project-guide`. This is the breaking change — old users must reinstall.
+- [ ] Create `project_guide/templates/project-guide/templates/modes/_phase-letters.md` shared include
+  - [ ] Document phase letter scheme: `A`–`Z`, then `AA`, `AB`, …, `AZ`, `BA`, … (base-26, no zero)
+  - [ ] Document story sub-letter scheme: `A.a`–`A.z`, then `A.aa`, `A.ab`, …
+  - [ ] Note that letters continue across archive boundaries (read `.archive/` to find the latest)
+- [ ] Update `project_guide/templates/project-guide/templates/artifacts/stories.md` to include a `## Future` section after `{{ phases_and_stories }}`
+  - [ ] Add a brief inline note describing what belongs there (deferred stories, future phases, project-level out-of-scope items)
+- [ ] Update `project_guide/templates/project-guide/templates/modes/plan-stories-mode.md` to include `_phase-letters.md`
+- [ ] Update `project_guide/templates/project-guide/templates/modes/plan-phase-mode.md` to include `_phase-letters.md`
+- [ ] Verify: rendered `default` mode and `plan_phase` mode both contain the phase letter rules exactly once
+- [ ] Add tests for the updated `stories.md` artifact template (renders with empty and populated `## Future`)
 
-- [x] Update `pyproject.toml`
-  - [x] Remove `project-guides = "project_guides.cli:main"` entry point
-  - [x] Bump version to `1.5.0`
-- [x] Update `project_guides/version.py` to `"1.5.0"`
-- [x] Update all CLI help strings in `cli.py` (e.g., `"Run project-guides init"` → `"Run project-guide init"`)
-- [x] Update `README.md` — all command examples
-- [x] Update all files under `project_guards/templates/guides/` that reference `project-guides`
-  - [x] `project-guide.md` (How to Use section)
-  - [x] Any other guide referencing the CLI command
-- [x] Update `CHANGELOG.md`
-- [x] Build and publish to PyPI
-- [x] Verify: `project-guides --help` is no longer available after reinstall
-- [x] Verify: `project-guide --help` works and shows correct command name
+### Story K.c: v2.1.2 Archive Action Type [Planned]
 
-### Story I.d: v1.5.1 Rename Python Module Directory [In Progress]
+Add a new `archive` action type to the metadata schema and action handler. Carries the version-derivation and move-and-recreate semantics validated in K.a.
 
-Rename the Python package directory from `project_guides/` to `project_guide/` so the module name matches the package and CLI command. This is a purely internal refactor with no user-visible behavior change.
+- [ ] Extend `project_guide/metadata.py` to recognize `action: archive` on artifacts
+- [ ] Implement archive action semantics: derive version from latest story in source file, move to `<dirname>/.archive/<basename>-vX.Y.Z.md`, re-render fresh artifact preserving `## Future`
+- [ ] Add validation: `archive` action requires the source file to exist
+- [ ] Unit tests for version derivation (single story, multiple stories, no versioned stories)
+- [ ] Unit tests for phase letter derivation (single phase, multiple phases, post-Z letters)
+- [ ] Unit tests for `## Future` extraction and re-injection (present, absent, empty)
+- [ ] Unit tests for the archive action against a fixture `stories.md`
+- [ ] Verify: existing `create` and `modify` action types still work unchanged
 
-- [x] Rename directory: `project_guides/` → `project_guide/`
-- [x] Update `pyproject.toml`
-  - [x] `packages = ["project_guides"]` → `["project_guide"]`
-  - [x] `project-guide = "project_guides.cli:main"` → `"project_guide.cli:main"`
-- [x] Update all internal imports across `project_guide/*.py`
-  - [x] `cli.py` — `from project_guides.xxx import`
-  - [x] `sync.py` — `from project_guides.xxx import` and `importlib.resources.files("project_guides.templates...")` strings
-  - [x] `config.py`, `exceptions.py`, `__init__.py`, `__main__.py`
-- [x] Update all test imports: `from project_guides.xxx import` → `from project_guide.xxx import`
-- [x] Update `.github/workflows/`
-  - [x] `--cov=project_guides` → `--cov=project_guide` in `ci.yml`, `test.yml`, `publish.yml`
-  - [x] `mypy project_guides/` → `mypy project_guide/` in `publish.yml`
-- [x] Bump `version.py` and `pyproject.toml` to `1.5.1`
-- [x] Update `CHANGELOG.md`
-- [x] Run full test suite — all 59 tests must pass
-- [x] Verify: `pyve run project-guide status` works correctly after reinstall
+### Story K.d: v2.1.3 archive_stories Mode [Planned]
 
-### Story I.e: GitHub Repo Rename and PyPI Archive [Planned]
+Productionize the `archive_stories` mode using the `archive` action type and `_phase-letters.md` include from prior stories.
 
-Admin tasks with no code changes. No version bump.
+- [ ] Create `project_guide/templates/project-guide/templates/modes/archive-stories-mode.md` (sequence-style, uses `_header-sequence.md`)
+- [ ] Mode steps: read `stories.md`, warn if any non-`[Done]` stories, show planned archive path, await confirmation, perform archive, suggest `plan_phase`
+- [ ] Add `archive_stories` entry to `project_guide/templates/project-guide/.metadata.yml` under the `# Post-Release` section with `action: archive` on `stories.md` and `next_mode: plan_phase`
+- [ ] Integration test: render `archive_stories` mode, execute against a fixture, verify the archived file and the fresh `stories.md`
+- [ ] Delete `scripts/spike_archive_stories.py` (now superseded)
+- [ ] Verify: `project-guide mode archive_stories` works end-to-end on a clean test project
 
-- [x] Rename GitHub repo from `project-guides` to `project-guide`
-  - [x] Settings → Repository name → `project-guide`
-  - [x] GitHub automatically redirects old URLs
-- [x] Update all hardcoded GitHub URLs in the codebase and docs
-  - [x] `README.md` badges and links
-  - [x] `pyproject.toml` `[project.urls]` section
-  - [x] Any guide files referencing the repo URL
-- [x] Archive old `project-guides` PyPI package
-  - [x] Publish a final `project-guides` release with updated README/description: "This package has moved to `project-guide`. Please update your dependencies."
-  - [x] Go to PyPI → `project-guides` → Settings → Archive project
-- [x] Update `mkdocs.yml` site URL if applicable
-- [x] Verify: all links resolve correctly
+### Story K.e: v2.1.4 plan_phase Post-Archive Support [Planned]
 
-### Story I.f: Update README, landing page, and descriptions [Done]
-- [x] Update `docs/specs/descriptions.md` to reflect new package name and concepts (guides -> guide/prompts)
-- [x] Update `README.md` based on `docs/specs/description.md`
-- [x] Update landing page based on `docs/specs/description.md`
-- [x] Add Codecov badge to `README.md` and set minimum coverage to 75%
+Update `plan_phase` to handle an empty `stories.md` and continue phase letters from `.archive/` when present.
 
-### Story I.g: v1.5.2 Increase Test Coverage to 85% [In Progress]
+- [ ] Update `project_guide/templates/project-guide/templates/modes/plan-phase-mode.md` to handle the empty-`stories.md` case explicitly
+- [ ] Document the `.archive/` lookup: read `.archive/stories-vX.Y.Z.md` (latest by version) and parse the highest phase letter to determine the next letter
+- [ ] Reference `_phase-letters.md` for the letter rules rather than restating them
+- [ ] Add a fixture test: empty `stories.md` + `.archive/stories-v2.0.20.md` containing Phase J → next phase letter is `K`
+- [ ] Add a fixture test: empty `stories.md` + no `.archive/` → next phase letter is `A`
+- [ ] Verify: rendered `plan_phase` mode correctly references the include and the archive lookup
 
-Expand test coverage from 79% to 85%+ by filling gaps in `cli.py` (currently 72%, 84 missed statements). Focus on error paths, edge cases, and untested command flows. Raise the `--cov-fail-under` threshold to 85%.
+### Story K.f: v2.1.5 Default Mode All-Stories-Done Suggestion [Planned]
 
-**cli.py — config migration (lines 37–38):**
-- [x] Test `_migrate_config_if_needed`: old `.project-guides.yml` exists, `.project-guide.yml` does not → renames and prints notice
+Teach `default` mode to detect when all stories are `[Done]` and prompt the developer to choose between `archive_stories` and `plan_phase`.
 
-**cli.py — `init` error paths (lines 79–84):**
-- [x] Test `init` when a guide file already exists without `--force` (FileExistsError path — `⚠ Skipped` message)
-- [x] Test `init` when `copy_guide` raises `SyncError` (e.g., permission denied) → exits with code 2
+- [ ] Update `project_guide/templates/project-guide/templates/modes/default-mode.md` with an "If all stories are [Done]" section
+- [ ] Detection performed by the LLM at read time (consistent with v2 architecture — no Python-side check)
+- [ ] Prompt suggests both `archive_stories` (clean slate first) and `plan_phase` (plan against history first), explaining the trade-off
+- [ ] If at least one story is non-`[Done]`, the existing default lifecycle suggestions apply unchanged
+- [ ] Verify by manually rendering `default` mode against (a) a fresh project, (b) an in-progress project, (c) a fully-`[Done]` project
 
-**cli.py — `status` edge cases (lines 115–117, 147–148, 157–161, 178):**
-- [x] Test `status` with corrupt/invalid config file → `ConfigError`, exits with code 3
-- [x] Test `status` with a missing guide file on disk → shows `✗ (missing)` and missing count
-- [x] Test `status` with a locally modified guide (content differs from template) → shows `⚠ (modified)`
-- [x] Test `status` summary includes missing count when guides are missing
+### Story K.g: v2.1.6 Phase K Documentation and CHANGELOG [Planned]
 
-**cli.py — `update` error paths (lines 198–203, 208–210, 220–226, 235–237):**
-- [x] Test `update` with no config file → error message, exits with code 1
-- [x] Test `update` with corrupt config → `ConfigError`, exits with code 3
-- [x] Test `update --guides fake-guide.md` → error with available guides list, exits with code 1
-- [x] Test `update` when `sync_guides` raises `SyncError` → exits with code 2
+- [ ] Add `archive_stories` to the modes catalogue (whichever source doc lists modes — confirm location during the story; do not edit `docs/project-guide/` since it is the installed copy)
+- [ ] Update `project_guide/templates/project-guide/templates/modes/default-mode.md` "All Available Modes" table with the new mode under Post-Release
+- [ ] Update `CHANGELOG.md` with v2.1.0–v2.1.5 entries
+- [ ] Update README if any user-facing wording references the lifecycle workflow
+- [ ] Verify: `project-guide mode archive_stories` appears in `project-guide --help` mode list (if applicable)
 
-**cli.py — `update` modified-file prompts (lines 245–259, 269–282):**
-- [x] Test `update` with locally modified file, user confirms → backup created, file updated, shows "Updated (approved by user)"
-- [x] Test `update` with locally modified file, user declines → shows "Skipped (user declined)"
-- [x] Test `update --dry-run` with locally modified file → shows "Modified (would prompt)" without changing files
+### Story K.h: v2.1.7 project-essentials.md Placeholder and Render Hook [Planned]
 
-**cli.py — `update` summary variations (lines 310–334):**
-- [x] Test `update --dry-run` summary with missing files → shows "Would create"
-- [x] Test `update` when all guides declined → "No guides updated (all modifications declined)"
-- [x] Test `update` when all guides overridden (no `--force`) → "All guides are overridden. Use --force to update anyway."
+Establish a per-project `project-essentials.md` artifact that gets injected into every rendered mode via `_header-common.md`. This is the minimal hookup — empty/missing renders cleanly, content (when present) appears as a `## Project Essentials` section in every mode. Phase L will wire the planning modes to populate it; this story just lays the rails and dogfoods it for this project. See `phase-l-project-essentials-plan.md` for the follow-up phase.
 
-**cli.py — `override`/`unoverride` missing config (lines 346–358, 387–399):**
-- [x] Test `override` with no config file → error, exits with code 1
-- [x] Test `override` with corrupt config → exits with code 3
-- [x] Test `unoverride` with no config file → error, exits with code 1
-- [x] Test `unoverride` with corrupt config → exits with code 3
+- [ ] Create `project_guide/templates/project-guide/templates/artifacts/project-essentials.md`
+  - [ ] Empty body with a brief comment block describing what belongs there: workflow rules, architecture quirks, domain conventions, hidden coupling, dogfooding/meta notes
+  - [ ] Note that an empty file is acceptable
+- [ ] Update `project_guide/render.py` to read `<spec_artifacts_path>/project-essentials.md` if present
+  - [ ] Pass content as the `project_essentials` Jinja2 context variable
+  - [ ] Default to empty string when the file is missing or empty (no error)
+- [ ] Update `project_guide/templates/project-guide/templates/modes/_header-common.md`
+  - [ ] After the **Rules** section and before the `# {{ mode_name }} mode` heading, render `{% if project_essentials %}## Project Essentials\n\n{{ project_essentials }}\n\n---\n{% endif %}` (or equivalent — section omitted entirely when empty)
+- [ ] Tests in `tests/test_render.py`:
+  - [ ] Rendered output contains `## Project Essentials` when fixture file is non-empty
+  - [ ] Rendered output omits the section when fixture file is empty
+  - [ ] Rendered output omits the section when fixture file is missing (no error)
+  - [ ] **Regression guard**: rendered output never contains the literal string `{{ project_essentials }}` in any of the above cases. This catches a future template edit that removes the `{% if %}` guard, since `_LenientUndefined.__str__` would otherwise render the placeholder verbatim. See `render.py:83-99`.
+- [ ] Populate `docs/specs/project-essentials.md` for this project with current must-know facts:
+  - [ ] Dogfooding rule: edit templates under `project_guide/templates/project-guide/`, never `docs/project-guide/` (the installed copy)
+  - [ ] Workflow rule: prefix Python tools with `pyve run` (e.g., `pyve run pytest`, `pyve run ruff check`)
+  - [ ] `docs/project-guide/go.md` is dynamically re-rendered by the `mode` command — never hand-edit
+  - [ ] (Add others if any surface during the story)
+- [ ] Verify by running `project-guide mode default` (or any mode) and inspecting `docs/project-guide/go.md` for the rendered Project Essentials section
+- [ ] Note: do **not** add `project-essentials.md` as a tracked artifact in any mode's `.metadata.yml` entry yet — that wiring is Phase L's responsibility
 
-**cli.py — `overrides` error path (lines 422–424):**
-- [x] Test `overrides` with corrupt config → exits with code 3
+### Story K.i: v2.1.8 Render Output Validation — Fail on Unrendered Placeholders [Planned]
 
-**cli.py — `purge` edge cases (lines 478–491):**
-- [x] Test `purge` when guides directory does not exist → shows "not found (skipped)"
-- [x] Test `purge` when config file does not exist after dir removal → shows "not found (skipped)"
+Generalize the K.h `{{ project_essentials }}` regression guard into a project-wide safeguard. After every render, scan the output for any remaining `{{ identifier }}` Jinja-style placeholders. If any are found, raise `RenderError` with the placeholder names. This catches missed intents (a context variable that should have been set), typos (`{{ project_essentialss }}`), and removed `{% if %}` guards across **all** templates, not just `_header-common.md`. The current `_LenientUndefined` class (`render.py:83-99`) outputs `{{ var_name }}` for undefined variables — this story turns that observation into a hard error gate. Lenient mode itself stays unchanged because its placeholder output is what makes the validator's job possible.
 
-**Raise coverage threshold:**
-- [x] Update `pyproject.toml`: change `--cov-fail-under=75` to `--cov-fail-under=85`
-- [x] Verify: full test suite passes with 85%+ coverage
-- [x] Bump `version.py` and `pyproject.toml` to `1.5.2`
-- [x] Update `CHANGELOG.md`
-
-**Codecov badge**
-- [x] Add codecov badge to README.md
+- [ ] Add a post-render validation function in `project_guide/render.py`
+  - [ ] Regex: `\{\{\s*[a-zA-Z_]\w*\s*\}\}` (matches `{{var}}`, `{{ var }}`, `{{  var  }}`)
+  - [ ] Scan the rendered string after Jinja produces output, before writing the file
+  - [ ] If matches found, raise `RenderError` with the list of placeholder names and a hint message: "Check (1) render.py context variables and (2) template variable spellings"
+- [ ] Call the validator inside `render_go_project_guide` after `template.render(...)` but before `output_path.write_text(...)`
+- [ ] Tests in `tests/test_render.py`:
+  - [ ] Rendering a template that references an undefined variable raises `RenderError`
+  - [ ] Error message includes the offending placeholder name
+  - [ ] Rendering with all variables defined succeeds (existing parametrized mode test should still pass)
+  - [ ] Validator does not raise on templates with no Jinja variables at all
+- [ ] Remove the now-redundant `{{ project_essentials }}` regression-guard assertion added in K.h (the generalized validator subsumes it). Leave a brief comment in the test file noting the validator covers this case.
+- [ ] Audit existing mode templates and `_header-common.md` to confirm none rely on undefined variables silently passing through. Fix any that do.
+- [ ] Verify: running `project-guide mode default` and `project-guide mode plan_concept` still produces valid `go.md` output with no errors
+- [ ] Document the limitation in a code comment: templates that legitimately want to emit literal `{{ var }}` strings (e.g., documentation of Jinja syntax) will trigger false positives. Not currently a problem; bridge if/when needed.
 
 ---
 
-## Phase J: Mode-Driven Template System (v2.0.0)
+## Phase L: Project Essentials Integration (v2.2.0)
 
-Replace the static file-sync architecture with a dynamic, mode-driven template system using Jinja2. The LLM reads a single rendered `go-project-guide.md` that is regenerated each time the developer changes modes via `project-guide mode <name>`. See `phase-j-modes-plan.md` for full architectural details.
+Wire the three planning modes (`plan_tech_spec`, `refactor_plan`, `plan_phase`) to populate and maintain `docs/specs/project-essentials.md` so that new and existing projects automatically capture must-know facts that future LLMs need to avoid blunders. Phase K (story K.h) established the placeholder, render hook, and dogfooded the artifact for this project. Phase L makes it self-maintaining across the planning lifecycle. See `phase-l-project-essentials-plan.md` for full details.
 
-**Implementation strategy:** Spike first with `default` + `plan_concept` modes only, validating the full rendering pipeline end-to-end before adding remaining modes.
+**Implementation strategy:** No spike — the integration boundary (LLM context variable) was already validated in K.h. Each mode update is independent and small; they could ship in any order, but the listed order matches the project lifecycle (initial → refactor → per-phase).
 
-Foundation modes:
-- `default`: Determine which mode to use (generated on init)
-- `plan_concept`: Generate a high-level concept (problem and solution space)
-- `plan_features`: Generate feature requirements
-- `plan_tech_spec`: Generate a technical specification
-- `plan_stories`: Generate user stories
-- `plan_phase`: Generate a feature phase (mini-concept + features + tech details)
-- `code_velocity`: Generate code with velocity
-- `code_test_first`: Generate code with a test-first approach
-- `debug`: Debug code with a test-first approach
-- `document_brand`: Develop branding for the project
-- `document_landing`: Generate a GitHub landing page and MkDocs documentation
+Out of scope (deferred or already covered): a dedicated `refactor_essentials` mode (not needed; the three planning modes cover the lifecycle), a new `create_or_modify` action type (the mode templates handle existence-checking conversationally instead).
 
-Future modes (deferred): `code_production`, `audit_security`, `audit_architecture`, `audit_performance`, `audit_best_practices`, `audit_modularity`, `audit_patterns`, `refactor_plan`, `refactor_document`.
+### Story L.a: v2.2.0 plan_tech_spec Populates project-essentials.md [Planned]
 
-Migration: No automatic migration of old `docs/guides/` content. Users can apply a future `refactor` mode to migrate.
+After the tech-spec is approved, prompt the developer to capture any project-specific must-know facts and write them to `docs/specs/project-essentials.md`.
 
-### Story J.a: v2.0.0 End-to-End Spike — Metadata, Rendering, and Mode Command [Done]
+- [ ] Update `project_guide/templates/project-guide/templates/modes/plan-tech-spec-mode.md` to add a final step after tech-spec approval
+- [ ] Step asks the developer for project-essentials content with concrete examples in the prompt:
+  - Workflow rules (e.g., tool wrappers, virtual env conventions)
+  - Architecture quirks (e.g., source vs generated/installed file locations)
+  - Domain conventions (e.g., money in cents, dates in UTC)
+  - Hidden coupling (e.g., auto-generated files, regenerated outputs)
+  - Skip if there are none — empty is fine
+- [ ] Generate `docs/specs/project-essentials.md` from the artifact template only if the developer provides facts; otherwise leave the file empty (or skip creation entirely)
+- [ ] Add `project-essentials.md` to `plan_tech_spec`'s `artifacts` list in `project_guide/templates/project-guide/.metadata.yml` with `action: create`
+- [ ] Tests for the rendered mode template containing the new prompt
+- [ ] Verify: running `project-guide mode plan_tech_spec` end-to-end on a fixture project includes the essentials prompt
 
-Wire the full stack end-to-end with two modes (`default`, `plan_concept`). This validates metadata parsing, Jinja2 rendering, the `mode` command, config schema v2.0, and the new directory structure. No remaining modes, no sync/update changes — just prove the critical path works.
+### Story L.b: v2.2.1 refactor_plan Refreshes project-essentials.md [Planned]
 
-- [x] Add `jinja2>=3.1` to runtime dependencies in `pyproject.toml`
-- [x] Add `MetadataError` and `RenderError` to `exceptions.py`
-- [x] Create `metadata.py`
-  - [x] Load and validate `project-guide-metadata.yml`
-  - [x] Resolve `common` block variables (two-pass: resolve `{{var}}` references in all fields against `common` values)
-  - [x] Look up a mode by name, returning its `ModeDefinition` (template path, sequence/cycle, next_mode, artifacts, files_exist)
-  - [x] List all available mode names
-- [x] Create `render.py`
-  - [x] Configure Jinja2 environment with the project's template directory as the loader path
-  - [x] Render `go-project-guide.md` by: loading the entry point template, injecting the current mode's template via `{% include %}`, passing metadata variables as Jinja2 context
-  - [x] Handle the `_header-sequence.md` / `_header-cycle.md` inclusion within mode templates
-  - [x] Write rendered output to the target path
-- [x] Update `config.py`
-  - [x] Add `current_mode: str = "default"` to `Config` dataclass
-  - [x] Bump config schema version to `"2.0"`
-  - [x] Migrate v1.0 configs on load: add `current_mode: "default"` if missing
-  - [x] Change default `target_dir` to `"docs/project-guide"` for new projects
-- [x] Update `init` command in `cli.py`
-  - [x] Create new directory structure: `docs/project-guide/templates/modes/`, `docs/project-guide/templates/artifacts/`
-  - [x] Copy `project-guide-metadata.yml`, header partials, `default-mode.md`, and `plan-concept-mode.md` + its artifact template
-  - [x] Render `go-project-guide.md` in `default` mode
-  - [x] Create `.project-guide.yml` with `current_mode: "default"` and `target_dir: "docs/project-guide"`
-  - [x] Add `go-project-guide.md` to `.gitignore` if not already present
-- [x] Add `mode` command to `cli.py`
-  - [x] `project-guide mode <name>`: validate mode name against metadata, update `current_mode` in config, render `go-project-guide.md`, print confirmation
-  - [x] `project-guide mode` (no arg): print current mode and list available modes
-  - [x] Error on invalid mode name with list of valid options
-- [x] Convert template syntax: replace `{{template "path"}}` in mode templates with Jinja2 `{% include "path" %}`
-- [x] Finalize `default-mode.md` and `plan-concept-mode.md` templates (already hand-drafted, adjust as needed during spike)
-- [x] Write tests for `metadata.py`, `render.py`, `mode` command, updated `init`, and config v2.0 migration
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.0`
-- [x] Update `CHANGELOG.md`
-- [x] Verify: `project-guide init` creates new directory structure and renders `go-project-guide.md`
-- [x] Verify: `project-guide mode plan_concept` switches mode and re-renders `go-project-guide.md` with plan_concept content
-- [x] Verify: `project-guide mode` (no arg) lists available modes with current mode highlighted
-- [x] Verify: rendered `go-project-guide.md` includes `_header-common.md` + `_header-sequence.md` + plan-concept steps
-- [x] Verify: old v1.0 config loads without error (migration adds `current_mode: "default"`)
-- [x] Verify: artifact templates (`templates/artifacts/concept.md`) are copied but NOT Jinja2-rendered
+When `refactor_plan` updates the concept/features/tech-spec, give the developer a chance to refresh `project-essentials.md` for any architecture or workflow changes that affect must-know facts.
 
-### Story J.b: v2.0.1 Update Status Command for Modes [Done]
+- [ ] Update `project_guide/templates/project-guide/templates/modes/refactor-plan-mode.md` to add a cycle step (or extend Step 1) for revisiting project-essentials
+- [ ] Prompt: "Did any of these refactor changes affect facts that future LLMs must know? (e.g., new tool wrapper, renamed module, changed conventions). Update project-essentials.md if so."
+- [ ] Mode template handles the case where `project-essentials.md` does not yet exist (legacy project): create from artifact template, then populate
+- [ ] Mode template handles the case where it exists: read, modify, write
+- [ ] Add `project-essentials.md` to `refactor_plan`'s `artifacts` list in `.metadata.yml` with `action: modify`
+- [ ] Tests for the rendered mode template
+- [ ] Verify: rendered `refactor_plan` mode includes the revisit step
 
-Update `status` to reflect the mode system. Show current mode, mode description, and prerequisite file status.
+### Story L.c: v2.2.2 plan_phase Appends to project-essentials.md [Planned]
 
-- [x] Update `status` command in `cli.py`
-  - [x] Display current mode name and description (from metadata)
-  - [x] Display `go-project-guide.md` path
-  - [x] Show prerequisite status for current mode (`files_exist` entries: present/missing)
-  - [x] Continue to show guide sync status (version, overrides) for template files
-- [x] Update `test_cli.py` for updated `status` output
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.1`
-- [x] Update `CHANGELOG.md`
-- [x] Verify: `project-guide status` shows mode name, description, and prerequisite status
+When `plan_phase` plans a new phase, prompt the developer to append any new must-know facts the phase introduces.
 
-### Story J.c: v2.0.2 Update Sync/Update for New Directory Structure [Done]
+- [ ] Update `project_guide/templates/project-guide/templates/modes/plan-phase-mode.md` to add a step after phase approval
+- [ ] Prompt: "Does this phase introduce any new must-know facts that should be added to project-essentials.md? (e.g., new architecture, new workflow rule, new gotcha)"
+- [ ] Append (do not overwrite) to `project-essentials.md` if the developer provides facts
+- [ ] Mode template handles the create case for legacy projects (file does not yet exist)
+- [ ] Add `project-essentials.md` to `plan_phase`'s `artifacts` list in `.metadata.yml` with `action: modify`
+- [ ] Tests for the rendered mode template
+- [ ] Verify: rendered `plan_phase` mode includes the append prompt
 
-Adapt the sync/override system to operate on the new template directory structure. After any update that touches mode templates or header partials, re-render `go-project-guide.md`.
+### Story L.d: v2.2.3 Phase L Documentation and CHANGELOG [Planned]
 
-- [x] Update guide discovery in `sync.py` (`get_all_guide_names()`) to scan `templates/modes/*.md`, `templates/artifacts/*.md`, `project-guide-metadata.yml`
-  - [x] Remove old `guides/` directory references
-- [x] Update `update` command: after syncing template files, re-render `go-project-guide.md` for the current mode
-- [x] Override/unoverride work on template-relative paths (e.g., `override templates/modes/plan-concept-mode.md "Custom concept workflow"`)
-- [x] Update `purge` to remove `docs/project-guide/` instead of `docs/guides/`
-- [x] Write tests for updated sync discovery, update-then-render flow, and override on new paths
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.2`
-- [x] Update `CHANGELOG.md`
-- [x] Verify: `project-guide update` syncs new template files and re-renders `go-project-guide.md`
-- [x] Verify: `project-guide override templates/modes/plan-concept-mode.md "reason"` works correctly
-
-### Story J.d: v2.0.3 Add Planning Mode Templates [Done]
-
-Add the remaining planning mode templates: `plan_features`, `plan_tech_spec`, `plan_stories`, `plan_phase`. Each must include the appropriate header partial and be self-contained.
-
-- [x] Finalize `plan-features-mode.md` — migrate content from old `go-project-guide.md` Step 1 (Features Document)
-- [x] Finalize `plan-tech-spec-mode.md` — migrate content from old Step 2 (Technical Specification)
-- [x] Finalize `plan-stories-mode.md` — migrate content from old Step 3 (Stories Document)
-- [x] Finalize `plan-phase-mode.md` — combined concept/features/tech-spec for adding a new phase to an existing project
-- [x] Create artifact templates for each mode where applicable (`features.md`, `tech-spec.md`, `stories.md`)
-- [x] Each mode template includes `{% include "_header-sequence.md" %}` with `next_mode` populated
-- [x] Update `init` to copy all planning templates
-- [x] Verify: `project-guide mode plan_features` renders correctly and includes next_mode prompt to `plan_tech_spec`
-- [x] Verify: each planning mode's rendered output is self-contained for an LLM to follow
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.3`
-- [x] Update `CHANGELOG.md`
-
-### Story J.e: v2.0.4 Add Code and Debug Mode Templates [Done]
-
-Add `code_velocity`, `code_test_first`, and `debug` mode templates. Migrate relevant content from old `go-project-guide.md` Step 4 and `best-practices-guide.md`.
-
-- [x] Finalize `code-velocity-mode.md` — velocity coding workflow: commit to main, version-per-story, HITLoop cycle, checklist approach
-- [x] Finalize `code-test-first-mode.md` — TDD workflow: failing test first, red-green-refactor
-- [x] Finalize `debug-mode.md` — reproduce, isolate, failing test, fix, verify
-- [x] Each mode template includes `{% include "_header-cycle.md" %}`
-- [x] Migrate relevant best practices from `best-practices-guide.md` into the appropriate mode templates
-- [x] Update `init` to copy code and debug templates
-- [x] Verify: `project-guide mode code_velocity` renders correctly with cycle header
-- [x] Verify: `project-guide mode debug` renders correctly
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.4`
-- [x] Update `CHANGELOG.md`
-
-### Story J.f: v2.0.5 Add Document Mode Templates [Done]
-
-Add `document_brand` and `document_landing` mode templates.
-
-- [x] Finalize `document-brand-mode.md` — adapted from old `descriptions-guide.md`, generate `docs/specs/brand-descriptions.md`
-- [x] Finalize `document-landing-mode.md` — generate GitHub landing page (`docs/site/index.html`) and MkDocs documentation
-- [x] Each mode template includes `{% include "_header-sequence.md" %}`
-- [x] Create artifact templates where applicable
-- [x] Update `init` to copy document templates
-- [x] Verify: `project-guide mode document_brand` renders correctly
-- [x] Verify: `project-guide mode document_landing` renders correctly
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.5`
-- [x] Update `CHANGELOG.md`
-
-### Story J.g: v2.0.6 Migrate Monolithic Entry Point Content [Done]
-
-The old `go-project-guide.md` entry point template contains Steps 0-4 as a monolithic document. Now that all mode templates exist, reduce the entry point to a thin shell that includes `_header-common.md` and the active mode template. Move Step 0 (Project Setup) content into `_header-common.md` or `default-mode.md`.
-
-- [x] Slim down `go-project-guide.md` entry point template to: common header + mode inclusion only
-- [x] Move Step 0 content (License, Copyright Headers, Badges, CHANGELOG) into `default-mode.md`
-- [x] Distribute prerequisites from old default-mode.md into planning modes (concept, features, tech-spec)
-- [x] Rewrite `default-mode.md` as full lifecycle overview for new users
-- [x] Add `default` mode to `project-guide-metadata.yml`
-- [x] Remove old static guide files that are now fully absorbed into mode templates (`best-practices-guide.md`)
-- [x] Verify: all 11 modes render complete, self-contained output from the slimmed entry point
-- [x] Verify: no content was lost in the migration
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.6`
-- [x] Update `CHANGELOG.md`
-
-### Story J.h: v2.0.7 Test Coverage and Documentation [Done]
-
-Ensure test coverage remains at 85%+ after all Phase J changes. Update README and user-facing documentation to reflect the mode system.
-
-- [x] Review test coverage for all new modules (`metadata.py`, `render.py`) and updated modules (`cli.py`, `config.py`, `sync.py`)
-- [x] Add missing tests to maintain 85%+ coverage (112 tests, 92% coverage)
-- [x] Update `README.md` with mode system usage examples (`project-guide mode plan_concept`, etc.)
-- [x] Final pass: run full test suite, linting, type checking
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.7`
-- [x] Update `CHANGELOG.md`
-
-### Story J.i: v2.0.8 Project Setup Mode [Done]
-
-Extract project scaffolding (LICENSE, headers, manifest, README, CHANGELOG, .gitignore) from `default-mode.md` into a dedicated `project_setup` sequence mode. Slim `default` to pure navigation.
-
-- [x] Create `project-setup-mode.md` with step-by-step setup instructions and approval checklist
-- [x] Add `project_setup` mode to `project-guide-metadata.yml` (between `default` and `plan_concept`)
-- [x] Slim `default-mode.md` to project lifecycle overview with mode table -- no setup content
-- [x] Update mode flow: `default` -> `project_setup` -> `plan_concept`
-- [x] Verify: `project-guide mode project_setup` renders correctly with setup steps
-- [x] Verify: `default` mode no longer contains setup instructions
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.8`
-- [x] Update `CHANGELOG.md`
-
-### Story J.j: v2.0.9 Artifact Refactoring Modes [Done]
-
-Implement `refactor_plan` and `refactor_document` cycle modes for migrating existing documents into the v2.x artifact template format. Also add a v1.x → v2.x migration notice to the `status` command.
-
-**Mode templates:**
-- [x] Create `refactor-plan-mode.md` — cycle mode for refactoring planning artifacts (`concept.md`, `features.md`, `tech-spec.md`)
-- [x] Create `refactor-document-mode.md` — cycle mode for refactoring documentation artifacts (`brand-descriptions.md`, landing page `index.html`, MkDocs files)
-- [x] Each mode template includes `{% include "modes/_header-cycle.md" %}`
-- [x] Add both modes to `project-guide-metadata.yml`
-
-**Cycle steps (both modes follow this pattern for each document):**
-1. Enumerate the documents to refactor
-2. For each document:
-   - [x] Move existing document to `<doc_name>_old.md`
-   - [x] Read old document as the primary source of information
-   - [x] If any necessary information is missing from the old document, ask the developer
-   - [x] Generate new document using the appropriate artifact template format
-   - [x] Append any leftover information to the end as a `## Legacy Content` section
-   - [x] Present the completed document to the developer for approval; iterate as needed
-
-**`refactor_plan` targets:**
-- `docs/specs/concept.md` → artifact template format from `templates/artifacts/concept.md`
-- `docs/specs/features.md` → artifact template format from `templates/artifacts/features.md`
-- `docs/specs/tech-spec.md` → artifact template format from `templates/artifacts/tech-spec.md`
-
-**`refactor_document` targets:**
-- `docs/specs/descriptions.md` → `docs/specs/brand-descriptions.md` (artifact template format)
-- `docs/site/index.html` → updated with `{{ web_root }}` structure from `document-landing-mode.md`
-- MkDocs configuration and pages
-
-**v1.x → v2.x migration notice in `status`:**
-- [x] Detect v1.x config (`version: "1.0"` or `target_dir: "docs/guides"`) in the `status` command
-- [x] Display migration notice:
-  - `docs/guides/` directory is deprecated; new features target `docs/project-guide/` only
-  - Run `project-guide init` to install the v2.x template system alongside existing guides
-  - Use `refactor_plan` mode to migrate `concept.md`, `features.md`, `tech-spec.md` to the new artifact format
-  - Use `refactor_document` mode to migrate `descriptions.md`, landing page, and MkDocs files
-
-**Tests:**
-- [x] Write tests for `refactor_plan` and `refactor_document` mode rendering
-- [x] Write test for v1.x migration notice in `status` output
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.9`
-- [x] Update `CHANGELOG.md`
-
-### Story J.k: v2.0.10 Fix UX and Config Problems [Done]
-
-Fix three UX/config issues identified in `docs/specs/ux-problems.md`. No backward compatibility needed — `purge` + `init` is the recovery path.
-
-**Fix 1 — Default mode on init:**
-
-`init` hardcodes `current_mode="plan_concept"` and renders in `plan_concept` mode. It should use `default`.
-
-- [x] Update `cli.py` `init`: change `current_mode="plan_concept"` to `"default"` and render in `default` mode
-- [x] Update affected tests
-
-**Fix 2 — Remove template paths from `files_exist`:**
-
-`files_exist` entries include `{{mode_templates_path}}/...` which resolves to a repo-internal path that never exists in an installed project. Template presence is infrastructure, not a user prerequisite — if a template is missing, the render will fail with a clear Jinja2 error.
-
-- [x] Remove all `{{mode_templates_path}}` entries from `files_exist` in the metadata file, keeping only `{{spec_artifacts_path}}` entries (user-created content)
-- [x] Add actionable error guidance: when a Jinja2 render fails due to a missing template, prompt the developer to run `project-guide status` and `project-guide update`
-- [x] Add a parametrized test that iterates every mode in the metadata and asserts the render pipeline succeeds — proves a fresh install works and catches regressions when modes are added
-- [x] Update affected tests
-
-**Fix 3 — Rename metadata file to `.metadata.yml` and add to config:**
-
-`project-guide-metadata.yml` is redundant (already inside `project-guide/`) and is infrastructure, not user content. Rename to `.metadata.yml` (hidden, minimal). Store the filename in `.project-guide.yml` so the CLI never hardcodes it.
-
-- [x] Add `metadata_file: str = ".metadata.yml"` to `Config` dataclass in `config.py`
-- [x] Update `cli.py`: replace all 4 hardcoded `"project-guide-metadata.yml"` with `Path(config.target_dir) / config.metadata_file`; in `init`, set `metadata_file=".metadata.yml"` when creating the config
-- [x] Rename template file: `project_guide/templates/project-guide/project-guide-metadata.yml` → `project_guide/templates/project-guide/.metadata.yml`
-- [x] Update `metadata.py`: docstrings referencing the old filename
-- [x] Update `sync.py` `get_all_guide_names()`: `rglob("*.yml")` does not match dotfiles — add `".*.yml"` pattern or explicitly include `.metadata.yml`
-- [x] Update all test references (`test_metadata.py`, `test_cli.py`, `test_integration.py`)
-- [x] Update `CHANGELOG.md`
-
-**Wrap-up:**
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.10`
-- [x] Run full test suite — 129 tests pass, 92% coverage
-- [x] Verify: `project-guide init` creates `.metadata.yml` and starts in `default` mode
-- [x] Verify: `.project-guide.yml` contains `metadata_file: .metadata.yml`
-- [x] Verify: `project-guide mode plan_phase` shows only spec artifact prerequisites, no template paths
-- [x] Verify: `project-guide update` syncs `.metadata.yml` correctly
-
-### Story J.l: v2.0.11 Move Rendered Guide to project-guide Directory [Done]
-
-The rendered `go-project-guide.md` is mode instructions, not a spec artifact. It currently lives in `docs/specs/` because the Jinja2 template source has the same name in `docs/project-guide/`. Fix this by moving the template source into `docs/project-guide/templates/` and rendering the output to `docs/project-guide/go-project-guide.md`.
-
-**Move template source:**
-- [x] Move `project_guide/templates/project-guide/go-project-guide.md` → `project_guide/templates/project-guide/templates/go-project-guide.md`
-- [x] Update `render.py`: Jinja2 loader simplified to search only `templates/` subdirectory
-- [x] Update `cli.py` `init`: render output to `docs/project-guide/go-project-guide.md` instead of `docs/specs/go-project-guide.md`
-
-**Update render output path:**
-- [x] All CLI commands (`init`, `mode`, `update`, `status`) now render to `target_dir / go-project-guide.md`
-- [x] `target_dir` added as a Jinja2 context variable for templates
-
-**Gitignore and cleanup:**
-- [x] `_ensure_gitignore_entry()` now receives `target_dir` — entry is `docs/project-guide/go-project-guide.md`
-- [x] `_header-common.md` updated to `Read {{ target_dir }}/go-project-guide.md`
-
-**Tests and wrap-up:**
-- [x] Updated `test_cli.py`, `test_render.py`, `test_sync.py` — all output path assertions and fixtures
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.11`
-- [x] Update `CHANGELOG.md`
-- [x] Run full test suite — 129 tests pass, 92% coverage
-- [x] Verify: `project-guide init` renders `docs/project-guide/go-project-guide.md`
-- [x] Verify: `project-guide mode code_velocity` re-renders in the correct location
-- [x] Verify: developer instruction is `Read docs/project-guide/go-project-guide.md`
-
-### Story J.m: v2.0.12 Improve Status Command UX and Rename Guides to Files [Done]
-
-The `status` command outputs 40+ lines dominated by a per-file sync list. On the happy path (everything current), this is noise. Also, "guides" no longer describes what the sync system tracks — rename to "files" throughout.
-
-**Status UX:**
-- [x] Refactor `status` command: compact summary by default, per-file list only on problems
-- [x] Show `target_dir` in status header
-- [x] Show hint: `Run 'project-guide mode' to see available modes.`
-- [x] Add `--verbose` / `-v` flag to force full per-file list
-
-**Rename "guides" → "files":**
-- [x] `exceptions.py`: `GuideNotFoundError` → `ProjectFileNotFoundError`
-- [x] `sync.py`: `get_all_guide_names` → `get_all_file_names`, `copy_guide` → `copy_file`, `backup_guide` → `backup_file`, `apply_guide_update` → `apply_file_update`, `sync_guides` → `sync_files`
-- [x] `config.py`: `GuideOverride` → `FileOverride`, `guide_name` → `file_name` parameters
-- [x] `cli.py`: `--guides` → `--files` flag, all user-facing strings ("Guide" → "File", "guides" → "files")
-- [x] All test files updated
-
-**Wrap-up:**
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.12`
-- [x] Update `CHANGELOG.md`
-- [x] Run full test suite — all tests pass at 85%+ coverage
-
-### Story J.n: v2.0.13 Status UX, Hash-Based Sync, and Rename go.md [Done]
-
-Three related improvements: redesign `status` output with grouped sections, replace version-based sync logic with content hash comparison, and rename `go-project-guide.md` → `go.md`.
-
-**Redesign `status` output — grouped sections with contextual actions:**
-
-```
-project-guide v2.0.13 (installed: v2.0.12)
-
-Mode: default — Getting started -- full project lifecycle overview
-  Prerequisites: all met
-  Run 'project-guide mode' to see available modes.
-
-Guide: docs/project-guide/go.md
-
-Files: 3 current, 28 need updating, 2 missing
-  Run 'project-guide update' to sync.
-```
-
-- [x] Group output into three sections: Mode, Guide, Files — each with its own contextual action prompt
-- [x] Omit `Prerequisites` line when the mode has none
-- [x] Show `(installed: vX.X.X)` only when it differs from package version
-- [x] Files section is always a summary count; `--verbose` for per-file list
-- [x] Action prompts only when relevant (`update` prompt only when files need syncing)
-- [x] Update affected tests
-
-**Hash-based sync — replace version comparison with content hash:**
-
-The current logic assumes all files are stale when the package version differs from `installed_version`. In reality, most files don't change between versions. Use the existing `file_matches_template()` hash comparison as the sole source of truth for file freshness.
-
-- [x] Update `status` command: always use `file_matches_template()` to determine file state, remove version-first branching
-- [x] Update `sync_files()`: same — hash check determines whether a file needs updating, not version comparison
-- [x] `installed_version` remains as a global "last time update ran" data point, shown in the header, not per-file
-- [x] Remove per-file version display from `--verbose` output (the version was the global `installed_version` repeated — not meaningful per-file)
-- [x] Update affected tests
-
-**Rename `go-project-guide.md` → `go.md`:**
-
-The file lives in `docs/project-guide/` — the directory provides context. The shorter name is easier to type and autocomplete (`@go<tab>`).
-
-- [x] Rename template source: `templates/go-project-guide.md` → `templates/go.md`
-- [x] Update `render.py`: `get_template("go.md")`
-- [x] Update `cli.py`: all references to `go-project-guide.md` → `go.md` (init, mode, update, status, gitignore)
-- [x] Update `_header-common.md`: developer instruction path
-- [x] Update all test references
-- [x] Update `CHANGELOG.md`
-
-**Wrap-up:**
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.13`
-- [x] Run full test suite — 129 tests pass, 91% coverage
-- [x] Verify: `project-guide init` renders `docs/project-guide/go.md`
-- [x] Verify: `project-guide status` shows grouped output with hash-based file state
-- [x] Verify: version upgrade with no template changes shows `Files: 33 current`
-
-### Story J.o: v2.0.14 Adjust status output colors []
-
-- [x] Adjust status output colors for interest and readability
-- [x] Bump version to 2.0.14
-
-### Story J.p: v2.0.15 Add missing prompt to 'Tell LLM to read go.md' [Done]
-
-- [x] Add prompt to 'Tell your LLM: Read docs/project-guide/go-project-guide.md'
-- [x] Bump version to 2.0.15
-
-### Story J.q: v2.0.16 Refactor Planning Docs and Documentation [Done]
-
-- [x] Clarify `refactor_*` modes and their purpose in `.metadata.yml`
-- [x] Update `refactor-plan-mode.md` and `refactor-document-mode.md`
-- [x] Update concept (`docs/specs/concept.md`)
-- [x] Update features (`docs/specs/features.md`)
-- [x] Update tech-spec (`docs/specs/tech-spec.md`)
-- [x] Update README (`README.md`)
-- [x] Update index.html page (`docs/site/index.html`)
-- [x] Update MkDocs pages (`docs/site/*.md`)
-- [x] Update CHANGELOG (`CHANGELOG.md`)
-- [x] Bump version to 2.0.16
-
-### Story J.r: Restructure MkDocs Site Navigation [Done]
-
-No version bump — documentation-only changes.
-
-The Getting Started section had three pages (installation, quick-start, configuration) that overlapped with each other and with the landing page Quick Start section. Restructured to eliminate duplication.
-
-**File moves:**
-- [x] `docs/site/getting-started/quick-start.md` → `docs/site/getting-started.md` (top-level, content unchanged)
-- [x] `docs/site/getting-started/installation.md` → `docs/site/user-guide/install-options.md`
-- [x] `docs/site/getting-started/configuration.md` → `docs/site/user-guide/configuration.md`
-- [x] Removed empty `docs/site/getting-started/` directory
-
-**Navigation updates:**
-- [x] `mkdocs.yml`: Getting Started is now a single top-level page; Install Options and Configuration moved under User Guide
-- [x] `index.html`: Docs nav link updated to `/getting-started/`
-- [x] Updated cross-references in 6 files (getting-started.md, install-options.md, commands.md, workflow.md, overrides.md, development.md)
-
-**Other fixes:**
-- [x] `git checkout -b` → `git switch -c` in README.md, contributing.md, development.md
-- [x] Fixed `.gitignore` entries: removed stale `go-project-guide.md` paths, added `docs/project-guide/go.md` and `docs/project-guide/**/*.bak.*` under `# project-guide` comment
-- [x] Added `Tell your LLM: Read docs/project-guide/go.md` prompt to `status` Guide section
-
-### Story J.s: v2.0.17 Modes Doc, Rename project_setup to project_scaffold, Slim Workflow Doc [Done]
-
-User-facing changes that warrant a version bump.
-
-**Add Modes documentation page:**
-- [x] Create `docs/site/user-guide/modes.md` documenting all 15 modes with type, prerequisites, artifacts, next mode, description, and command
-- [x] Add Mode Flow diagram showing the typical project lifecycle
-- [x] Add Modes page to `mkdocs.yml` nav between Commands and Workflow
-
-**Rename `project_setup` → `project_scaffold`:**
-
-The "setup" name was too generic — could mean install dependencies, configure environment, set up CI, etc. The mode specifically scaffolds project files (LICENSE, headers, manifest, README, CHANGELOG, .gitignore), so "scaffold" is more accurate and matches industry conventions.
-
-- [x] Rename template file: `project-setup-mode.md` → `project-scaffold-mode.md`
-- [x] Update `.metadata.yml`: `name: project_scaffold`, template path, comment header (`# Scaffold`), description
-- [x] Update `next_mode: project_scaffold` in `plan_stories` mode
-- [x] Update `default-mode.md`: lifecycle table row, "Scaffold (sequence)" section
-- [x] Update `project-scaffold-mode.md`: heading "Project Scaffold Mode", description, fix `next_mode` reference (was hardcoded `plan_concept`, now uses `{{ next_mode }}`)
-- [x] Update `docs/site/user-guide/modes.md`: section heading, mode entry, command, mode flow diagram
-- [x] Update `docs/specs/concept.md`: 15 modes list
-- [x] Update `docs/specs/features.md`: file structure listing, modes table
-- [x] Historical references in `CHANGELOG.md` and `stories.md` Story J.i left as-is (describe past work with old name)
-
-**Slim down `workflow.md`:**
-
-The workflow guide was 376 lines and mostly duplicated content from `getting-started.md`, `commands.md`, and `overrides.md`. Reduced to ~85 lines focused on the workflow itself.
-
-- [x] Removed Initial Setup section (duplicates getting-started.md)
-- [x] Removed Common Workflows section (duplicates commands and overrides)
-- [x] Removed Multi-Project Management section
-- [x] Removed Override Management section (duplicates overrides.md)
-- [x] Removed Best Practices section (generic, not workflow-specific)
-- [x] Removed Troubleshooting section (duplicates other pages)
-- [x] Added "The HITLoop Cycle" section (propose → review → approve → execute rhythm)
-- [x] Added "When to Switch Modes" table
-- [x] Added "Customization and Updates" paragraph linking to overrides.md
-- [x] Updated "Next Steps" to link to canonical pages
-
-**Wrap-up:**
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.17`
-- [x] Update `CHANGELOG.md`
-- [x] Run full test suite — 129 tests pass (parametrized mode test confirms `project_scaffold` renders)
-
-### Story J.t: v2.0.18 Stop Gitignoring go.md, Fix Mode Heading Bug [Done]
-
-**Stop gitignoring `go.md`:**
-
-The rendered `docs/project-guide/go.md` was added to `.gitignore` since it's a generated file. But agentic LLMs that respect gitignore patterns can't read the file, breaking the entire workflow. Fix: track `go.md` in git. Mode switches will create small commits, which is actually a useful git history footprint.
-
-- [x] Remove `f"{target_dir}/go.md"` from `_ensure_gitignore_entry()` in `cli.py`
-- [x] Remove `docs/project-guide/go.md` from project root `.gitignore`
-
-**Fix mode heading bug:**
-
-The 5 planning mode templates (`plan-concept`, `plan-features`, `plan-tech-spec`, `plan-stories`, `plan-phase`) started with a heading like `# concept.md — {{ project_name }}`. This was wrong on multiple levels:
-- Looked like an artifact file title, not a mode heading
-- `project_name` is not a defined Jinja2 variable, so it rendered as the literal `{{ project_name }}`
-- Not useful for the LLM (project name is meaningless for instructions)
-
-Other mode templates had their own H1 headings (e.g., `# Velocity Coding Mode`, `# Debug Guide for LLMs`) that varied in style and weren't tied to the actual mode metadata.
-
-Fix: add a single mode heading to `_header-common.md` (rendered for every mode) using `{{ mode_name }}`, `{{ sequence_or_cycle }}`, and `{{ mode_info }}`. Strip the H1 from every individual mode template since the header now provides one.
-
-- [x] Add `# {{ mode_name }} mode ({{ sequence_or_cycle }})` heading and `> {{ mode_info }}` blockquote to end of `_header-common.md`
-- [x] Strip H1 from `plan-concept-mode.md`, `plan-features-mode.md`, `plan-tech-spec-mode.md`, `plan-stories-mode.md`, `plan-phase-mode.md`
-- [x] Strip H1 from `code-velocity-mode.md`, `code-test-first-mode.md`, `debug-mode.md`
-- [x] Strip H1 from `default-mode.md`, `document-brand-mode.md`, `document-landing-mode.md`
-- [x] Strip H1 from `project-scaffold-mode.md`, `refactor-plan-mode.md`, `refactor-document-mode.md`
-- [x] Update `test_mode_renders_output` test: `"Debug Guide"` → `"debug mode"` (matches new generated heading)
-
-**Wrap-up:**
-- [x] Run full test suite — 129 tests pass
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.18`
-- [x] Update `CHANGELOG.md`
-
-### Story J.u: v2.0.19 Auto-Backup Modified Files on Update [Done]
-
-`update` was prompting for each file whose content differed from the bundled template, with the message "X has been modified locally. Backup and overwrite?". This was misleading: with hash-based sync, we can't distinguish "user modified the file" from "the bundled template changed in this package version" — both look identical.
-
-The prompt was also painful — modifying many files (e.g., after a package upgrade) meant approving each one individually.
-
-New behavior: differing files are always backed up (`.bak.<timestamp>`) and overwritten without prompting. Users who want to lock specific files should use `project-guide override`.
-
-**`sync_files()` simplification:**
-- [x] Remove `modified` from return tuple — 5-tuple → 4-tuple `(updated, skipped, current, missing)`
-- [x] Files whose content differs are added to `updated` and auto-backed-up via `apply_file_update(make_backup=True)`
-- [x] Update docstring to reflect new behavior
-
-**`update` command simplification:**
-- [x] Remove `modified` handling and prompt loop from `cli.py` `update`
-- [x] Remove `user_approved` / `user_declined` tracking
-- [x] Remove "Modified files detected" / "Skipped (user declined)" / "Updated (approved by user)" output sections
-- [x] Remove unused `apply_file_update` import from `cli.py`
-- [x] Adjust summary output (`total_changes` no longer counts user_approved separately)
-
-**Tests:**
-- [x] Update all `test_sync_files_*` tests: 5-tuple → 4-tuple unpacking
-- [x] Replace `test_sync_files_detects_user_modifications` to assert auto-update + backup behavior
-- [x] Replace `test_update_modified_file_user_approves`/`_user_declines` with `test_update_modified_file_auto_backup`
-- [x] Replace `test_update_all_declined_message` with `test_update_bulk_auto_backup`
-- [x] Update `test_update_with_dry_run` and `test_update_dry_run_with_modified_file` assertions
-- [x] Remove obsolete `test_update_modified_file_apply_sync_error`
-- [x] Update `test_dry_run_doesnt_modify_files` and integration test prompt-input cleanup
-- [x] 127 tests pass at 91% coverage
-
-**Wrap-up:**
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.19`
-- [x] Update `CHANGELOG.md`
-
-### Story J.v: v2.0.20 Rename Template Source go.md → llm_entry_point.md, Add Shell Completion [Done]
-
-**Rename template source:**
-
-The Jinja2 template source and the rendered output were both named `go.md`, just in different directories (`templates/go.md` and `go.md`). When @-including files in an LLM chat window, this caused confusion ("which `go.md` is it? why are there two?"). Rename the template source to `llm_entry_point.md` to remove the ambiguity. The rendered output keeps its short, easy-to-type `go.md` name.
-
-- [x] Rename template file: `project_guide/templates/project-guide/templates/go.md` → `llm_entry_point.md`
-- [x] Update `render.py`: `get_template("llm_entry_point.md")`
-- [x] Update `tests/test_render.py` fixture: create `templates/llm_entry_point.md` instead of `templates/go.md`
-- [x] Update `tests/test_render.py`: docstring for `test_render_missing_entry_point`
-- [x] Update `tests/test_sync.py`: assert `templates/llm_entry_point.md` in tracked files
-- [x] Update `docs/specs/features.md`: file structure listing and architecture description
-
-**Add shell completion:**
-
-Click supports shell completion out of the box for command names and flags. Add a `shell_complete` callback for the `mode` argument so `project-guide mode <TAB>` dynamically completes mode names from the active project's `.metadata.yml`.
-
-- [x] Add `_complete_mode_names(ctx, param, incomplete)` callback in `cli.py` that loads metadata and returns matching mode names; returns `[]` on any error so completion never crashes the user's shell
-- [x] Wire `shell_complete=_complete_mode_names` to the `mode_name` argument
-- [x] Add tests: `test_mode_shell_completion_returns_all_modes`, `test_mode_shell_completion_filters_by_prefix`, `test_mode_shell_completion_no_config`, `test_mode_shell_completion_handles_errors_silently`
-- [x] Document shell completion setup in `docs/site/user-guide/install-options.md` (bash, zsh, fish)
-
-**Wrap-up:**
-- [x] Run full test suite — 131 tests pass
-- [x] Bump `version.py` and `pyproject.toml` to `2.0.20`
-- [x] Update `CHANGELOG.md`
+- [ ] Add `project-essentials.md` to the artifacts catalogue (wherever artifacts are listed in `project_guide/templates/project-guide/`)
+- [ ] Cross-reference `project-essentials.md` from `concept.md`, `features.md`, and/or `tech-spec.md` artifact templates if appropriate (a one-line "see also")
+- [ ] Update `CHANGELOG.md` with v2.2.0–v2.2.2 entries
+- [ ] Update README if any user-facing wording references the new artifact
+- [ ] Verify by running each of the three updated planning modes against a fresh fixture project
 
 ---
 
@@ -723,14 +209,6 @@ Add a `--test-first` flag to the `init` command that causes coding to prefer `co
 ### Future Story: Code Production Mode [Deferred]
 
 Implement the `code_production` mode...TBD
-
-### Future Story: Archive Stories Mode [Deferred]
-
-Future mode (deferred): `archive_stories`
-
-Move the `docs/specs/stories.md` file to `docs/specs/.archive/stories.md-vx.x.x.md` where `vx.x.x` is the most recent version set by a story.
-
-Then `plan_phase` mode can create a new `docs/specs/stories.md` file. This requires a minor tweak to the metadata since there is a `file_exists` requirement for the stories file and a `modify` action on that file (as well as some logic changes if we add a `create_or_modify` action type).
 
 ### Future Story: Audit Modes [Deferred]
 

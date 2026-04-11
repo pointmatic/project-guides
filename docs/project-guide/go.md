@@ -22,7 +22,7 @@ For efficiency, when you change modes, start a new LLM conversation.
 ### For LLMs
 
 **Modes**
-This Project-Guide offers a human-in-the-loop workflow for you to follow that can be dynamically reconfigured based on the project `mode`. Each `mode` defines a focused sequence of steps to guide you (the LLM) to help generate artifacts for some facet in the project lifecycle. This document is customized for default.
+This Project-Guide offers a human-in-the-loop workflow for you to follow that can be dynamically reconfigured based on the project `mode`. Each `mode` defines a focused sequence of steps to guide you (the LLM) to help generate artifacts for some facet in the project lifecycle. This document is customized for plan_phase.
 
 **Approval Gate**
 When you have completed the steps, pause for the developer to review, correct, redirect, or ask questions about your work.  
@@ -36,60 +36,57 @@ When you have completed the steps, pause for the developer to review, correct, r
 
 ---
 
-# default mode (sequence)
+# plan_phase mode (sequence)
 
-> Getting started -- full project lifecycle overview
+> Generate a feature phase prompt, which includes a mini-concept, features, and technical details
 
 
-This is the default mode for new projects. It provides an overview of the full project lifecycle. For focused work, switch to a specific mode with `project-guide mode <name>`.
+Generate a combined concept/features/tech-spec document for a new phase in an existing project, then add the phase and stories to `docs/specs/stories.md`.
+
+Use this mode when the developer wants to add a significant new capability to a project that already has an established codebase and spec documents.
+
+**Next Action**
+Prompt the user to change modes. 
+
+```bash
+project-guide mode code_velocity
+```
 
 ---
 
-## Project Lifecycle
 
-| Step | Mode | What it does |
-|------|------|-------------|
-| 1 | `plan_concept` | Define the problem and solution space |
-| 2 | `plan_features` | Define requirements, inputs, outputs, behavior |
-| 3 | `plan_tech_spec` | Define architecture, modules, dependencies |
-| 4 | `plan_stories` | Break into phases and stories with checklists |
-| 5 | `project_scaffold` | Scaffold LICENSE, headers, manifest, README, CHANGELOG, .gitignore |
-| 6 | `code_velocity` | Implement stories with fast iteration |
+## Prerequisites
 
-## Get Started
+Before planning a new phase, the following should exist:
+- `docs/specs/concept.md`
+- `docs/specs/features.md`
+- `docs/specs/tech-spec.md`
+- `docs/specs/stories.md`
 
-To begin a new project, run:
+## Steps
 
-```bash
-project-guide mode plan_concept
-```
+1. Read the existing spec documents to understand the current project state.
 
-## All Available Modes
+2. Gather information from the developer about the new phase:
+   - phase_name: A short name for the phase (e.g., "Mode System", "API Integration")
+   - problem_gap: What capability is missing or what problem this phase solves
+   - new_features: What the phase will add (functional requirements)
+   - technical_approach: How it will be built (architecture changes, new modules, new dependencies)
+   - constraints: Any limitations or compatibility requirements with existing code
+   - scope: What this phase will and won't do
 
-### Planning (sequence)
-| Mode | Command | Output |
-|------|---------|--------|
-| **Concept** | `project-guide mode plan_concept` | `docs/specs/concept.md` |
-| **Features** | `project-guide mode plan_features` | `docs/specs/features.md` |
-| **Tech Spec** | `project-guide mode plan_tech_spec` | `docs/specs/tech-spec.md` |
-| **Stories** | `project-guide mode plan_stories` | `docs/specs/stories.md` |
-| **Phase** | `project-guide mode plan_phase` | Add a new phase to an existing project |
+3. Generate a phase plan document at `docs/specs/phase-<name>-plan.md` that combines:
+   - **Gap analysis**: What exists vs. what's needed
+   - **Feature requirements**: What the phase adds (mini features.md)
+   - **Technical changes**: New/modified modules, dependencies, config changes (mini tech-spec.md)
+   - **Out of scope**: What's deferred to future phases
 
-### Scaffold (sequence)
-| Mode | Command | Purpose |
-|------|---------|---------|
-| **Project Scaffold** | `project-guide mode project_scaffold` | One-time project scaffolding |
+4. Present the phase plan to the developer for approval.
 
-### Coding (cycle)
-| Mode | Command | Workflow |
-|------|---------|----------|
-| **Velocity** | `project-guide mode code_velocity` | Direct commits, fast iteration |
-| **Test-First** | `project-guide mode code_test_first` | TDD red-green-refactor cycle |
-| **Debug** | `project-guide mode debug` | Test-driven debugging |
+5. After approval, add a new phase section and stories to `docs/specs/stories.md`:
+   - Determine the next phase letter
+   - Break the phase into stories following the standard story format
+   - Include a spike story if the phase introduces a new integration boundary
 
-### Documentation (sequence)
-| Mode | Command | Output |
-|------|---------|--------|
-| **Branding** | `project-guide mode document_brand` | `docs/specs/brand-descriptions.md` |
-| **Landing Page** | `project-guide mode document_landing` | GitHub Pages + MkDocs docs |
+6. Present the updated stories to the developer for approval.
 
