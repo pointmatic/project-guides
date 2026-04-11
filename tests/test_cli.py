@@ -49,17 +49,46 @@ def test_init_in_empty_directory(runner, tmp_path):
         assert Path("docs/project-guide/developer/codecov-setup-guide.md").exists()
 
 
-def test_init_with_existing_config_error(runner, tmp_path):
-    """Test that init errors when config already exists."""
+def test_init_on_already_initialized_project_is_idempotent(runner, tmp_path):
+    """Re-running init without --force is a silent exit-0 no-op.
+
+    Idempotent re-run (v2.2.0) — supports unattended/CI use and the pyve
+    post-hook integration path. Previously raised click.Abort() / exit 1.
+    """
     with runner.isolated_filesystem(temp_dir=tmp_path):
         # First init
         result = runner.invoke(main, ['init'])
         assert result.exit_code == 0
 
-        # Second init without force should fail
+        # Second init without force should exit 0 with an informational message
         result = runner.invoke(main, ['init'])
-        assert result.exit_code == 1
-        assert "already exists" in result.output
+        assert result.exit_code == 0
+        assert "already initialized" in result.output
+
+
+def test_init_double_run_does_not_modify_files(runner, tmp_path):
+    """Second init run does not touch any tracked template files."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        # First init
+        result = runner.invoke(main, ['init'])
+        assert result.exit_code == 0
+
+        # Snapshot mtimes of a representative set of files the installer writes
+        tracked = [
+            Path(".project-guide.yml"),
+            Path("docs/project-guide/.metadata.yml"),
+            Path("docs/project-guide/templates/modes/plan-concept-mode.md"),
+            Path("docs/project-guide/templates/modes/default-mode.md"),
+        ]
+        before = {p: p.stat().st_mtime_ns for p in tracked}
+
+        # Second init — idempotent no-op
+        result = runner.invoke(main, ['init'])
+        assert result.exit_code == 0
+
+        # Verify no tracked file was rewritten
+        after = {p: p.stat().st_mtime_ns for p in tracked}
+        assert before == after
 
 
 def test_init_with_force_flag(runner, tmp_path):

@@ -115,19 +115,19 @@ Make `project-guide init` safe to run unattended — from CI, scripts, or as a p
 
 Out of scope (deferred): `--no-input` for `purge`/`update` (not on the pyve integration path), a `--quiet` flag for output suppression (spec explicitly says `--no-input` affects stdin only), a `create_or_modify` action type, legacy broken-state detection where `.project-guide.yml` is absent but the target directory is populated.
 
-### Story L.a: v2.2.0 Idempotent init Re-run [Planned]
+### Story L.a: v2.2.0 Idempotent init Re-run [Done]
 
 Change `project-guide init` to exit 0 silently when the project is already initialized, instead of the current `click.Abort()` on `.project-guide.yml` existing. This is the small, focused fix that actually unblocks the pyve post-hook integration — `--no-input` plumbing comes next in L.b.
 
-- [ ] Replace the abort-on-exists path in `project_guide/cli.py:init` (lines ~90-96)
-  - [ ] If `.project-guide.yml` exists and `--force` is not given: print `project-guide already initialized at <target_dir>/ (use --force to reinitialize).` to stdout and `return` (exit 0)
-  - [ ] If `.project-guide.yml` exists and `--force` is given: current overwrite behavior unchanged
-  - [ ] If `.project-guide.yml` does not exist: current behavior unchanged
-  - [ ] Decision rationale: idempotency check is based solely on `.project-guide.yml` presence. Partial-install state (config absent but target directory populated) falls through to the existing `_copy_template_tree` skip-with-warnings path — documented as out of scope in the phase plan
-- [ ] Update `tests/test_cli.py` init test that currently expects `click.Abort()` / exit 1 on re-init → change expectation to exit 0 with the "already initialized" message on stdout
-- [ ] Add new test: re-running `init` twice in a row produces exit 0 both times, and the second run does not modify any files (verify via `mtime` or file hash on a tracked template file)
-- [ ] Add new test: `init --force` on an initialized project still overwrites (regression guard for the `--force` branch)
-- [ ] Verify: `project-guide init && project-guide init` succeeds end-to-end in a `CliRunner.isolated_filesystem()`
+- [x] Replace the abort-on-exists path in `project_guide/cli.py:init` (lines ~90-96)
+  - [x] If `.project-guide.yml` exists and `--force` is not given: print `project-guide already initialized at <target_dir>/ (use --force to reinitialize).` to stdout and `return` (exit 0)
+  - [x] If `.project-guide.yml` exists and `--force` is given: current overwrite behavior unchanged
+  - [x] If `.project-guide.yml` does not exist: current behavior unchanged
+  - [x] Decision rationale: idempotency check is based solely on `.project-guide.yml` presence. Partial-install state (config absent but target directory populated) falls through to the existing `_copy_template_tree` skip-with-warnings path — documented as out of scope in the phase plan
+- [x] Update `tests/test_cli.py` init test that currently expects `click.Abort()` / exit 1 on re-init → change expectation to exit 0 with the "already initialized" message on stdout (renamed to `test_init_on_already_initialized_project_is_idempotent`)
+- [x] Add new test: re-running `init` twice in a row produces exit 0 both times, and the second run does not modify any files (new `test_init_double_run_does_not_modify_files` — snapshots `st_mtime_ns` of `.project-guide.yml`, `.metadata.yml`, and two mode templates)
+- [x] Add new test: `init --force` on an initialized project still overwrites (regression guard for the `--force` branch) — the existing `test_init_with_force_flag` already covers this; verified unchanged
+- [x] Verify: `project-guide init && project-guide init` succeeds end-to-end in a `CliRunner.isolated_filesystem()` (covered by the two idempotency tests)
 
 ### Story L.b: v2.2.1 --no-input Flag, Trigger Helper, and Prompt Contract [Planned]
 

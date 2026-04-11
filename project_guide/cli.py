@@ -86,14 +86,16 @@ def init(target_dir: str, force: bool):
     """Initialize project-guide in a new project."""
     config_path = Path(".project-guide.yml")
 
-    # Check if config already exists
+    # Idempotency: if the project is already initialized and --force was not
+    # given, exit 0 silently with an informational message. This makes
+    # `project-guide init` safe to run unattended (e.g., as a pyve post-hook)
+    # without aborting on re-run.
     if config_path.exists() and not force:
-        click.secho(
-            f"Error: {config_path} already exists. Use --force to overwrite.",
-            fg='red',
-            err=True
+        click.echo(
+            f"project-guide already initialized at {target_dir}/ "
+            f"(use --force to reinitialize)."
         )
-        raise click.Abort()
+        return
 
     click.echo(f"Initializing project-guide v{__version__}...")
 

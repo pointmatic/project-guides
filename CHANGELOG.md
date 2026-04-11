@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-04-11
+
+### Changed
+- **`project-guide init` is now idempotent** (Story L.a) — re-running `init` on an already-initialized project is a silent exit-0 no-op instead of raising `click.Abort()` / exit 1. When `.project-guide.yml` already exists and `--force` was not given, `init` now prints `project-guide already initialized at <target_dir>/ (use --force to reinitialize).` and returns. The `--force` branch is unchanged: overwrite semantics still apply. This is the small behavioral fix that unblocks the `pyve` post-hook integration path — `project-guide init` can now be invoked unconditionally from automated flows (CI, scripts, `pyve init` post-hook) without hanging on an existing project. The `--no-input` flag, env-var (`PROJECT_GUIDE_NO_INPUT`, `CI`), and non-TTY auto-detection arrive in v2.2.1 (Story L.b).
+
+### Tests
+- `tests/test_cli.py::test_init_on_already_initialized_project_is_idempotent` (renamed from `test_init_with_existing_config_error`) — verifies exit 0 and the "already initialized" message on re-run without `--force`.
+- `tests/test_cli.py::test_init_double_run_does_not_modify_files` — new regression guard: a second `init` run must not rewrite any tracked template file (verified via `st_mtime_ns` snapshots of `.project-guide.yml`, `.metadata.yml`, and two mode templates).
+- `test_init_with_force_flag` is unchanged and still guards the `--force` overwrite branch.
+
+### Notes
+- Idempotency is based solely on `.project-guide.yml` presence. A partial-install state where the config is absent but the target directory is populated is out of scope (falls through to the existing `_copy_template_tree` skip-with-warnings path — documented in `phase-l-no-input-init-plan.md`).
+- All 194 tests pass (`pyve test`). Ruff is clean on the changed files.
+
 ## [2.1.6] - 2026-04-10
 
 ### Added
