@@ -53,6 +53,8 @@ modes:
     artifacts:
       - file: "{{spec_artifacts_path}}/tech-spec.md"
         action: create
+      - file: "{{spec_artifacts_path}}/project-essentials.md"
+        action: create
     files_exist:
       - "{{spec_artifacts_path}}/concept.md"
       - "{{spec_artifacts_path}}/features.md"

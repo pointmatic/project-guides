@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.2] - 2026-04-11
+
+### Added
+- **`plan_tech_spec` mode populates `project-essentials.md`** (Story M.c) — wires the first of the three planning modes to the M.a render hook. After the developer approves the tech-spec, the mode now asks whether any must-know facts should be captured for future LLMs working on the project, with concrete worked examples in the prompt (not just abstract category names). If the developer provides facts, the mode generates `docs/specs/project-essentials.md` from the artifact template; if not, the file is not created (an empty file is deliberately avoided on fresh projects — the "skip if none" escape hatch is explicit).
+- **New step 5 in `plan_tech_spec` mode template** at `project_guide/templates/project-guide/templates/modes/plan-tech-spec-mode.md`: "After tech-spec approval, capture project essentials." The prompt lists five categories (workflow rules, architecture quirks, domain conventions, hidden coupling, dogfooding/meta notes) and provides concrete worked examples for each — in particular, the *tool wrapper random walk* anti-pattern (Python invocation, dev tool installation, test invocation) that the story's implementation strategy explicitly calls out as the highest-value category to capture.
+- **New step 6 in the same mode**: generate `project-essentials.md` from the artifact template when the developer provides facts. The step explicitly reminds the LLM to follow the template's heading convention (no top-level `#`; `###` for subsections) so the content nests correctly under the `## Project Essentials` wrapper injected by `_header-common.md`.
+- **`plan_tech_spec` metadata entry** now declares two `artifacts` (was one): `tech-spec.md` + `project-essentials.md`, both with `action: create`. The `create` action type is correct here because `plan_tech_spec` is the initial-lifecycle population path; `refactor_plan` (M.d) and `plan_phase` (M.e) will use `modify`/`modify` since those run against existing projects where the file may already exist.
+
+### Tests
+- **2 new tests in `tests/test_render.py`** under the "Story M.c" heading:
+  - `test_plan_tech_spec_mode_prompts_for_project_essentials` — end-to-end render test. Fresh `init` → `mode plan_tech_spec` → read `go.md`. Asserts the capture step is present and ordered after tech-spec approval, at least one concrete worked example (`pyve run python` or `poetry run python`) is visible, two category names (`Workflow rules`, `Architecture quirks`) appear, the "skip if none" escape hatch is present, the artifact template path is referenced, and the heading convention reminder ("do NOT include a top-level", `###`) is emitted.
+  - `test_plan_tech_spec_metadata_declares_project_essentials_artifact` — loads the bundled `.metadata.yml`, gets the `plan_tech_spec` mode, and asserts both `tech-spec.md` and `project-essentials.md` are declared as artifacts with the `project-essentials.md` artifact using `ActionType.CREATE`. This is the wiring checkpoint that M.d/M.e will deliberately diverge from.
+- **`test_every_mode_renders_successfully` parametrized test continues to pass unchanged** — the new prompt content and the new metadata entry do not introduce any undefined-variable placeholders (validated by the M.b post-render validator) and do not break rendering for any of the 14 modes.
+
+### Notes
+- The `create` action type on the new artifact is an **intent declaration**, not an unconditional file-creation. The mode template's step 5 "skip to step 7 if there are no facts to capture" clause is the LLM-runtime escape hatch — a fresh project where the developer has nothing to put in `project-essentials.md` does NOT get an empty file. This is a deliberate design choice: empty files would trigger the render hook's "whitespace-only = omit section" branch (which is correct) but would leave a dormant empty file in `docs/specs/` that looks like an oversight. Better to not create it at all.
+- Full test suite: **244 passed** (+2 new M.c tests). Ruff clean across `project_guide/` and `tests/`. mypy clean on `project_guide/render.py`.
+- Verified end-to-end by running `pyve run project-guide update && pyve run project-guide mode plan_tech_spec` in this repo. The rendered `go.md` contains both the M.a-injected Project Essentials section at the top (fed by this project's own `docs/specs/project-essentials.md`) and the new M.c capture step at step 5 — proving the two layers compose correctly on a project that already has the file populated.
+- **What M.d and M.e add next**: M.d (`refactor_plan`) adds the same prompt with a "refactor-driven changes" framing and handles the legacy-project case where `project-essentials.md` does not yet exist; declares `action: modify` so the mode can either create-if-absent or modify-if-present. M.e (`plan_phase`) adds an append-only variant that runs once per new phase plan; also declares `action: modify`. M.c/M.d/M.e are mutually independent (per the phase plan in `docs/specs/stories.md`) but the listed order matches the project lifecycle.
+
 ## [2.3.1] - 2026-04-11
 
 ### Added

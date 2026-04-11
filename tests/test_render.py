@@ -485,6 +485,97 @@ def test_validator_passes_on_template_with_no_jinja_variables(
 # --- End Story M.b tests ---------------------------------------------------
 
 
+# --- Story M.c: plan_tech_spec populates project-essentials.md -------------
+
+
+def test_plan_tech_spec_mode_prompts_for_project_essentials():
+    """Rendering the plan_tech_spec mode emits the project-essentials capture step.
+
+    End-to-end render: init a fresh project, switch to plan_tech_spec, and
+    read the resulting go.md. The prompt for project-essentials must appear
+    (post-approval step), include at least one concrete worked example so
+    the LLM's read-time behavior is anchored, and reference the artifact
+    template path so the LLM knows where to generate from.
+    """
+    from click.testing import CliRunner  # noqa: I001
+
+    from project_guide.cli import main
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ['init'])
+        assert result.exit_code == 0
+
+        result = runner.invoke(main, ['mode', 'plan_tech_spec'])
+        assert result.exit_code == 0
+
+        content = Path("docs/project-guide/go.md").read_text(encoding="utf-8")
+
+    # The capture step is explicit and ordered after approval
+    assert "After tech-spec approval, capture project essentials" in content
+
+    # Concrete worked examples from at least two categories must be present —
+    # the story is specific that abstract category names alone are not enough
+    # to jog the developer's memory at read time.
+    assert "pyve run python" in content or "poetry run python" in content
+    assert "Workflow rules" in content
+    assert "Architecture quirks" in content
+
+    # The "skip if none" escape hatch must be present so plan_tech_spec does
+    # not leave empty project-essentials.md files behind on fresh projects.
+    assert "skip to step 7" in content or "do not create an empty" in content
+
+    # References the artifact template path (so the LLM knows what to render)
+    assert "templates/artifacts/project-essentials.md" in content
+
+    # Heading convention reminder (no top-level `#`; `###` for subsections)
+    # to prevent heading-level collision with the wrapper in _header-common.md
+    assert "do NOT include a top-level" in content
+    assert "###" in content
+
+
+def test_plan_tech_spec_metadata_declares_project_essentials_artifact():
+    """The bundled metadata lists project-essentials.md as a create artifact.
+
+    This is the story's explicit wiring checkpoint: after M.c ships,
+    `plan_tech_spec` declares two artifacts (tech-spec.md + project-essentials.md),
+    both with action: create. M.d/M.e will add modify/modify wiring on other modes.
+    """
+    import importlib.resources
+
+    from project_guide.actions import ActionType
+    from project_guide.metadata import load_metadata
+
+    with importlib.resources.as_file(
+        importlib.resources.files("project_guide.templates").joinpath(
+            "project-guide/.metadata.yml"
+        )
+    ) as path:
+        metadata = load_metadata(path)
+
+    mode = metadata.get_mode("plan_tech_spec")
+    artifact_files = [a.file for a in mode.artifacts if a.file]
+
+    # Both artifacts present
+    assert any("tech-spec.md" in f for f in artifact_files), (
+        f"tech-spec.md missing from plan_tech_spec artifacts: {artifact_files}"
+    )
+    assert any("project-essentials.md" in f for f in artifact_files), (
+        f"project-essentials.md missing from plan_tech_spec artifacts: {artifact_files}"
+    )
+
+    # project-essentials.md must be declared with action: create (not modify).
+    # This is deliberate: M.c creates it fresh; M.d (refactor_plan) uses
+    # modify, M.e (plan_phase) uses modify.
+    essentials_artifact = next(
+        a for a in mode.artifacts if a.file and "project-essentials.md" in a.file
+    )
+    assert essentials_artifact.action is ActionType.CREATE
+
+
+# --- End Story M.c tests ---------------------------------------------------
+
+
 @pytest.mark.parametrize("mode_name", _get_all_mode_names())
 def test_every_mode_renders_successfully(mode_name):
     """Every mode in the bundled metadata must render without errors.

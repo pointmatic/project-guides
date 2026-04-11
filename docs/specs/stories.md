@@ -253,25 +253,25 @@ Generalize the M.a `{{ project_essentials }}` regression guard into a project-wi
 - [x] Verify: running `project-guide mode default` and `project-guide mode plan_concept` still produces valid `go.md` output with no errors (both ran successfully; `go.md` was grepped for unrendered placeholders → zero matches)
 - [x] Document the limitation in a code comment: templates that legitimately want to emit literal `{{ var }}` strings (e.g., documentation of Jinja syntax) will trigger false positives. Not currently a problem; bridge if/when needed (likely via `{% raw %}`). Documented inline in the `_UNRENDERED_PLACEHOLDER_RE` docstring.
 
-### Story M.c: v2.3.2 plan_tech_spec Populates project-essentials.md [Planned]
+### Story M.c: v2.3.2 plan_tech_spec Populates project-essentials.md [Done]
 
 After the tech-spec is approved, prompt the developer to capture any project-specific must-know facts and write them to `docs/specs/project-essentials.md`.
 
-- [ ] Update `project_guide/templates/project-guide/templates/modes/plan-tech-spec-mode.md` to add a final step after tech-spec approval
-- [ ] Step asks the developer for project-essentials content with **concrete worked examples** in the prompt (not just abstract categories — the LLM should put these specific scenarios in front of the developer to jog their memory):
-  - **Workflow rules — tool wrappers and environment conventions.** A common source of "random walks" by LLMs: multiple invocation forms all *work*, but only one is canonical. Capture which form to use so the LLM doesn't pick whatever happens to succeed first:
-    - *Python invocation*: wrapper command (e.g., `pyve run python ...`, `poetry run python ...`, `hatch run python ...`, `uv run python ...`) vs `python -m ...` vs `.venv/bin/python ...`. All may execute, but only one matches the project's setup.
-    - *Dev tool installation*: dedicated dev/test environment (e.g., `pyve testenv --install`, `poetry install --with dev`, `uv sync --extra dev`) vs `pip install -e ".[dev]"` into the main venv. Different isolation guarantees — the latter pollutes the runtime venv.
-    - *Test invocation*: project-specific runner (e.g., `pyve test`, `poetry run pytest`, `make test`) vs bare `pytest`. Bare `pytest` may fail because the tool isn't in the active venv — that's a signal to use the wrapper, not to `pip install pytest`.
-    - **Principle:** legitimate alternatives exist, but they should be intentional choices, not a random walk to whatever works.
-  - **Architecture quirks** (e.g., source-of-truth vs generated/installed file locations — edit the source, not the copy; build outputs that get regenerated)
-  - **Domain conventions** (e.g., money stored in cents, all timestamps UTC, IDs are strings not ints)
-  - **Hidden coupling** (e.g., files that mirror each other, auto-generated code, regenerated outputs that look hand-edited)
-  - **Skip if there are none — empty is fine**
-- [ ] Generate `docs/specs/project-essentials.md` from the artifact template only if the developer provides facts; otherwise leave the file empty (or skip creation entirely)
-- [ ] Add `project-essentials.md` to `plan_tech_spec`'s `artifacts` list in `project_guide/templates/project-guide/.metadata.yml` with `action: create`
-- [ ] Tests for the rendered mode template containing the new prompt
-- [ ] Verify: running `project-guide mode plan_tech_spec` end-to-end on a fixture project includes the essentials prompt
+- [x] Update `project_guide/templates/project-guide/templates/modes/plan-tech-spec-mode.md` to add a final step after tech-spec approval (new steps 5, 6, 7 inserted after the previous step 4 "approve" gate)
+- [x] Step asks the developer for project-essentials content with **concrete worked examples** in the prompt (not just abstract categories — the LLM should put these specific scenarios in front of the developer to jog their memory):
+  - [x] **Workflow rules — tool wrappers and environment conventions.** All four worked examples present (Python invocation, dev tool installation, test invocation, "legitimate alternatives should be intentional choices" principle).
+  - [x] **Architecture quirks** — present as a top-level category with the source-of-truth vs installed-copy example.
+  - [x] **Domain conventions** — present with money-in-cents / UTC timestamps / string-IDs examples.
+  - [x] **Hidden coupling** — present with mirror-file / auto-generated code / regenerated-looks-hand-edited examples.
+  - [x] **Dogfooding / meta notes** — present as an additional fifth category (not in the story's original list, but the M.a dogfooding work made it obvious this belongs here).
+  - [x] **Skip if there are none — empty is fine** — implemented as an explicit "skip to step 7" escape hatch in the template, with the note that empty files are acceptable when maintaining an existing one but should NOT be created on fresh projects.
+- [x] Generate `docs/specs/project-essentials.md` from the artifact template only if the developer provides facts (step 6); otherwise skip entirely (step 5's escape hatch). **Design refinement from the story text**: the story said "leave the file empty (or skip creation entirely)" — we chose skip-creation, not empty file, because the latter would leave a dormant file in `docs/specs/` that looks like an oversight. The M.a render hook's "whitespace-only = omit section" branch handles maintenance of an existing empty file, but initial creation of an empty file is intentionally avoided.
+- [x] Step 6 also reminds the LLM to follow the heading convention (no top-level `#`; `###` for subsections) to prevent heading-level collision with the wrapper injected by `_header-common.md`.
+- [x] Add `project-essentials.md` to `plan_tech_spec`'s `artifacts` list in `project_guide/templates/project-guide/.metadata.yml` with `action: create`
+- [x] Tests for the rendered mode template containing the new prompt (2 new tests under a "Story M.c" heading in `tests/test_render.py`):
+  - [x] `test_plan_tech_spec_mode_prompts_for_project_essentials` — end-to-end render via `CliRunner.isolated_filesystem() + init + mode plan_tech_spec`. Asserts: capture step present and post-approval; at least one concrete worked example visible (`pyve run python` or `poetry run python`); two category names (`Workflow rules`, `Architecture quirks`); the "skip if none" escape hatch; the artifact template path reference; and the heading convention reminder.
+  - [x] `test_plan_tech_spec_metadata_declares_project_essentials_artifact` — loads bundled metadata, gets the `plan_tech_spec` mode, asserts both artifacts are declared and the `project-essentials.md` artifact uses `ActionType.CREATE`. This is the wiring checkpoint that M.d/M.e will deliberately diverge from (they use `modify`).
+- [x] Verify: running `project-guide mode plan_tech_spec` end-to-end on a fixture project includes the essentials prompt — confirmed via the end-to-end test above and by running `pyve run project-guide update && pyve run project-guide mode plan_tech_spec` in this repo. The rendered `go.md` contains the capture step at its expected position (step 5) AND the M.a-injected `## Project Essentials` section at the top, proving the two layers compose correctly.
 
 ### Story M.d: v2.3.3 refactor_plan Refreshes project-essentials.md [Planned]
 
