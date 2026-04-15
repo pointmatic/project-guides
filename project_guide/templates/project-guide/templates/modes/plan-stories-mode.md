@@ -2,8 +2,6 @@ Break the project into an ordered sequence of small, independently completable s
 
 The high-level concept (why) should be captured in `concept.md`. The requirements and behavior (what) should be captured in `features.md`. The implementation details (how) should be written in `tech-spec.md`.
 
-{% include "modes/_header-sequence.md" %}
-
 ## Prerequisites
 
 Before writing stories, the following must be approved:
@@ -66,3 +64,5 @@ Phases may be added, removed, or renamed to fit the project.
 - [ ] Task 2
 - [ ] Task 3
 ```
+
+{% include "modes/_header-sequence.md" %}

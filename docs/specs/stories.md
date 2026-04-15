@@ -369,6 +369,16 @@ Stop LLMs from tacking "commit now or continue?" footers onto approval-gate summ
 - [x] Update pip-installed project-guide package to 2.3.6
 - [x] Bump version to 2.3.7
 
+### Story M.i: v2.3.8 Fix Sequence-Mode "Next Action" Directive Skipping Steps [Done]
+
+LLMs in `plan_stories` (and all sequence modes) were skipping the mode's steps and jumping straight to suggesting a mode switch. Root cause: `_header-sequence.md` rendered a prominent "Next Action: Prompt the user to change modes" directive *before* the Steps section. LLMs treated it as the primary instruction.
+
+- [x] Reword `_header-sequence.md` from "Next Action / Prompt the user to change modes" to "After completing all steps below, prompt the user to change modes"
+- [x] Move `{% include "modes/_header-sequence.md" %}` from top to bottom of all 9 sequence-mode templates: `plan-concept-mode.md`, `plan-features-mode.md`, `plan-tech-spec-mode.md`, `plan-stories-mode.md`, `plan-phase-mode.md`, `archive-stories-mode.md`, `project-scaffold-mode.md`, `document-brand-mode.md`, `document-landing-mode.md`
+- [x] Verify: all 266 tests pass, ruff clean
+- [x] Bump version to 2.3.8
+- [x] Update CHANGELOG.md
+
 ---
 
 ## Future

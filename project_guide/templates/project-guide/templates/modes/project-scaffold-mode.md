@@ -1,7 +1,5 @@
 Scaffold the project foundation: license, copyright headers, package manifest, README with badges, CHANGELOG, and .gitignore. This is a one-time scaffolding step after planning is complete, using decisions made in the concept, features, tech-spec, and stories documents.
 
-{% include "modes/_header-sequence.md" %}
-
 ## Prerequisites
 
 Before starting, the developer must provide (or the LLM must ask for):
@@ -130,3 +128,5 @@ Once approved, proceed to coding:
 ```bash
 project-guide mode {{ next_mode }}
 ```
+
+{% include "modes/_header-sequence.md" %}

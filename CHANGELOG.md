@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.8] - 2026-04-14
+
+### Fixed
+- **Sequence-mode "Next Action" directive caused LLMs to skip steps** (Story M.i) — the `_header-sequence.md` include rendered a prominent "Next Action: Prompt the user to change modes" directive *before* the actual Steps section in all 9 sequence-mode templates. LLMs interpreted this as the primary instruction and jumped straight to suggesting a mode switch, ignoring the mode's steps entirely. Fix is belt-and-suspenders: (1) reworded `_header-sequence.md` from "Next Action / Prompt the user to change modes" to "After completing all steps below, prompt the user to change modes" so the directive is unambiguously post-completion, and (2) moved the `{% include "modes/_header-sequence.md" %}` from the top to the bottom of all 9 sequence-mode templates so the directive structurally appears after the steps.
+
+### Changed
+- **`_header-sequence.md`** — reworded from "Next Action / Prompt the user to change modes" to "After completing all steps below, prompt the user to change modes."
+- **All 9 sequence-mode templates** — moved `{% include "modes/_header-sequence.md" %}` from top (before Prerequisites/Steps) to bottom (after all steps and reference material): `plan-concept-mode.md`, `plan-features-mode.md`, `plan-tech-spec-mode.md`, `plan-stories-mode.md`, `plan-phase-mode.md`, `archive-stories-mode.md`, `project-scaffold-mode.md`, `document-brand-mode.md`, `document-landing-mode.md`.
+
 ## [2.3.7] - 2026-04-14
 
 ### Changed

@@ -2,8 +2,6 @@ Define **what** the project does -- requirements, inputs, outputs, behavior -- w
 
 The high-level concept (why) should be captured in `concept.md`. The implementation details (how) should be written in `tech-spec.md`. The breakdown of the implementation plan (step-by-step tasks) should be written in `stories.md`.
 
-{% include "modes/_header-sequence.md" %}
-
 ## Prerequisites
 
 Before starting, the developer must provide (or the LLM must ask for):
@@ -55,3 +53,5 @@ Description of the feature's purpose.
 - Edge case 1 -> How it's handled
 - Edge case 2 -> How it's handled
 ```
+
+{% include "modes/_header-sequence.md" %}
