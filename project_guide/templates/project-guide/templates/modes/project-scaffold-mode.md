@@ -112,7 +112,14 @@ Create or update `.gitignore` with language-appropriate patterns. Include at min
 - OS-specific files (`.DS_Store`, `Thumbs.db`)
 - Test/coverage output
 
-### 7. Present for Approval
+### 7. Mark Story A.a Done
+
+Read `docs/specs/stories.md` and locate Story A.a.
+
+- If Story A.a is found and represents project scaffolding: mark all its tasks `[x]` and change its status suffix from `[Planned]` to `[Done]`.
+- If Story A.a is not found or does not appear to be a scaffolding story: warn the developer ("Story A.a not found or does not match expected scaffolding content — skipping story update") and continue.
+
+### 8. Present for Approval
 
 Present the scaffolded project to the developer for review:
 

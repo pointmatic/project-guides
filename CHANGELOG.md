@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.9] - 2026-04-14
+
+### Changed
+- **`plan-stories-mode.md`** — Story A.a redefined from "Hello World" to "Project Scaffolding" (executed in `project_scaffold` mode); A.b is now Hello World; A.c is the stack spike. Added rule requiring every versioned story to include `Bump version to vX.Y.Z` and `Update CHANGELOG.md` as closing tasks. Updated Story Format example block and Phase A table to match.
+- **`project-scaffold-mode.md`** — Added Step 7 to mark Story A.a `[Done]` in `stories.md` after scaffolding is complete (warns and continues if A.a is not found).
+
 ## [2.3.8] - 2026-04-14
 
 ### Fixed

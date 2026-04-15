@@ -379,6 +379,27 @@ LLMs in `plan_stories` (and all sequence modes) were skipping the mode's steps a
 - [x] Bump version to 2.3.8
 - [x] Update CHANGELOG.md
 
+### Story M.j: v2.3.9 plan_stories Story Writing Rules — Scaffolding and Version Tasks [Done]
+
+Two gaps in `plan_stories` mode cause LLMs to generate stories that are missing standard tasks and that duplicate `project_scaffold`'s work.
+
+**Gap 1 — Version bump and CHANGELOG tasks omitted from planned stories.** The Story Writing Rules say "version is bumped per story" but never instruct the LLM to include those as checklist tasks. At execution time, `code_velocity` steps 7–8 prompt the bump and changelog update, but they were never in the planned story — so the story checklist is incomplete by design.
+
+**Gap 2 — Story A.a duplicates project_scaffold work.** `plan_stories` defines A.a as "Hello World." In practice, LLMs include scaffolding tasks (manifest, README, headers) in A.a, duplicating what `project_scaffold` mode does. The two modes are unaware of each other. `project_scaffold` has no story to mark done; its work is invisible in the story record.
+
+- [x] Update `project_guide/templates/project-guide/templates/modes/plan-stories-mode.md`:
+  - [x] Add rule under Story Writing Rules: every versioned story must include `- [ ] Bump version to vX.Y.Z` and `- [ ] Update CHANGELOG.md` as the last tasks before any Verify tasks
+  - [x] Update Story Format example block to show these two closing tasks
+  - [x] Change "First story (A.a)" rule: A.a = Project Scaffolding — LICENSE, copyright header, package manifest, README, CHANGELOG, .gitignore. Note it is executed in `project_scaffold` mode, not `code_velocity`.
+  - [x] Change "Second story (A.b)" rule: A.b = Hello World — the smallest runnable artifact proving the environment is wired up (previously A.a)
+  - [x] Retain "Additional spikes" rule: A.c (or the second story of any phase with a major new integration) = end-to-end stack spike (throwaway in `scripts/`)
+  - [x] Update Phase A row in Recommended Phase Progression table to reflect the new A.a/A.b/A.c ordering
+- [x] Update `project_guide/templates/project-guide/templates/modes/project-scaffold-mode.md`:
+  - [x] Add a final step (before "Present for Approval"): read `docs/specs/stories.md` and locate Story A.a. If found and it represents scaffolding, mark all tasks `[x]` and change suffix to `[Done]`. If not found, warn the developer and continue.
+- [x] Verify: run existing tests; confirm no regressions (266 passed, ruff clean)
+- [x] Bump version to 2.3.9
+- [x] Update CHANGELOG.md
+
 ---
 
 ## Future
