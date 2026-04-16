@@ -389,9 +389,11 @@ def test_mode_list_available(runner, tmp_path):
         result = runner.invoke(main, ['mode'])
         assert result.exit_code == 0
         assert "Current mode:" in result.output
-        assert "Available modes:" in result.output
         assert "plan_concept" in result.output
         assert "code_direct" in result.output
+        # Modes are now grouped by category
+        assert "Planning" in result.output
+        assert "Coding" in result.output
 
 
 def test_mode_invalid_name(runner, tmp_path):
@@ -867,6 +869,68 @@ def test_status_stories_verbose_shows_phase_breakdown(runner, tmp_path):
 
 
 # --- End Story N.g -----------------------------------------------------------
+
+
+# --- Story N.h ---------------------------------------------------------------
+
+
+def test_mode_list_marks_available_mode(runner, tmp_path):
+    """Modes with all files_exist present are marked ✓ in the listing."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+        # plan_concept has no files_exist prerequisite, so it's always available
+        result = runner.invoke(main, ['mode'])
+
+        assert result.exit_code == 0
+        assert "✓" in result.output
+
+
+def test_mode_list_marks_unavailable_mode(runner, tmp_path):
+    """Modes with unmet files_exist are marked ✗ in the listing."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+        # code_direct requires docs/specs/stories.md and CHANGELOG.md — not present after bare init
+        result = runner.invoke(main, ['mode'])
+
+        assert result.exit_code == 0
+        assert "✗" in result.output
+
+
+def test_mode_list_non_tty_shows_listing_no_prompt(runner, tmp_path):
+    """Non-TTY CliRunner → annotated listing, no interactive prompt, exit 0."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+        # CliRunner stdin is always non-TTY — should_skip_input auto-fires
+        result = runner.invoke(main, ['mode'])
+
+        assert result.exit_code == 0
+        assert "Current mode:" in result.output
+        # Grouped categories shown
+        assert "Planning" in result.output
+        # No selection prompt emitted
+        assert "Select mode" not in result.output
+
+
+def test_mode_interactive_selection_switches_mode(runner, tmp_path, monkeypatch):
+    """Selecting a valid number in the interactive menu switches the mode."""
+    import project_guide.cli as cli_module
+
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+
+        # Simulate TTY: should_skip_input returns False so the menu fires
+        monkeypatch.setattr(cli_module, 'should_skip_input', lambda *a, **kw: False)
+
+        # The numbered list puts modes in category order. We'll select
+        # whichever number corresponds to 'plan_concept' by looking at output first.
+        # Easier: just feed "1\n" and verify mode switched to whatever is #1.
+        result = runner.invoke(main, ['mode'], input="1\n")
+
+        assert result.exit_code == 0
+        assert "Mode set:" in result.output
+
+
+# --- End Story N.h -----------------------------------------------------------
 
 
 def test_update_with_missing_config(runner, tmp_path):

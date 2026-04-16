@@ -118,7 +118,7 @@ class Config:
                 file_name: override.to_dict()
                 for file_name, override in self.overrides.items()
             }
-            data["overrides"] = overrides_dict  # type: ignore[assignment]
+            data["overrides"] = overrides_dict
 
         config_path = Path(path)
         with open(config_path, "w") as f:

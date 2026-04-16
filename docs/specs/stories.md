@@ -139,25 +139,25 @@ Add a `--quiet` / `-q` flag to suppress per-file progress chatter from `init`, `
 - [x] Bump version to v2.4.6
 - [x] Update CHANGELOG.md
 
-### Story N.h: v2.4.7 Mode Auto-Detection and Interactive Menu [Planned]
+### Story N.h: v2.4.7 Mode Auto-Detection and Interactive Menu [Done]
 
 `project-guide mode` (no argument) becomes useful: it checks prerequisites and — on a TTY — offers a numbered selection menu instead of a plain list.
 
-- [ ] Update the no-argument path of `mode` command to check each mode's `files_exist` list against the current working directory
-  - [ ] Modes with all prerequisites met: marked `✓` (green)
-  - [ ] Modes with unmet prerequisites: listed but dimmed; unmet files noted on `--verbose`
-- [ ] Add interactive menu (TTY only, i.e. `not should_skip_input()`):
-  - [ ] Modes grouped by category: Planning, Coding, Post-Release, Debugging, Documentation, Refactoring
-  - [ ] Numbered selection prompt; on valid selection switch mode + re-render `go.md`
-  - [ ] Invalid input → re-prompt (max 3 attempts then exit 1 with helpful message)
-  - [ ] Under `--no-input` / non-TTY: skip menu, print the `✓`-annotated listing and exit 0
-- [ ] Tests in `tests/test_cli.py`:
-  - [ ] Mode with all `files_exist` files present → marked available in output
-  - [ ] Mode with missing prerequisite → marked unavailable
-  - [ ] Non-TTY `CliRunner` invocation → plain listing rendered, no interactive prompt
-  - [ ] Selecting a valid number switches mode (integration test via `isolated_filesystem`)
-- [ ] Bump version to v2.4.7
-- [ ] Update CHANGELOG.md
+- [x] Update the no-argument path of `mode` command to check each mode's `files_exist` list against the current working directory
+  - [x] Modes with all prerequisites met: marked `✓` (green)
+  - [x] Modes with unmet prerequisites: listed but dimmed; unmet files noted on `--verbose`
+- [x] Add interactive menu (TTY only, i.e. `not should_skip_input()`):
+  - [x] Modes grouped by category: Planning, Coding, Post-Release, Debugging, Documentation, Refactoring
+  - [x] Numbered selection prompt; on valid selection switch mode + re-render `go.md`
+  - [x] Invalid input → re-prompt (max 3 attempts then exit 1 with helpful message)
+  - [x] Under `--no-input` / non-TTY: skip menu, print the `✓`-annotated listing and exit 0
+- [x] Tests in `tests/test_cli.py`:
+  - [x] Mode with all `files_exist` files present → marked available in output
+  - [x] Mode with missing prerequisite → marked unavailable
+  - [x] Non-TTY `CliRunner` invocation → plain listing rendered, no interactive prompt
+  - [x] Selecting a valid number switches mode (integration test via `isolated_filesystem`)
+- [x] Bump version to v2.4.7
+- [x] Update CHANGELOG.md
 
 ### Story N.i: v2.4.8 Per-Project Metadata Overrides [Planned]
 

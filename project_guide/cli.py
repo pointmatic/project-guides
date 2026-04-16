@@ -22,7 +22,7 @@ import click
 from project_guide.actions import ActionType, perform_archive
 from project_guide.config import Config
 from project_guide.exceptions import ActionError, ConfigError, MetadataError, RenderError, SyncError
-from project_guide.metadata import load_metadata
+from project_guide.metadata import ModeDefinition, load_metadata
 from project_guide.render import render_go_project_guide
 from project_guide.runtime import _resolve_setting, should_skip_input
 from project_guide.stories import _read_stories_summary
@@ -213,6 +213,126 @@ def _ensure_gitignore_entry(target_dir: str) -> None:
         gitignore_path.write_text(lines)
 
 
+_MODE_CATEGORIES: dict[str, str] = {
+    "default": "Getting Started",
+    "plan_concept": "Planning",
+    "plan_features": "Planning",
+    "plan_tech_spec": "Planning",
+    "plan_stories": "Planning",
+    "archive_stories": "Post-Release",
+    "plan_phase": "Post-Release",
+    "scaffold_project": "Scaffold",
+    "document_brand": "Documentation",
+    "document_landing": "Documentation",
+    "code_direct": "Coding",
+    "code_test_first": "Coding",
+    "debug": "Debugging",
+    "refactor_plan": "Refactoring",
+    "refactor_document": "Refactoring",
+}
+
+_CATEGORY_ORDER = [
+    "Getting Started",
+    "Planning",
+    "Coding",
+    "Post-Release",
+    "Scaffold",
+    "Documentation",
+    "Debugging",
+    "Refactoring",
+    "Other",
+]
+
+
+def _mode_category(mode_name: str) -> str:
+    return _MODE_CATEGORIES.get(mode_name, "Other")
+
+
+def _print_mode_listing(
+    modes: list[ModeDefinition], current_mode: str, verbose: bool, numbered: bool
+) -> list[ModeDefinition]:
+    """Print grouped, annotated mode listing.
+
+    Each mode is marked with → (current), ✓ (prerequisites met), or ✗ (unmet).
+    When ``numbered`` is True, a selection number is shown beside each entry.
+    Returns the flat ordered list of modes for menu indexing.
+    """
+    groups: dict[str, list] = {}
+    for m in modes:
+        groups.setdefault(_mode_category(m.name), []).append(m)
+
+    flat: list = []
+    for cat in _CATEGORY_ORDER:
+        if cat not in groups:
+            continue
+        click.secho(f"  {cat}", bold=True)
+        for m in groups[cat]:
+            flat.append(m)
+            n = len(flat)
+
+            missing = [f for f in m.files_exist if not Path(f).exists()]
+            available = len(missing) == 0
+
+            if m.name == current_mode:
+                marker = click.style("→", fg='cyan', bold=True)
+            elif available:
+                marker = click.style("✓", fg='green')
+            else:
+                marker = click.style("✗", fg='yellow')
+
+            num_str = f"{n:2}  " if numbered else "    "
+            name_part = click.style(f"{m.name:25}", dim=(not available and m.name != current_mode))
+            info_part = click.style(m.info, dim=True)
+            click.echo(f"  {marker} {num_str}{name_part}  {info_part}")
+
+            if verbose and missing:
+                for f in missing:
+                    click.secho(f"              ✗ {f}", fg='yellow', dim=True)
+        click.echo()
+
+    return flat
+
+
+def _prompt_mode_selection(flat_modes: list[ModeDefinition], max_attempts: int = 3) -> str | None:
+    """Prompt the user to select a mode by number.
+
+    Returns the chosen mode name, or None if the user cancelled (empty input).
+    Exits with code 1 after ``max_attempts`` invalid entries.
+    """
+    max_n = len(flat_modes)
+    for attempt in range(max_attempts):
+        try:
+            raw = click.prompt(
+                f"Select mode [1-{max_n}, Enter to cancel]",
+                default="",
+                show_default=False,
+                prompt_suffix=": ",
+            )
+        except (click.Abort, EOFError):
+            return None
+
+        if not raw.strip():
+            return None
+
+        try:
+            selection = int(raw.strip())
+            if 1 <= selection <= max_n:
+                return flat_modes[selection - 1].name
+        except ValueError:
+            pass
+
+        remaining = max_attempts - attempt - 1
+        if remaining > 0:
+            click.secho(
+                f"  Invalid selection. Enter a number 1–{max_n}, or press Enter to cancel."
+                f" ({remaining} attempt{'s' if remaining != 1 else ''} remaining)",
+                fg='yellow',
+            )
+
+    click.secho("Too many invalid attempts.", fg='red', err=True)
+    sys.exit(1)
+
+
 def _complete_mode_names(ctx, param, incomplete):
     """Shell completion for mode names. Reads metadata at completion time.
 
@@ -232,7 +352,13 @@ def _complete_mode_names(ctx, param, incomplete):
 
 @main.command(name="mode")
 @click.argument("mode_name", required=False, shell_complete=_complete_mode_names)
-def set_mode(mode_name: str | None):
+@click.option('--verbose', '-v', is_flag=True, help='Show unmet prerequisite files for each mode.')
+@click.option(
+    '--no-input', 'no_input',
+    is_flag=True, default=False,
+    help='Skip interactive menu; print annotated list and exit. (Also auto-enabled by CI=1 or non-TTY stdin.)',
+)
+def set_mode(mode_name: str | None, verbose: bool, no_input: bool):
     """Set or show the active development mode."""
     config_path = Path(".project-guide.yml")
 
@@ -258,15 +384,26 @@ def set_mode(mode_name: str | None):
         click.secho(f"Error: {e}", fg='red', err=True)
         sys.exit(3)
 
-    # No argument: show current mode and list available modes
+    # No argument: show annotated listing; offer interactive menu on TTY
     if not mode_name:
+        skip_input = should_skip_input(no_input)
+
         click.echo(f"Current mode: {config.current_mode}")
         click.echo()
-        click.echo("Available modes:")
-        for m in metadata.modes:
-            marker = "→" if m.name == config.current_mode else " "
-            click.echo(f"  {marker} {m.name:25} {m.info}")
-        return
+        flat = _print_mode_listing(
+            metadata.modes,
+            current_mode=config.current_mode,
+            verbose=verbose,
+            numbered=not skip_input,
+        )
+
+        if skip_input:
+            return  # non-interactive: listing only, exit 0
+
+        # Interactive menu
+        mode_name = _prompt_mode_selection(flat)
+        if mode_name is None:
+            return  # user cancelled
 
     # Validate mode name
     try:

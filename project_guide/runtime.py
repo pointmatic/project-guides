@@ -116,7 +116,7 @@ def _resolve_setting(
     if config is not None:
         config_val = getattr(config, config_key, None)
         if config_val is not None:
-            return config_val
+            return config_val  # type: ignore[no-any-return]
 
     # 4. Default
     return default

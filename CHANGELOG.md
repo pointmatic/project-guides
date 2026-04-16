@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.7] - 2026-04-15
+
+### Added
+- **`project-guide mode` (no argument) now shows a prerequisite-annotated listing** — each mode is marked `→` (current), `✓` (all prerequisites met), or `✗` (unmet prerequisites, dimmed). Modes are grouped by category: Getting Started, Planning, Coding, Post-Release, Scaffold, Documentation, Debugging, Refactoring.
+- **Interactive numbered menu on TTY** — on a real terminal, `project-guide mode` prompts for a selection number. Valid input switches mode + re-renders `go.md`; empty input cancels. Up to 3 attempts before exit 1. Under `--no-input`, `CI=1`, or non-TTY stdin, only the annotated listing is shown (exit 0).
+- **`--verbose / -v` on `mode`** — shows unmet prerequisite file paths beneath each `✗` entry.
+- **`--no-input` on `mode`** — skips the interactive menu and exits after printing the listing.
+
 ## [2.4.6] - 2026-04-15
 
 ### Added
