@@ -777,6 +777,98 @@ def test_status_with_modified_file(runner, tmp_path):
         assert "need updating" in result.output
 
 
+# --- Story N.g ---------------------------------------------------------------
+
+
+def test_status_stories_section_shows_counts(runner, tmp_path):
+    """status with populated stories.md shows correct total/done/planned counts."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+        Path("docs/specs").mkdir(parents=True, exist_ok=True)
+        Path("docs/specs/stories.md").write_text(
+            "### Story A.a: v0.1.0 Hello World [Done]\n"
+            "### Story A.b: v0.2.0 Second Story [Planned]\n"
+            "### Story A.c: v0.3.0 Third Story [Planned]\n"
+        )
+
+        result = runner.invoke(main, ['status'])
+
+        assert result.exit_code == 0
+        assert "Stories:" in result.output
+        assert "3 total" in result.output
+        assert "1 done" in result.output
+        assert "2 planned" in result.output
+        assert "0 in progress" in result.output
+        assert "Story A.b: v0.2.0 Second Story" in result.output
+
+
+def test_status_stories_all_done(runner, tmp_path):
+    """status with all-Done stories shows 0 planned, 0 in progress."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+        Path("docs/specs").mkdir(parents=True, exist_ok=True)
+        Path("docs/specs/stories.md").write_text(
+            "### Story A.a: v0.1.0 Hello World [Done]\n"
+            "### Story A.b: v0.2.0 Another Done [Done]\n"
+        )
+
+        result = runner.invoke(main, ['status'])
+
+        assert result.exit_code == 0
+        assert "2 done" in result.output
+        assert "0 planned" in result.output
+        assert "0 in progress" in result.output
+
+
+def test_status_stories_section_omitted_when_no_file(runner, tmp_path):
+    """status omits the Stories section when stories.md is absent."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+        # docs/specs/stories.md does not exist
+
+        result = runner.invoke(main, ['status'])
+
+        assert result.exit_code == 0
+        assert "Stories:" not in result.output
+
+
+def test_status_stories_section_omitted_when_empty(runner, tmp_path):
+    """status omits Stories section when stories.md has no story headings."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+        Path("docs/specs").mkdir(parents=True, exist_ok=True)
+        Path("docs/specs/stories.md").write_text(
+            "# stories.md\n\nNo stories yet.\n\n## Future\n\nSome future items.\n"
+        )
+
+        result = runner.invoke(main, ['status'])
+
+        assert result.exit_code == 0
+        assert "Stories:" not in result.output
+
+
+def test_status_stories_verbose_shows_phase_breakdown(runner, tmp_path):
+    """status --verbose shows per-phase line when stories.md is present."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        runner.invoke(main, ['init'])
+        Path("docs/specs").mkdir(parents=True, exist_ok=True)
+        Path("docs/specs/stories.md").write_text(
+            "## Phase A: Alpha Phase (v0.1.0)\n\n"
+            "### Story A.a: v0.1.0 Hello World [Done]\n"
+            "### Story A.b: v0.2.0 Second Story [Planned]\n"
+        )
+
+        result = runner.invoke(main, ['status', '--verbose'])
+
+        assert result.exit_code == 0
+        assert "Phase A:" in result.output
+        assert "Alpha Phase" in result.output
+        assert "1/2 done" in result.output
+
+
+# --- End Story N.g -----------------------------------------------------------
+
+
 def test_update_with_missing_config(runner, tmp_path):
     """Test update with no config file exits with code 1."""
     with runner.isolated_filesystem(temp_dir=tmp_path):

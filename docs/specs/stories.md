@@ -115,29 +115,29 @@ Add a `--quiet` / `-q` flag to suppress per-file progress chatter from `init`, `
 - [x] Bump version to v2.4.5
 - [x] Update CHANGELOG.md
 
-### Story N.g: v2.4.6 Story Detection in status [Planned]
+### Story N.g: v2.4.6 Story Detection in status [Done]
 
 `project-guide status` gains a **Stories** section showing backlog counts and the next unstarted story — giving the developer an at-a-glance view of progress without opening `stories.md`.
 
-- [ ] Add `_read_stories_summary(spec_artifacts_path: str) -> StoriesSummary | None` helper (new `project_guide/stories.py` or inline in `cli.py`)
-  - [ ] Reads `<spec_artifacts_path>/stories.md` via regex; returns `None` if absent or has no story headings
-  - [ ] Counts: total stories, `[Done]`, `[In Progress]`, `[Planned]`
-  - [ ] Identifies the first non-Done story for the "Next:" line
-- [ ] Update `status` output to include a **Stories** section when data is available:
+- [x] Add `_read_stories_summary(spec_artifacts_path: str) -> StoriesSummary | None` helper (new `project_guide/stories.py` or inline in `cli.py`)
+  - [x] Reads `<spec_artifacts_path>/stories.md` via regex; returns `None` if absent or has no story headings
+  - [x] Counts: total stories, `[Done]`, `[In Progress]`, `[Planned]`
+  - [x] Identifies the first non-Done story for the "Next:" line
+- [x] Update `status` output to include a **Stories** section when data is available:
   ```
   Stories: 13 total — 0 done, 0 in progress, 13 planned
     Next: Story N.a: v2.4.0 Rename code_velocity → code_direct
   ```
-- [ ] `--verbose` shows per-phase breakdown (phase letter, phase name, done/total count per phase)
-- [ ] Section omitted entirely when `stories.md` is absent, empty, or post-archive (no story headings)
-- [ ] Tests in `tests/test_cli.py`:
-  - [ ] Status with populated stories.md shows correct counts
-  - [ ] Status with all-Done stories shows `0 planned, 0 in progress`
-  - [ ] Status with no stories.md omits the section
-  - [ ] Status with empty post-archive stories.md omits the section
-  - [ ] `--verbose` shows per-phase line
-- [ ] Bump version to v2.4.6
-- [ ] Update CHANGELOG.md
+- [x] `--verbose` shows per-phase breakdown (phase letter, phase name, done/total count per phase)
+- [x] Section omitted entirely when `stories.md` is absent, empty, or post-archive (no story headings)
+- [x] Tests in `tests/test_cli.py`:
+  - [x] Status with populated stories.md shows correct counts
+  - [x] Status with all-Done stories shows `0 planned, 0 in progress`
+  - [x] Status with no stories.md omits the section
+  - [x] Status with empty post-archive stories.md omits the section
+  - [x] `--verbose` shows per-phase line
+- [x] Bump version to v2.4.6
+- [x] Update CHANGELOG.md
 
 ### Story N.h: v2.4.7 Mode Auto-Detection and Interactive Menu [Planned]
 

@@ -25,6 +25,7 @@ from project_guide.exceptions import ActionError, ConfigError, MetadataError, Re
 from project_guide.metadata import load_metadata
 from project_guide.render import render_go_project_guide
 from project_guide.runtime import _resolve_setting, should_skip_input
+from project_guide.stories import _read_stories_summary
 from project_guide.sync import (
     file_matches_template,
     get_all_file_names,
@@ -444,8 +445,10 @@ def status(verbose):
     # --- Mode section ---
     click.echo()
     metadata_path = target_dir / config.metadata_file
+    spec_artifacts_path = "docs/specs"  # default; overridden by metadata if available
     try:
         metadata = load_metadata(metadata_path)
+        spec_artifacts_path = metadata.common.get('spec_artifacts_path', spec_artifacts_path)
         mode = metadata.get_mode(config.current_mode)
         click.echo(
             click.style("Mode: ", bold=True)
@@ -477,6 +480,27 @@ def status(verbose):
         + click.style(guide_path, fg='cyan')
     )
     click.secho(f"  Tell your LLM: Read {guide_path}", dim=True)
+
+    # --- Stories section ---
+    stories = _read_stories_summary(spec_artifacts_path)
+    if stories is not None:
+        click.echo()
+        summary_line = (
+            f"{stories.total} total"
+            f" — {stories.done} done"
+            f", {stories.in_progress} in progress"
+            f", {stories.planned} planned"
+        )
+        click.echo(click.style("Stories: ", bold=True) + summary_line)
+        if stories.next_story:
+            click.secho(f"  Next: {stories.next_story}", dim=True)
+        if verbose and stories.phases:
+            for phase in stories.phases:
+                click.secho(
+                    f"  Phase {phase.letter}: {phase.name}"
+                    f"  ({phase.done}/{phase.total} done)",
+                    dim=True,
+                )
 
     # --- Files section ---
     click.echo()

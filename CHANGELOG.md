@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.6] - 2026-04-15
+
+### Added
+- **Stories section in `project-guide status`** — shows total/done/in-progress/planned counts and the next unstarted story, parsed from `<spec_artifacts_path>/stories.md` via `project_guide/stories.py`. Section is omitted when the file is absent or contains no story headings (e.g. post-archive). `--verbose` adds a per-phase breakdown.
+
 ## [2.4.5] - 2026-04-15
 
 ### Added
