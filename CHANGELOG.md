@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-04-15
+
+### Changed
+- **`project-scaffold-mode.md` → `scaffold-project-mode.md`** — Renamed mode template file; mode key updated from `project_scaffold` to `scaffold_project` in `.metadata.yml`. `scaffold_project` follows the `<verb>_<noun>` convention established by every other mode.
+- **Cross-references updated** — `default-mode.md`, `plan-stories-mode.md`, `docs/specs/features.md`, `docs/site/user-guide/modes.md`, `docs/site/user-guide/workflow.md`, `README.md`.
+
 ## [2.4.0] - 2026-04-15
 
 ### Changed

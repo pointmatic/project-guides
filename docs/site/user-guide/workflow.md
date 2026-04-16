@@ -22,7 +22,7 @@ For step-by-step setup instructions, see [Getting Started](../getting-started.md
 
 ### Get in the Mode
 Decide the style of development.
-- **Go**: Get coding now (change mode to `code_velocity` or `code_test_first`)
+- **Go**: Get coding now (change mode to `code_direct` or `code_test_first`)
 - **Ready-Set-Go**: Plan the concept, features, and tech-spec, scaffold the project, then start coding.
 
 ### Modes
@@ -32,9 +32,9 @@ There are several kinds of modes to choose from. See details in [Modes](modes.md
 - **Default**: There are some basic instructions for the LLM to follow. Switch to a more specific mode to take advantage of `project-guide`.
 - **First Time**: Use when you're starting a new project or adding `project-guide` to an existing project.
   - **Plan**: `plan_concept` –> `plan_features` –> `plan_tech_spec` –> `plan_stories`
-  - **Scaffold**: (new project only) `project_scaffold`
+  - **Scaffold**: (new project only) `scaffold_project`
 - **Build**: Work from a list of stories in `docs/project-guide/stories.md`.
-  - **Code**: Either `code_velocity` or `code_test_first`
+  - **Code**: Either `code_direct` or `code_test_first`
   - **Review**: Monitor the output as the LLM works, then look over the results and provide feedback.
   - **Repeat**: Continue cycling through code and review until the build is complete.
 - **Targeted Development**: Work from a specific story in `docs/project-guide/stories.md`.
@@ -67,7 +67,7 @@ Mode switching is the core of the workflow. Common transitions:
 
 | Situation | Switch to |
 |-----------|-----------|
-| Finished planning, ready to build | `code_velocity` or `code_test_first` |
+| Finished planning, ready to build | `code_direct` or `code_test_first` |
 | Bug discovered during build | `debug` |
 | All stories `[Done]`, want a clean slate before next phase | `archive_stories` |
 | New feature phase needed | `plan_phase` |

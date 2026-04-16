@@ -31,19 +31,19 @@ Clear the accumulated deferred backlog from Phases J–M in four clusters: (1) m
 - [x] Bump version to v2.4.0
 - [x] Update CHANGELOG.md
 
-### Story N.b: v2.4.1 Rename project_scaffold → scaffold_project [Planned]
+### Story N.b: v2.4.1 Rename project_scaffold → scaffold_project [Done]
 
 `project_scaffold` is the only mode that does not start with a verb. `scaffold_project` follows the `<verb>_<noun>` convention established by every other mode.
 
-- [ ] Rename `project_guide/templates/project-guide/templates/modes/project-scaffold-mode.md` → `scaffold-project-mode.md`
-- [ ] Update `.metadata.yml`: mode key `project_scaffold` → `scaffold_project`; `mode_template` path updated
-- [ ] Update all cross-references in mode templates: `default-mode.md`, `plan-stories-mode.md` (Story A.a scaffolding rule added in M.j references `project_scaffold` mode — update to `scaffold_project`)
-- [ ] Update `README.md`, `docs/site/user-guide/modes.md`, `docs/specs/features.md` (non-goals section and FR-1 modes table)
-- [ ] Update any hardcoded `project_scaffold` strings in test files
-- [ ] Run `pyve run project-guide update && pyve run project-guide mode scaffold_project` — verify renders correctly
-- [ ] Verify: `test_every_mode_renders_successfully` passes; parametrized approval-gate test passes
-- [ ] Bump version to v2.4.1
-- [ ] Update CHANGELOG.md
+- [x] Rename `project_guide/templates/project-guide/templates/modes/project-scaffold-mode.md` → `scaffold-project-mode.md`
+- [x] Update `.metadata.yml`: mode key `project_scaffold` → `scaffold_project`; `mode_template` path updated
+- [x] Update all cross-references in mode templates: `default-mode.md`, `plan-stories-mode.md` (Story A.a scaffolding rule added in M.j references `project_scaffold` mode — update to `scaffold_project`)
+- [x] Update `README.md`, `docs/site/user-guide/modes.md`, `docs/specs/features.md` (non-goals section and FR-1 modes table)
+- [x] Update any hardcoded `project_scaffold` strings in test files
+- [x] Run `pyve run project-guide update && pyve run project-guide mode scaffold_project` — verify renders correctly
+- [x] Verify: `test_every_mode_renders_successfully` passes; parametrized approval-gate test passes
+- [x] Bump version to v2.4.1
+- [x] Update CHANGELOG.md
 
 ### Story N.c: v2.4.2 Config-File Fallback — _resolve_setting Helper [Planned]
 

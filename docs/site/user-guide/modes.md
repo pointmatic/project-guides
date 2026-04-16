@@ -86,7 +86,7 @@ project-guide mode plan_tech_spec
 | Field | Value |
 |-|-|
 | **Type** | Sequence |
-| **Next** | `project_scaffold` |
+| **Next** | `scaffold_project` |
 | **Artifact** | `docs/specs/stories.md` |
 | **Prerequisites** | `concept.md`, `features.md`, `tech-spec.md` |
 
@@ -143,7 +143,7 @@ project-guide archive-stories  # after developer approval
 
 ### Scaffold Mode
 
-#### project_scaffold
+#### scaffold_project
 
 | Field | Value |
 |-|-|
@@ -154,7 +154,7 @@ project-guide archive-stories  # after developer approval
 One-time project scaffolding after planning is complete. Creates LICENSE, copyright headers, package manifest, README with badges, CHANGELOG, and `.gitignore` based on decisions made during planning.
 
 ```bash
-project-guide mode project_scaffold
+project-guide mode scaffold_project
 ```
 
 ---
@@ -283,7 +283,7 @@ default
         └─> plan_features
               └─> plan_tech_spec
                     └─> plan_stories
-                          └─> project_scaffold
+                          └─> scaffold_project
                                 └─> code_direct (cycle)
 ```
 

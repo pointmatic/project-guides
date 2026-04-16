@@ -106,7 +106,7 @@ project-guide mode plan_features     # Define requirements
 project-guide mode plan_tech_spec    # Define architecture
 project-guide mode plan_stories      # Break into stories
 project-guide mode plan_phase        # Add a new phase to stories
-project-guide mode project_scaffold  # Scaffold license, manifest, README, CHANGELOG
+project-guide mode scaffold_project  # Scaffold license, manifest, README, CHANGELOG
 project-guide mode code_direct       # Implement stories fast
 project-guide mode code_test_first   # TDD red-green-refactor
 project-guide mode debug             # Debug with test-first approach

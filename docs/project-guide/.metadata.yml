@@ -64,7 +64,7 @@ modes:
     sequence_or_cycle: sequence
     generation_type: document
     mode_template: "{{mode_templates_path}}/plan-stories-mode.md"
-    next_mode: project_scaffold
+    next_mode: scaffold_project
     artifacts:
       - file: "{{spec_artifacts_path}}/stories.md"
         action: create
@@ -106,12 +106,12 @@ modes:
       - "{{spec_artifacts_path}}/stories.md"
 
   # Scaffold
-  - name: project_scaffold
+  - name: scaffold_project
     info: Scaffold the project foundation (LICENSE, headers, manifest, README, CHANGELOG)
     description: One-time project scaffolding after planning. Creates license, copyright headers, package manifest, README with badges, CHANGELOG, and .gitignore based on decisions made during planning.
     sequence_or_cycle: sequence
     generation_type: document
-    mode_template: "{{mode_templates_path}}/project-scaffold-mode.md"
+    mode_template: "{{mode_templates_path}}/scaffold-project-mode.md"
     next_mode: "{{default_code_mode}}"
     files_exist:
       - "{{spec_artifacts_path}}/concept.md"
@@ -162,7 +162,7 @@ modes:
       - "{{root_artifacts_path}}/CHANGELOG.md"
   - name: code_test_first
     info: Generate code with a test-first approach
-    description: Implement stories using test-driven development (TDD). For each task: write a failing test, confirm red, write minimal implementation, confirm green, refactor. Best for complex logic where correctness is critical and tests can capture intent precisely.
+    description: "Implement stories using test-driven development (TDD). For each task: write a failing test, confirm red, write minimal implementation, confirm green, refactor. Best for complex logic where correctness is critical and tests can capture intent precisely."
     sequence_or_cycle: cycle
     generation_type: code
     mode_template: "{{mode_templates_path}}/code-test-first-mode.md"

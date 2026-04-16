@@ -10,7 +10,7 @@ This is the default mode for new projects. It provides an overview of the full p
 | 2 | `plan_features` | Define requirements, inputs, outputs, behavior |
 | 3 | `plan_tech_spec` | Define architecture, modules, dependencies |
 | 4 | `plan_stories` | Break into phases and stories with checklists |
-| 5 | `project_scaffold` | Scaffold LICENSE, headers, manifest, README, CHANGELOG, .gitignore |
+| 5 | `scaffold_project` | Scaffold LICENSE, headers, manifest, README, CHANGELOG, .gitignore |
 | 6 | `code_direct` | Implement stories with fast iteration |
 
 ## Get Started
@@ -73,7 +73,7 @@ This is a fresh project. Direct the developer to `project-guide mode plan_concep
 ### Scaffold (sequence)
 | Mode | Command | Purpose |
 |------|---------|---------|
-| **Project Scaffold** | `project-guide mode project_scaffold` | One-time project scaffolding |
+| **Project Scaffold** | `project-guide mode scaffold_project` | One-time project scaffolding |
 
 ### Coding (cycle)
 | Mode | Command | Workflow |
