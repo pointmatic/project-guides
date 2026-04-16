@@ -45,21 +45,21 @@ Clear the accumulated deferred backlog from Phases J–M in four clusters: (1) m
 - [x] Bump version to v2.4.1
 - [x] Update CHANGELOG.md
 
-### Story N.c: v2.4.2 Config-File Fallback — _resolve_setting Helper [Planned]
+### Story N.c: v2.4.2 Config-File Fallback — _resolve_setting Helper [Done]
 
 Implement the documented resolution chain (CLI flag → env var → `.project-guide.yml` key → default) as a reusable helper in `runtime.py`. Required before N.d (`--test-first`) and any future prompt that has a settable default.
 
-- [ ] Add `_resolve_setting(name, cli_value, env_var, config_key, config, default)` to `project_guide/runtime.py`
-  - [ ] Resolution chain (first match wins): CLI value (if not `None`) → env var (truthy string via `_TRUTHY_ENV_VALUES` for bools; raw string for str settings) → config key (from loaded `Config` dict) → default
-  - [ ] Handles both `bool` and `str` return types; type is inferred from `default`
-- [ ] Tests in `tests/test_runtime.py` (new "Story N.c" section):
-  - [ ] CLI value wins over env, env wins over config, config wins over default (priority-order parametrized test)
-  - [ ] Full fallback chain: CLI=None, env unset, config key absent → default returned
-  - [ ] Bool resolution: truthy env values (`"1"`, `"true"`, `"yes"`, `"on"`) → `True`; falsy → `False`
-  - [ ] String resolution: env var returned as-is; config key returned as-is
-  - [ ] Contract test: function signature and return type are stable (guards against future signature drift)
-- [ ] Bump version to v2.4.2
-- [ ] Update CHANGELOG.md
+- [x] Add `_resolve_setting(name, cli_value, env_var, config_key, config, default)` to `project_guide/runtime.py`
+  - [x] Resolution chain (first match wins): CLI value (if not `None`) → env var (truthy string via `_TRUTHY_ENV_VALUES` for bools; raw string for str settings) → config key (from loaded `Config` dict) → default
+  - [x] Handles both `bool` and `str` return types; type is inferred from `default`
+- [x] Tests in `tests/test_runtime.py` (new "Story N.c" section):
+  - [x] CLI value wins over env, env wins over config, config wins over default (priority-order parametrized test)
+  - [x] Full fallback chain: CLI=None, env unset, config key absent → default returned
+  - [x] Bool resolution: truthy env values (`"1"`, `"true"`, `"yes"`, `"on"`) → `True`; falsy → `False`
+  - [x] String resolution: env var returned as-is; config key returned as-is
+  - [x] Contract test: function signature and return type are stable (guards against future signature drift)
+- [x] Bump version to v2.4.2
+- [x] Update CHANGELOG.md
 
 ### Story N.d: v2.4.3 --test-first Flag on init [Planned]
 

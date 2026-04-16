@@ -14,12 +14,14 @@
 
 """Tests for project_guide.runtime — should_skip_input and _require_setting."""
 
+import inspect
 import io
+import types
 
 import click
 import pytest
 
-from project_guide.runtime import _require_setting, should_skip_input
+from project_guide.runtime import _require_setting, _resolve_setting, should_skip_input
 
 
 @pytest.fixture
@@ -195,3 +197,100 @@ def test_require_setting_message_format():
         "project name is required when --no-input is active. "
         "Provide via --project-name or PROJECT_GUIDE_PROJECT_NAME."
     )
+
+
+# ---------------------------------------------------------------------------
+# Story N.c — _resolve_setting
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def clean_resolve_env(monkeypatch):
+    """Remove the test env var used by _resolve_setting tests."""
+    monkeypatch.delenv("PG_TEST_SETTING", raising=False)
+    return monkeypatch
+
+
+def _cfg(key: str, value: object) -> object:
+    """Return a SimpleNamespace acting as a Config with one attribute set."""
+    return types.SimpleNamespace(**{key: value})
+
+
+# --- Priority order ---------------------------------------------------------
+
+
+@pytest.mark.parametrize("cli_val,env_val,cfg_val,expected", [
+    (True,  "0",   False, True),   # CLI wins over env and config
+    (None,  "1",   False, True),   # env wins over config (bool True)
+    (None,  None,  True,  True),   # config wins over default (bool True)
+    (None,  None,  None,  False),  # falls through to default (False)
+])
+def test_resolve_setting_bool_priority(clean_resolve_env, monkeypatch, cli_val, env_val, cfg_val, expected):
+    """Priority chain: CLI > env > config > default for bool settings."""
+    if env_val is not None:
+        monkeypatch.setenv("PG_TEST_SETTING", env_val)
+    config = _cfg("test_key", cfg_val) if cfg_val is not None else None
+    result = _resolve_setting("test", cli_val, "PG_TEST_SETTING", "test_key", config, False)
+    assert result is expected
+
+
+# --- Full fallback chain ----------------------------------------------------
+
+
+def test_resolve_setting_full_fallback_returns_default_bool(clean_resolve_env):
+    """CLI=None, env unset, config key absent → bool default returned."""
+    result = _resolve_setting("test", None, "PG_TEST_SETTING", "missing_key", None, False)
+    assert result is False
+
+
+def test_resolve_setting_full_fallback_returns_default_str(clean_resolve_env):
+    """CLI=None, env unset, config key absent → str default returned."""
+    result = _resolve_setting("test", None, "PG_TEST_SETTING", "missing_key", None, "default-val")
+    assert result == "default-val"
+
+
+# --- Bool env-var resolution ------------------------------------------------
+
+
+@pytest.mark.parametrize("raw", ["1", "true", "yes", "on", "TRUE", "YES", "ON"])
+def test_resolve_setting_truthy_env_returns_true(clean_resolve_env, monkeypatch, raw):
+    """Recognised truthy strings → True for bool settings."""
+    monkeypatch.setenv("PG_TEST_SETTING", raw)
+    result = _resolve_setting("test", None, "PG_TEST_SETTING", "k", None, False)
+    assert result is True
+
+
+@pytest.mark.parametrize("raw", ["0", "false", "no", "off", ""])
+def test_resolve_setting_falsy_env_returns_false(clean_resolve_env, monkeypatch, raw):
+    """Unrecognised strings → False for bool settings."""
+    monkeypatch.setenv("PG_TEST_SETTING", raw)
+    result = _resolve_setting("test", None, "PG_TEST_SETTING", "k", None, False)
+    assert result is False
+
+
+# --- String resolution ------------------------------------------------------
+
+
+def test_resolve_setting_env_returned_as_is_for_str(clean_resolve_env, monkeypatch):
+    """For str settings, the env var value is returned raw."""
+    monkeypatch.setenv("PG_TEST_SETTING", "my-project")
+    result = _resolve_setting("test", None, "PG_TEST_SETTING", "k", None, "")
+    assert result == "my-project"
+
+
+def test_resolve_setting_config_key_returned_as_is_for_str(clean_resolve_env):
+    """For str settings, the config value is returned raw."""
+    config = _cfg("proj_name", "my-project")
+    result = _resolve_setting("test", None, "PG_TEST_SETTING", "proj_name", config, "")
+    assert result == "my-project"
+
+
+# --- Contract test ----------------------------------------------------------
+
+
+def test_resolve_setting_contract():
+    """Function signature is stable — guards against accidental drift."""
+    sig = inspect.signature(_resolve_setting)
+    params = list(sig.parameters.keys())
+    assert params == ["name", "cli_value", "env_var", "config_key", "config", "default"]
+    # Return annotation exists and is a union type
+    assert sig.return_annotation is not inspect.Parameter.empty

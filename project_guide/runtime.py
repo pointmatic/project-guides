@@ -77,6 +77,51 @@ def should_skip_input(flag: bool = False) -> bool:
     return _stdin_is_non_tty()
 
 
+def _resolve_setting(
+    name: str,
+    cli_value: bool | str | None,
+    env_var: str,
+    config_key: str,
+    config: object | None,
+    default: bool | str,
+) -> bool | str:
+    """Resolve a setting via the documented four-level priority chain.
+
+    Priority (first match wins):
+
+    1. ``cli_value`` — the value passed via CLI flag (skipped when ``None``).
+    2. ``env_var`` — environment variable name; for bool settings, matched
+       case-insensitively against ``_TRUTHY_ENV_VALUES``; for str settings,
+       returned as-is.
+    3. ``config_key`` — attribute name on the ``config`` object (typically a
+       loaded :class:`Config` instance).  Skipped when ``config`` is ``None``
+       or the attribute is absent.
+    4. ``default`` — the fallback value; also determines the return type
+       (``bool`` when ``isinstance(default, bool)``, ``str`` otherwise).
+    """
+    is_bool = isinstance(default, bool)
+
+    # 1. CLI value
+    if cli_value is not None:
+        return cli_value
+
+    # 2. Env var
+    raw_env = os.environ.get(env_var)
+    if raw_env is not None:
+        if is_bool:
+            return raw_env.strip().lower() in _TRUTHY_ENV_VALUES
+        return raw_env
+
+    # 3. Config key
+    if config is not None:
+        config_val = getattr(config, config_key, None)
+        if config_val is not None:
+            return config_val
+
+    # 4. Default
+    return default
+
+
 def _require_setting(name: str, cli_flag: str, env_var: str) -> None:
     """Abort with exit 1 when a required setting has no value under --no-input.
 

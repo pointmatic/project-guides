@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.2] - 2026-04-15
+
+### Added
+- **`_resolve_setting` helper in `runtime.py`** — reusable four-level resolution chain (CLI flag → env var → config key → default). Type is inferred from `default`: bool settings use `_TRUTHY_ENV_VALUES` for env-var matching; str settings are returned as-is. Required foundation for `--test-first` (N.d) and any future settable prompt.
+- **Tests in `tests/test_runtime.py`** — priority-order parametrized tests, full fallback chain, bool/str env resolution, and a contract test pinning the function signature.
+
 ## [2.4.1] - 2026-04-15
 
 ### Changed
