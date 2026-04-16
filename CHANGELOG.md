@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.3] - 2026-04-15
+
+### Added
+- **`--test-first` flag on `init`** — persists `test_first: bool` to `.project-guide.yml`. Resolved via `_resolve_setting` (CLI flag → `PROJECT_GUIDE_TEST_FIRST` env var → default `false`).
+- **`test_first` Jinja2 context variable** — passed to all `render_go_project_guide` calls from `cli.py`. Planning modes that suggest a next coding step now use `{% if test_first %}code_test_first{% else %}code_direct{% endif %}`: `default-mode.md`, `plan-stories-mode.md`, `plan-phase-mode.md`.
+- **`Config.test_first: bool`** — new field with load/save round-trip.
+
+### Fixed
+- **`plan-concept-mode.md` missing output step** — added step 4 "Write the completed document to `docs/specs/concept.md`." LLMs were asking where to write the output because no step named the destination file.
+
 ## [2.4.2] - 2026-04-15
 
 ### Added

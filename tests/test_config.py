@@ -117,3 +117,23 @@ def test_override_update():
     assert config.overrides["debug-guide.md"].reason == "Updated reason"
     assert config.overrides["debug-guide.md"].locked_version == "0.2.0"
     assert config.overrides["debug-guide.md"].last_updated >= original_date
+
+
+# --- Story N.d ---------------------------------------------------------------
+
+
+def test_config_test_first_round_trip(tmp_path):
+    """test_first=True survives a save/load cycle."""
+    config_file = tmp_path / ".project-guide.yml"
+    config = Config(test_first=True)
+    config.save(str(config_file))
+    loaded = Config.load(str(config_file))
+    assert loaded.test_first is True
+
+
+def test_config_test_first_default_false(tmp_path):
+    """test_first defaults to False and round-trips as False."""
+    config_file = tmp_path / ".project-guide.yml"
+    Config().save(str(config_file))
+    loaded = Config.load(str(config_file))
+    assert loaded.test_first is False

@@ -904,6 +904,45 @@ def test_code_test_first_present_step_forbids_followup_prompts():
 # --- End Story M.g tests ---------------------------------------------------
 
 
+# --- Story N.d ---------------------------------------------------------------
+
+
+def test_default_mode_with_test_first_true_suggests_code_test_first():
+    """Rendered default mode with test_first=True must suggest code_test_first."""
+    from click.testing import CliRunner  # noqa: I001
+
+    from project_guide.cli import main
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ['init', '--test-first'])
+        assert result.exit_code == 0
+
+        content = Path("docs/project-guide/go.md").read_text(encoding="utf-8")
+
+    assert "code_test_first" in content
+    assert "code_direct" not in content.split("## Project Lifecycle")[1].split("##")[0]
+
+
+def test_default_mode_with_test_first_false_suggests_code_direct():
+    """Rendered default mode with test_first=False must suggest code_direct."""
+    from click.testing import CliRunner  # noqa: I001
+
+    from project_guide.cli import main
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ['init'])
+        assert result.exit_code == 0
+
+        content = Path("docs/project-guide/go.md").read_text(encoding="utf-8")
+
+    assert "code_direct" in content
+
+
+# --- End Story N.d -----------------------------------------------------------
+
+
 @pytest.mark.parametrize("mode_name", _get_all_mode_names())
 def test_every_mode_renders_successfully(mode_name):
     """Every mode in the bundled metadata must render without errors.

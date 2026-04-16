@@ -24,7 +24,7 @@ from project_guide.config import Config
 from project_guide.exceptions import ActionError, ConfigError, MetadataError, RenderError, SyncError
 from project_guide.metadata import load_metadata
 from project_guide.render import render_go_project_guide
-from project_guide.runtime import should_skip_input
+from project_guide.runtime import _resolve_setting, should_skip_input
 from project_guide.sync import (
     file_matches_template,
     get_all_file_names,
@@ -94,7 +94,14 @@ def _copy_template_tree(src_dir: Path, dest_dir: Path, force: bool = False) -> i
         'non-TTY stdin.)'
     ),
 )
-def init(target_dir: str, force: bool, no_input: bool):
+@click.option(
+    '--test-first',
+    'test_first',
+    is_flag=True,
+    default=False,
+    help='Prefer test-driven development; planning modes will suggest code_test_first.',
+)
+def init(target_dir: str, force: bool, no_input: bool, test_first: bool):
     """Initialize project-guide in a new project."""
     config_path = Path(".project-guide.yml")
 
@@ -103,6 +110,17 @@ def init(target_dir: str, force: bool, no_input: bool):
     # this value is plumbed through but not consulted — that's intentional:
     # the contract needs to exist *before* the first prompt is added.
     skip_input = should_skip_input(no_input)  # noqa: F841  (reserved for future prompts)
+
+    # Resolve test_first via the four-level chain: CLI flag → env var → default.
+    # Config is not yet loaded at init time, so the config level is skipped.
+    resolved_test_first = _resolve_setting(
+        "test_first",
+        test_first or None,
+        "PROJECT_GUIDE_TEST_FIRST",
+        "test_first",
+        None,
+        False,
+    )
 
     # Idempotency: if the project is already initialized and --force was not
     # given, exit 0 silently with an informational message. This makes
@@ -136,7 +154,7 @@ def init(target_dir: str, force: bool, no_input: bool):
     try:
         metadata = load_metadata(metadata_path)
         mode = metadata.get_mode("default")
-        render_go_project_guide(target_path, mode, metadata, output_path)
+        render_go_project_guide(target_path, mode, metadata, output_path, test_first=bool(resolved_test_first))
         click.secho(f"✓ Rendered {output_path} (mode: default)", fg='green')
     except (MetadataError, RenderError) as e:
         click.secho(f"Warning: Could not render go.md: {e}", fg='yellow')
@@ -151,6 +169,7 @@ def init(target_dir: str, force: bool, no_input: bool):
         target_dir=target_dir,
         metadata_file=metadata_file,
         current_mode="default",
+        test_first=bool(resolved_test_first),
     )
     config.save(str(config_path))
     click.secho(f"✓ Created {config_path}", fg='green')
@@ -252,7 +271,7 @@ def set_mode(mode_name: str | None):
     target_dir = Path(config.target_dir)
     output_path = target_dir / "go.md"
     try:
-        render_go_project_guide(target_dir, mode, metadata, output_path)
+        render_go_project_guide(target_dir, mode, metadata, output_path, test_first=config.test_first)
     except RenderError as e:
         click.secho(f"Error rendering: {e}", fg='red', err=True)
         click.secho("  Run 'project-guide status' to check for missing files.", fg='yellow', err=True)
@@ -593,7 +612,7 @@ def update(files: tuple, dry_run: bool, force: bool):
                 metadata = load_metadata(metadata_path)
                 mode = metadata.get_mode(config.current_mode)
                 output_path = target_dir / "go.md"
-                render_go_project_guide(target_dir, mode, metadata, output_path)
+                render_go_project_guide(target_dir, mode, metadata, output_path, test_first=config.test_first)
                 click.secho("✓ Re-rendered go.md", fg='green')
             except (MetadataError, RenderError) as e:
                 click.secho(f"Warning: Could not re-render go.md: {e}", fg='yellow')

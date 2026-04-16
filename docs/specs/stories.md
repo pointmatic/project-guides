@@ -61,25 +61,26 @@ Implement the documented resolution chain (CLI flag → env var → `.project-gu
 - [x] Bump version to v2.4.2
 - [x] Update CHANGELOG.md
 
-### Story N.d: v2.4.3 --test-first Flag on init [Planned]
+### Story N.d: v2.4.3 --test-first Flag on init, minor concept template bugfix [Done]
 
 Persist a project-level preference for test-driven coding so planning modes automatically suggest `code_test_first` instead of `code_direct`.
 
-- [ ] Add `test_first: bool = False` field to `Config` dataclass in `project_guide/config.py`
-- [ ] Update `Config.load()` / `Config.save()` for round-trip; add `test_config_test_first_round_trip` to `tests/test_config.py`
-- [ ] Add `--test-first` boolean flag to `init` in `cli.py`; resolve via `_resolve_setting` with env var `PROJECT_GUIDE_TEST_FIRST`; persist resolved value to config
-- [ ] Update `render.py` to pass `test_first: bool` as a Jinja2 context variable
-- [ ] Update `project_guide/templates/project-guide/.metadata.yml` `common` block: add `test_first: false` as a documented variable
-- [ ] Update mode templates that suggest a next coding step — use `{% if test_first %}code_test_first{% else %}code_direct{% endif %}`: `default-mode.md`, `plan-stories-mode.md`, `plan-phase-mode.md`
-- [ ] Tests in `tests/test_cli.py`:
-  - [ ] `init --test-first` → config `test_first: true`
-  - [ ] `init` without flag → config `test_first: false`
-  - [ ] `PROJECT_GUIDE_TEST_FIRST=1 init` → config `test_first: true`
-- [ ] Tests in `tests/test_render.py`:
-  - [ ] Rendered `default` mode with `test_first=True` contains `code_test_first` as next-mode suggestion
-  - [ ] Rendered `default` mode with `test_first=False` contains `code_direct`
-- [ ] Bump version to v2.4.3
-- [ ] Update CHANGELOG.md
+- [x] Add `test_first: bool = False` field to `Config` dataclass in `project_guide/config.py`
+- [x] Update `Config.load()` / `Config.save()` for round-trip; add `test_config_test_first_round_trip` to `tests/test_config.py`
+- [x] Add `--test-first` boolean flag to `init` in `cli.py`; resolve via `_resolve_setting` with env var `PROJECT_GUIDE_TEST_FIRST`; persist resolved value to config
+- [x] Update `render.py` to pass `test_first: bool` as a Jinja2 context variable
+- [x] Update `project_guide/templates/project-guide/.metadata.yml` `common` block: add `test_first: false` as a documented variable
+- [x] Update mode templates that suggest a next coding step — use `{% if test_first %}code_test_first{% else %}code_direct{% endif %}`: `default-mode.md`, `plan-stories-mode.md`, `plan-phase-mode.md`
+- [x] Tests in `tests/test_cli.py`:
+  - [x] `init --test-first` → config `test_first: true`
+  - [x] `init` without flag → config `test_first: false`
+  - [x] `PROJECT_GUIDE_TEST_FIRST=1 init` → config `test_first: true`
+- [x] Tests in `tests/test_render.py`:
+  - [x] Rendered `default` mode with `test_first=True` contains `code_test_first` as next-mode suggestion
+  - [x] Rendered `default` mode with `test_first=False` contains `code_direct`
+- [x] Bug fix: add step 4 to `plan-concept-mode.md` — "Write the completed document to `docs/specs/concept.md`." (LLM was asking where to write the output because no step named the destination file)
+- [x] Bump version to v2.4.3
+- [x] Update CHANGELOG.md
 
 ### Story N.e: v2.4.4 --no-input for purge and update [Planned]
 

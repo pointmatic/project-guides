@@ -54,6 +54,7 @@ class Config:
     target_dir: str = "docs/project-guide"
     metadata_file: str = ".metadata.yml"
     current_mode: str = "default"
+    test_first: bool = False
     overrides: dict[str, FileOverride] = field(default_factory=dict)
 
     @classmethod
@@ -97,6 +98,7 @@ class Config:
             target_dir=data.get('target_dir', 'docs/project-guide'),
             metadata_file=data.get('metadata_file', '.metadata.yml'),
             current_mode=data.get('current_mode', 'default'),
+            test_first=bool(data.get('test_first', False)),
             overrides=overrides
         )
 
@@ -108,6 +110,7 @@ class Config:
             "target_dir": self.target_dir,
             "metadata_file": self.metadata_file,
             "current_mode": self.current_mode,
+            "test_first": self.test_first,
         }
 
         if self.overrides:

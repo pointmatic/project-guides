@@ -11,7 +11,7 @@ This is the default mode for new projects. It provides an overview of the full p
 | 3 | `plan_tech_spec` | Define architecture, modules, dependencies |
 | 4 | `plan_stories` | Break into phases and stories with checklists |
 | 5 | `scaffold_project` | Scaffold LICENSE, headers, manifest, README, CHANGELOG, .gitignore |
-| 6 | `code_direct` | Implement stories with fast iteration |
+| 6 | `{% if test_first %}code_test_first{% else %}code_direct{% endif %}` | Implement stories with fast iteration |
 
 ## Get Started
 
@@ -78,7 +78,7 @@ This is a fresh project. Direct the developer to `project-guide mode plan_concep
 ### Coding (cycle)
 | Mode | Command | Workflow |
 |------|---------|----------|
-| **Direct** | `project-guide mode code_direct` | Direct commits, fast iteration |
+| **{% if test_first %}Test-First{% else %}Direct{% endif %}** | `project-guide mode {% if test_first %}code_test_first{% else %}code_direct{% endif %}` | {% if test_first %}TDD red-green-refactor cycle{% else %}Direct commits, fast iteration{% endif %} |
 | **Test-First** | `project-guide mode code_test_first` | TDD red-green-refactor cycle |
 | **Debug** | `project-guide mode debug` | Test-driven debugging |
 

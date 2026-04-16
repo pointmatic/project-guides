@@ -220,6 +220,40 @@ def test_require_setting_contract_exit_code_and_message(runner):
     ) in result.output
 
 
+# --- Story N.d ---------------------------------------------------------------
+
+
+def test_init_test_first_flag_persists(runner, tmp_path):
+    """init --test-first → config test_first: true."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(main, ['init', '--test-first'])
+        assert result.exit_code == 0
+        config = Config.load(".project-guide.yml")
+        assert config.test_first is True
+
+
+def test_init_without_test_first_flag_defaults_false(runner, tmp_path):
+    """init without --test-first → config test_first: false."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(main, ['init'])
+        assert result.exit_code == 0
+        config = Config.load(".project-guide.yml")
+        assert config.test_first is False
+
+
+def test_init_test_first_env_var(runner, tmp_path, monkeypatch):
+    """PROJECT_GUIDE_TEST_FIRST=1 init → config test_first: true."""
+    monkeypatch.setenv("PROJECT_GUIDE_TEST_FIRST", "1")
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(main, ['init'])
+        assert result.exit_code == 0
+        config = Config.load(".project-guide.yml")
+        assert config.test_first is True
+
+
+# --- End Story N.d -----------------------------------------------------------
+
+
 def test_status_with_all_guides_current(runner, tmp_path):
     """Test status command when all guides are current."""
     with runner.isolated_filesystem(temp_dir=tmp_path):

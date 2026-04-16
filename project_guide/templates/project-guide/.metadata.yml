@@ -8,6 +8,7 @@ common:
   test_command: pytest
   test_invocation: "pyve run {{test_command}}"
   default_code_mode: code_direct
+  test_first: false
 
 modes:
 
