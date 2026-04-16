@@ -125,7 +125,19 @@ Read `docs/specs/stories.md` and locate Story A.a.
 Read `templates/artifacts/project-essentials-pyve.md` and copy or merge its content into `docs/specs/project-essentials.md`. This ensures Pyve-specific dev-environment rules are documented before coding begins. If `docs/specs/project-essentials.md` does not yet exist, create it from the Pyve content; if it already exists, append the Pyve sections (skip any that are already present).
 
 {% endif %}
-### {% if pyve_installed %}9{% else %}8{% endif %}. Present for Approval
+### {% if pyve_installed %}9{% else %}8{% endif %}. Memory Review
+
+Read your recorded memories for this project (e.g., `.claude/projects/<project-path>/memory/` for Claude Code users).
+
+For each memory, evaluate: is this fact **project-specific** (belongs permanently in `docs/specs/project-essentials.md`) rather than — or in addition to — being stored in LLM memory?
+
+Present candidates to the developer:
+
+> "I found N memories. These may belong in `project-essentials.md`: [list with one-line summaries]. Which (if any) should I copy across?"
+
+Await confirmation, then append confirmed items to `docs/specs/project-essentials.md` following the heading convention (`###` subsections, no top-level `#`). If the memory store is empty or inaccessible, note this briefly and continue.
+
+### {% if pyve_installed %}10{% else %}9{% endif %}. Present for Approval
 
 Present the scaffolded project to the developer for review:
 

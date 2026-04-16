@@ -1018,6 +1018,59 @@ def test_project_essentials_pyve_artifact_has_no_unrendered_placeholders():
 # --- End Story N.j -----------------------------------------------------------
 
 
+# --- Story N.k ---------------------------------------------------------------
+
+
+def test_scaffold_project_contains_memory_review_step():
+    """Rendered scaffold_project contains the Memory Review step."""
+    from click.testing import CliRunner  # noqa: I001
+
+    from project_guide.cli import main
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        runner.invoke(main, ['init'])
+        runner.invoke(main, ['mode', 'scaffold_project'])
+        content = Path("docs/project-guide/go.md").read_text(encoding="utf-8")
+
+    assert "Memory Review" in content
+
+
+def test_scaffold_project_memory_review_before_present_for_approval():
+    """Memory Review step appears before Present for Approval in scaffold_project."""
+    from click.testing import CliRunner  # noqa: I001
+
+    from project_guide.cli import main
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        runner.invoke(main, ['init'])
+        runner.invoke(main, ['mode', 'scaffold_project'])
+        content = Path("docs/project-guide/go.md").read_text(encoding="utf-8")
+
+    memory_pos = content.index("Memory Review")
+    approval_pos = content.index("Present for Approval")
+    assert memory_pos < approval_pos
+
+
+def test_scaffold_project_memory_review_escape_hatch():
+    """Memory Review step includes escape hatch for empty or inaccessible memory store."""
+    from click.testing import CliRunner  # noqa: I001
+
+    from project_guide.cli import main
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        runner.invoke(main, ['init'])
+        runner.invoke(main, ['mode', 'scaffold_project'])
+        content = Path("docs/project-guide/go.md").read_text(encoding="utf-8")
+
+    assert "empty or inaccessible" in content
+
+
+# --- End Story N.k -----------------------------------------------------------
+
+
 @pytest.mark.parametrize("mode_name", _get_all_mode_names())
 def test_every_mode_renders_successfully(mode_name):
     """Every mode in the bundled metadata must render without errors.

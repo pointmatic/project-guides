@@ -204,23 +204,23 @@ Auto-detect Pyve at `init` time and ship a bundled Pyve-focused project-essentia
 - [x] Bump version to v2.4.9
 - [x] Update CHANGELOG.md
 
-### Story N.k: v2.4.10 Memory Review in scaffold_project Mode [Planned]
+### Story N.k: v2.4.10 Memory Review in scaffold_project Mode [Done]
 
 `scaffold_project` runs once per project setup — the natural moment to reconcile prior-session LLM memories with the project's permanent knowledge base in `project-essentials.md`.
 
-- [ ] Add a **Memory Review** step to `scaffold-project-mode.md` (penultimate step, before "Present for Approval"):
-  - [ ] Instruct LLM to read recorded memories from the project memory store (e.g., `.claude/projects/` files for Claude Code users)
-  - [ ] For each memory: evaluate whether it is project-specific and should live in `project-essentials.md` rather than (or in addition to) memory
-  - [ ] Present candidates to the developer: "I found N memories. These may belong in `project-essentials.md`: …"
-  - [ ] Await developer confirmation of which (if any) to copy/migrate
-  - [ ] Append confirmed items to `project-essentials.md` following the heading convention (`###` subsections, no top-level `#`)
-  - [ ] Escape hatch: if the memory store is empty or inaccessible, note this briefly and continue
-- [ ] Tests in `tests/test_render.py` (new "Story N.k" section):
-  - [ ] Rendered `scaffold_project` contains the Memory Review step
-  - [ ] Memory Review step appears before "Present for Approval"
-  - [ ] Escape hatch language ("empty or inaccessible") present
-- [ ] Bump version to v2.4.10
-- [ ] Update CHANGELOG.md
+- [x] Add a **Memory Review** step to `scaffold-project-mode.md` (penultimate step, before "Present for Approval"):
+  - [x] Instruct LLM to read recorded memories from the project memory store (e.g., `.claude/projects/` files for Claude Code users)
+  - [x] For each memory: evaluate whether it is project-specific and should live in `project-essentials.md` rather than (or in addition to) memory
+  - [x] Present candidates to the developer: "I found N memories. These may belong in `project-essentials.md`: …"
+  - [x] Await developer confirmation of which (if any) to copy/migrate
+  - [x] Append confirmed items to `project-essentials.md` following the heading convention (`###` subsections, no top-level `#`)
+  - [x] Escape hatch: if the memory store is empty or inaccessible, note this briefly and continue
+- [x] Tests in `tests/test_render.py` (new "Story N.k" section):
+  - [x] Rendered `scaffold_project` contains the Memory Review step
+  - [x] Memory Review step appears before "Present for Approval"
+  - [x] Escape hatch language ("empty or inaccessible") present
+- [x] Bump version to v2.4.10
+- [x] Update CHANGELOG.md
 
 ### Story N.l: v2.4.11 Memory Reflection Instruction in _header-common.md [Planned]
 

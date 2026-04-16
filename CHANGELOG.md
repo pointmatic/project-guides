@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.10] - 2026-04-16
+
+### Added
+- **Memory Review step in `scaffold_project` mode** — penultimate step (before "Present for Approval") instructs the LLM to read its recorded project memories, evaluate which are project-specific, present candidates to the developer, and append confirmed items to `docs/specs/project-essentials.md`. Includes an escape hatch for empty or inaccessible memory stores. Step numbering is conditional on `pyve_installed` (9 without pyve, 10 with).
+
+### Changed
+- **Current mode name highlighted in `project-guide mode` listing** — the selected mode name is now rendered with a cyan background and black text (`fg='black', bg='cyan'`) so it stands out clearly from available (✓) and unavailable (✗) entries.
+
 ## [2.4.9] - 2026-04-15
 
 ### Added
