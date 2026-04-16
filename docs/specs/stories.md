@@ -293,6 +293,13 @@ Rule of thumb: use pythonpath for library projects, editable install in testenv 
 - [x] Verify: all tests pass, ruff clean, `pyve run project-guide update` re-renders `go.md` cleanly
 - [x] Bump version to v2.4.13
 
+### Story N.o: v2.4.14 Autopublish PyPI packages on tag push [Done]
+
+- [x] Update GitHub Actions workflow to build and publish PyPI packages when a tag is pushed
+- [x] Update `CHANGELOG.md` with v2.4.14 entry for this automation
+- [x] Verify: workflow runs correctly, packages are published to PyPI
+- [x] Bump version to v2.4.14
+
 ---
 
 ## Future

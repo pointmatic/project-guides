@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.14] - 2026-04-16
+
+### Changed
+- **`.github/workflows/publish.yml`** — Added `push: tags: ['v*']` trigger so the build-and-publish job runs automatically on any version tag push, in addition to the existing GitHub Release publication trigger.
+
 ## [2.4.13] - 2026-04-16
 
 ### Added
