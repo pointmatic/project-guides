@@ -45,7 +45,7 @@ Any future interactive prompt added to a CLI command **must** use the `should_sk
 
 - **Bump `SCHEMA_VERSION` only for breaking changes:** field rename, field removal, type change, or semantic-meaning change of an existing field.
 - **Do NOT bump for additive-with-default changes.** Adding a new optional field with a sensible default (as in every Phase N field: `test_first`, `pyve_version`, `metadata_overrides`) is already backwards-compatible via `data.get(key, default)` in `Config.load()`.
-- **On mismatch,** `Config.load()` raises `SchemaVersionError(direction="older"|"newer")`. `cli.py:update` handles this specially: on `"older"` it backs up `.project-guide.yml` to `.project-guide.yml.bak.<timestamp>` and points the user at `project-guide init --force`; on `"newer"` it tells the user to upgrade project-guide.
+- **On mismatch,** `Config.load()` raises `SchemaVersionError(direction="older"|"newer")`. `cli.py:update` handles this specially: on `"older"` it points the user at `project-guide init --force` (which performs the backup at the destructive-overwrite site); on `"newer"` it tells the user to upgrade project-guide. `cli.py:init` is the sole writer of `.project-guide.yml.bak.<timestamp>`: with `--force` on an existing config it copies the current file aside before overwriting it, so the backup is idempotent (one per refresh) regardless of the entry point.
 - **When a real breaking change arrives,** revisit adding a migration registry (deferred by design — YAGNI until there's something to migrate).
 
 ### Approval gate discipline

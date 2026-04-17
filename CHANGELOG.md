@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.16] - 2026-04-16
+
+### Changed
+- **`project_guide/cli.py:init`** — Relocated the `.project-guide.yml.bak.<timestamp>` backup from `update`'s `SchemaVersionError("older")` handler into `init --force`. The backup now fires at the destructive-overwrite site itself, making it idempotent (one backup per refresh regardless of how the user got there) and extending coverage to `init --force` invocations that do not go through `update`. Backup only fires when the config already exists; a fresh `init --force` creates nothing to back up.
+- **`project_guide/cli.py:update`** — The `SchemaVersionError("older")` handler no longer writes a backup; it prints a short message directing the user to `project-guide init --force`, where the backup is now performed. Fixes the backup-spam bug where repeated `update` invocations against an unresolved older-schema config produced a new timestamped backup on every run.
+- **`docs/specs/tech-spec.md`** — Updated the `config.py` module description to record that `init` (not `update`) is the backup writer.
+- **`docs/specs/project-essentials.md`** — `### Config schema versioning` section updated to describe the new recovery flow and name `init --force` as the sole backup site.
+
 ## [2.4.15] - 2026-04-16
 
 ### Added

@@ -332,6 +332,85 @@ Add a schema-version guard to `.project-guide.yml` so breaking config changes fa
 - [x] Bump version to v2.4.15
 - [x] Verify: all tests pass, ruff clean, `pyve run project-guide update` re-renders `go.md` cleanly
 
+### Story N.q: v2.4.16 Move '.project-guide.yml' Backup to 'init --force' [Done]
+
+Relocate the `.project-guide.yml` backup from `update`'s `SchemaVersionError("older")` handler (added in N.p) into `init --force`, where the actual destructive overwrite happens. The N.p design backed up upstream of the recovery command, which has two flaws: (1) re-running `update` against an unresolved older schema spams a new identical `.bak.<timestamp>` on every invocation, and (2) running `init --force` directly — the actual data-loss path — produces no backup at all. Putting the backup at the overwrite site makes it idempotent (one backup per destructive refresh) and covers all entry points, not just the schema-mismatch recovery flow.
+
+- [x] In `cli.py:init`, when `config_path.exists() and force` (before constructing the new `Config`): copy `.project-guide.yml` → `.project-guide.yml.bak.<timestamp>`
+  - [x] Use `shutil.copy2` (preserves mtime) and `datetime.now().strftime("%Y%m%d%H%M%S")` for the timestamp, matching the existing N.p convention
+  - [x] Print the backup path at the end of init output: `Previous config backed up to <path>. Delete once you've verified the new config.`
+  - [x] Gate strictly on `config_path.exists()` — `init --force` with no prior config creates no backup (nothing to lose)
+- [x] In `cli.py:update`, remove the backup call from the `SchemaVersionError("older")` handler
+  - [x] New message: `Schema mismatch: <err>. Run 'project-guide init --force' to refresh (your existing .project-guide.yml will be backed up).`
+  - [x] Still exits 1; `"newer"` path is unchanged (already had no backup)
+  - [x] Remove the now-unused `from datetime import datetime` inline import if it is not used elsewhere in the function
+- [x] Update `tests/test_cli.py` "Story N.p" section — flip the existing assertions:
+  - [x] `update` with older schema: no backup created; stderr references `init --force`; exit 1 (previously: backup created)
+  - [x] Re-run `update` with older schema multiple times: still no backup created (regression guard for the backup-spam bug)
+- [x] Tests in `tests/test_cli.py` (new "Story N.q" section):
+  - [x] `init --force` on existing project: creates timestamped backup; end-of-output references the backup path; new config is written
+  - [x] `init` (no `--force`) on fresh project: no backup (nothing to back up); normal init
+  - [x] `init --force` on a nonexistent config: no backup; normal init (gated on `config_path.exists()`)
+  - [x] End-to-end: `update` with older schema → no backup; then `init --force` → backup created; contents of backup match the pre-refresh config
+- [x] Update `docs/specs/tech-spec.md` — relocate the backup-step description from the `update` flow to the `init --force` flow
+- [x] Update `docs/specs/project-essentials.md` `### Config schema versioning` subsection — update the description of the recovery flow to match the new location of the backup
+- [x] Update `CHANGELOG.md` with v2.4.16 entry (note: corrects the N.p design; no schema bump required)
+- [x] Bump version to v2.4.16 in `project_guide/version.py` and `pyproject.toml`
+- [x] Verify: all tests pass, ruff clean
+
+### Story N.r: v2.4.17 LLM vs Developer Invocation Rule in Pyve Essentials [Planned]
+
+Teach the LLM to keep `pyve run` out of user-facing command suggestions. The wrapper is only needed because the LLM's Bash-tool shell does not auto-activate `.venv/`; the developer's shell typically does. Without this rule, the LLM generalizes from a successful `pyve run <cmd>` execution and echoes the wrapped form back to the developer in "next, run:" prompts — overriding the bare form that mode templates already use. Observed in the wild in `archive_stories` (LLM suggested `pyve run project-guide mode plan_phase` instead of `project-guide mode plan_phase`).
+
+- [ ] Add a new `### LLM-internal vs. developer-facing invocation` subsection to `project_guide/templates/project-guide/templates/artifacts/project-essentials-pyve.md`, placed immediately after the existing "Runtime code / Tests / Dev tools / Install dev tools" bullet list (before the `### Python invocation rule` subsection)
+  - [ ] State the rule: `pyve run` is for the LLM's own Bash-tool invocations; developer-facing suggestions use the bare form verbatim from the mode template
+  - [ ] Include ✅/❌ examples using `project-guide mode plan_phase`
+  - [ ] Include a **Why:** line referencing the Bash-tool shell vs. the developer's (typically pyve/direnv-activated) shell
+  - [ ] Include a **How to apply:** line: "Never prepend environment wrappers (`pyve run`, `poetry run`, `uv run`, etc.) to commands you quote from a mode template."
+- [ ] Run `pyve run project-guide update` to propagate the edited template into `docs/project-guide/` for this project (dogfooding)
+- [ ] Verify: rendered `docs/project-guide/go.md` contains the new subsection under `## Project Essentials`
+- [ ] Tests in `tests/test_render.py` (new "Story N.r" section):
+  - [ ] When pyve is detected, rendered `go.md` for any mode contains the new subsection heading (e.g., substring `"LLM-internal vs. developer-facing invocation"`)
+  - [ ] The subsection is absent when pyve is not detected (regression guard for the existing `project-essentials-pyve.md` inclusion gate)
+- [ ] Update `CHANGELOG.md` with v2.4.17 entry
+- [ ] Bump version to v2.4.17 in `project_guide/version.py` and `pyproject.toml`
+- [ ] Verify: all tests pass, ruff clean
+
+### Story N.s: v2.4.18 project_name in Config + Silent-Placeholder Guard [Planned]
+
+Fix the archive_stories bug where a fresh `stories.md` is written with literal `{{ project_name }}` / `{{ programming_language }}` placeholders. Root cause: `perform_archive` relies on a strict regex parse of the old `stories.md` header to recover these values, has no fallback, and `render_fresh_stories_artifact` doesn't detect unrendered placeholders before writing. Fix: add `project_name` as a per-project Config field (populated at `init` via a resolution chain), pass it into the archive context, and add a post-render placeholder validator so silent drops become loud failures. Scope is deliberately narrow — broader integrity checks (header-vs-config drift, schema age, bundled-template drift) go to the deferred `project-guide check` command in the Future section.
+
+- [ ] Add `project_name: str = ""` field to `Config` dataclass in `project_guide/config.py`
+- [ ] Update `Config.load()` / `Config.save()` for round-trip; add `test_config_project_name_round_trip` to `tests/test_config.py`
+- [ ] Add `--project-name` option to `init` in `cli.py`; resolve via `_resolve_setting` (from N.c) with env var `PROJECT_GUIDE_PROJECT_NAME`; fallback chain: CLI flag → env → `pyproject.toml` `[project] name` → `Path.cwd().name`
+  - [ ] Extract the `pyproject.toml` lookup into a small helper in `runtime.py` (`_detect_project_name_from_pyproject()`) so the logic is unit-testable and non-Python projects can be extended later
+  - [ ] Persist the resolved value into `.project-guide.yml`
+- [ ] Update `cli.py:archive_stories_cmd` to merge `config.project_name` into the context passed to `perform_archive` (override `metadata.common`): `context = {**dict(metadata.common), "project_name": config.project_name}`
+- [ ] Add a one-line drift warning in `cli.py:archive_stories_cmd` (not a failure): if `Path.cwd().name != config.project_name`, print `⚠ cwd name '<cwd>' differs from config project_name '<name>' — archive will use the config value` to stderr. Exit 0.
+- [ ] Add post-render placeholder validator to `render_fresh_stories_artifact` in `project_guide/actions.py`:
+  - [ ] Reuse the `_UNRENDERED_PLACEHOLDER_RE` pattern from `render.py` (import it, or extract to a shared module — `runtime.py` is the natural home)
+  - [ ] After rendering, scan for unrendered `{{ name }}` placeholders; if any found, raise `ActionError` listing the undefined variable names and the file being written
+  - [ ] This is the root-cause guard: any future code path that forgets to populate a template variable fails loudly instead of silently corrupting the output
+- [ ] Tests in `tests/test_config.py` (new "Story N.s" section):
+  - [ ] `project_name` round-trips through `save`/`load`
+  - [ ] Absent field defaults to `""` (regression guard, additive-with-default policy)
+- [ ] Tests in `tests/test_cli.py` (new "Story N.s" section):
+  - [ ] `init --project-name explicit-name` → config `project_name: explicit-name`
+  - [ ] `PROJECT_GUIDE_PROJECT_NAME=env-name init` (no flag) → config `project_name: env-name`
+  - [ ] `init` in a dir containing a minimal `pyproject.toml` with `[project] name = "from-pyproject"` → config `project_name: from-pyproject`
+  - [ ] `init` with no flag, no env, no pyproject.toml → config `project_name` equals `Path.cwd().name`
+  - [ ] `archive-stories` with no header in `stories.md` and `config.project_name="demo"` → fresh `stories.md` contains `demo`, no literal `{{` placeholders
+  - [ ] `archive-stories` where `Path.cwd().name` differs from `config.project_name` → warning printed to stderr; command still exits 0
+- [ ] Tests in `tests/test_actions.py` (new "Story N.s" section):
+  - [ ] `render_fresh_stories_artifact` raises `ActionError` when context is missing `project_name` (undefined variable → lenient placeholder → validator catches it)
+  - [ ] Error message names the offending variable(s) and the template being rendered
+  - [ ] Successful render with all variables populated still passes validation (regression guard)
+- [ ] Update `docs/specs/tech-spec.md` Config section: document the new `project_name` field and the `init` resolution chain
+- [ ] Update `docs/specs/project-essentials.md` — add the resolution chain to the existing `### Config schema versioning` section or a new subsection
+- [ ] Update `CHANGELOG.md` with v2.4.18 entry
+- [ ] Bump version to v2.4.18 in `project_guide/version.py` and `pyproject.toml`
+- [ ] Verify: all tests pass, ruff clean, `pyve run project-guide update` re-renders `go.md` cleanly
+
 ---
 
 ## Future
@@ -359,6 +438,10 @@ Future modes: `audit_security`, `audit_architecture`, `audit_performance`, `audi
 
 - `--interactive` flag to force interactive mode over non-TTY stdin — not needed; `stdin` can always be re-attached.
 - Legacy broken-state detection for `init` (`.project-guide.yml` absent but target dir populated) — unusual edge case; falls through to existing skip-with-warnings path.
+
+### Integrity & Validation [Deferred]
+
+- `project-guide check` command — dedicated integrity/audit surface with nonzero exit on failure, suitable for CI and pre-commit hooks. Candidate rules: `project_name` in config vs. `cwd.name` vs. `pyproject.toml` `[project] name`; artifact headers (`# stories.md -- <name> (<lang>)`) vs. `config.project_name`/`config.programming_language`; `SCHEMA_VERSION` surfacing; `installed_version` vs. `__version__`; `.archive/stories-vX.Y.Z.md` filenames parse cleanly; metadata override keys reference existing modes; unrendered `{{ var }}` placeholders across written artifacts (broadens the N.s `render_fresh_stories_artifact` guard to every written artifact). `project-guide status` runs a cheap subset and prints a one-line footer (`⚠ N integrity issues — run 'project-guide check' for details`) without changing its exit code. Precedent: `django check`, `brew doctor`, `cargo check`. Defer until there is a concrete second integrity rule worth shipping (N.s covers the first drift source inline with a warning).
 
 ### Template & Rendering [Deferred]
 

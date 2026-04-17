@@ -16,6 +16,7 @@ import importlib.resources
 import shutil
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import click
@@ -152,6 +153,16 @@ def init(target_dir: str, force: bool, no_input: bool, test_first: bool, quiet: 
         )
         return
 
+    # --force on an existing config: back up the current .project-guide.yml
+    # before we overwrite it. This is the single destructive-overwrite site,
+    # so the backup is idempotent (one per refresh) and covers every entry
+    # point, not just the schema-mismatch recovery flow.
+    config_backup_path: Path | None = None
+    if config_path.exists() and force:
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        config_backup_path = Path(f"{config_path}.bak.{timestamp}")
+        shutil.copy2(config_path, config_backup_path)
+
     click.echo(f"Initializing project-guide v{__version__}...")
 
     # Copy template tree from package to target
@@ -214,6 +225,13 @@ def init(target_dir: str, force: bool, no_input: bool, test_first: bool, quiet: 
     click.secho(f"✓ Created {config_path}", fg='green')
 
     click.echo(f"\nSuccessfully initialized {count} files.")
+
+    if config_backup_path is not None:
+        click.secho(
+            f"Previous config backed up to {config_backup_path}. "
+            f"Delete once you've verified the new config.",
+            fg='yellow',
+        )
 
 
 def _ensure_gitignore_entry(target_dir: str) -> None:
@@ -769,21 +787,17 @@ def update(files: tuple, dry_run: bool, force: bool, no_input: bool, quiet: bool
         raise click.Abort()
 
     # Load config. SchemaVersionError is handled specially: on an "older"
-    # mismatch we back up the stale config and point the user at init --force;
-    # on a "newer" mismatch we tell the user to upgrade the package.
+    # mismatch we direct the user at init --force (which backs up the existing
+    # config at the destructive overwrite site); on a "newer" mismatch we
+    # tell the user to upgrade the package.
     try:
         config = Config.load(str(config_path))
     except SchemaVersionError as e:
         if e.direction == "older":
-            from datetime import datetime
-            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            backup_path = Path(f"{config_path}.bak.{timestamp}")
-            shutil.copy2(config_path, backup_path)
             click.secho(f"Schema mismatch: {e}", fg='red', err=True)
-            click.secho(f"Config backed up to {backup_path}.", fg='yellow', err=True)
             click.secho(
-                f"Run 'project-guide init --force' to refresh, then manually merge "
-                f"customizations from {backup_path}.",
+                "Run 'project-guide init --force' to refresh "
+                "(your existing .project-guide.yml will be backed up).",
                 fg='yellow',
                 err=True,
             )

@@ -1442,8 +1442,14 @@ def _rewrite_config_version(version: str) -> None:
     config_path.write_text("\n".join(lines) + "\n")
 
 
-def test_update_older_schema_backs_up_and_aborts(runner, tmp_path):
-    """update with an older schema version backs up the config and exits 1."""
+def test_update_older_schema_does_not_backup_and_aborts(runner, tmp_path):
+    """update with an older schema version refuses the load and exits 1.
+
+    The backup moved to ``init --force`` in Story N.q; ``update`` now only
+    points the user at the recovery command. Re-running ``update`` against an
+    unresolved older-schema config must therefore NOT spam new backups on
+    each invocation.
+    """
     with runner.isolated_filesystem(temp_dir=tmp_path):
         _init_project(runner)
         _rewrite_config_version("1.0")
@@ -1455,7 +1461,26 @@ def test_update_older_schema_backs_up_and_aborts(runner, tmp_path):
         assert "init --force" in result.output
 
         backups = list(Path(".").glob(".project-guide.yml.bak.*"))
-        assert len(backups) == 1, f"Expected one backup, got: {backups}"
+        assert backups == [], f"Expected no backup from update, got: {backups}"
+
+
+def test_update_older_schema_repeated_invocations_create_no_backups(runner, tmp_path):
+    """Repeated ``update`` against an older-schema config creates zero backups.
+
+    Regression guard for the backup-spam bug that motivated Story N.q: the
+    prior design wrote a new timestamped backup every time ``update`` was
+    invoked before the user ran the recovery command.
+    """
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        _init_project(runner)
+        _rewrite_config_version("1.0")
+
+        for _ in range(3):
+            result = runner.invoke(main, ['update'])
+            assert result.exit_code == 1
+
+        backups = list(Path(".").glob(".project-guide.yml.bak.*"))
+        assert backups == [], f"Expected no backups on repeated update, got: {backups}"
 
 
 def test_update_newer_schema_does_not_backup(runner, tmp_path):
@@ -1507,3 +1532,72 @@ def test_update_rerenders_go_md_when_missing(runner, tmp_path):
 
 
 # --- End Story N.p -----------------------------------------------------------
+
+
+# --- Story N.q ---------------------------------------------------------------
+
+
+def test_init_force_on_existing_config_creates_backup(runner, tmp_path):
+    """init --force on an existing project backs up the prior config.
+
+    The backup is the only record of any local customization once the file is
+    overwritten, so this is the destructive-overwrite guarantee.
+    """
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        _init_project(runner)
+        original = Path(".project-guide.yml").read_text(encoding="utf-8")
+
+        result = runner.invoke(main, ['init', '--force'])
+
+        assert result.exit_code == 0, result.output
+        backups = list(Path(".").glob(".project-guide.yml.bak.*"))
+        assert len(backups) == 1, f"Expected exactly one backup, got: {backups}"
+        assert backups[0].read_text(encoding="utf-8") == original
+        assert "Previous config backed up to" in result.output
+        assert str(backups[0]) in result.output
+
+
+def test_init_on_fresh_project_creates_no_backup(runner, tmp_path):
+    """init (no --force) on a fresh project does not create a backup."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(main, ['init'])
+
+        assert result.exit_code == 0, result.output
+        backups = list(Path(".").glob(".project-guide.yml.bak.*"))
+        assert backups == [], f"Expected no backup on fresh init, got: {backups}"
+
+
+def test_init_force_on_fresh_project_creates_no_backup(runner, tmp_path):
+    """init --force with no prior config creates no backup (nothing to lose)."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(main, ['init', '--force'])
+
+        assert result.exit_code == 0, result.output
+        assert Path(".project-guide.yml").exists()
+        backups = list(Path(".").glob(".project-guide.yml.bak.*"))
+        assert backups == [], f"Expected no backup on fresh init --force, got: {backups}"
+
+
+def test_update_older_schema_then_init_force_backs_up_and_recovers(runner, tmp_path):
+    """End-to-end recovery flow: update surfaces the mismatch, init --force backs up and refreshes."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        _init_project(runner)
+        _rewrite_config_version("1.0")
+        stale_config = Path(".project-guide.yml").read_text(encoding="utf-8")
+
+        result = runner.invoke(main, ['update'])
+        assert result.exit_code == 1
+        assert list(Path(".").glob(".project-guide.yml.bak.*")) == []
+
+        result = runner.invoke(main, ['init', '--force'])
+        assert result.exit_code == 0, result.output
+
+        backups = list(Path(".").glob(".project-guide.yml.bak.*"))
+        assert len(backups) == 1, f"Expected exactly one backup, got: {backups}"
+        assert backups[0].read_text(encoding="utf-8") == stale_config
+
+        refreshed = Path(".project-guide.yml").read_text(encoding="utf-8")
+        assert "version: '2.0'" in refreshed or 'version: "2.0"' in refreshed
+
+
+# --- End Story N.q -----------------------------------------------------------
