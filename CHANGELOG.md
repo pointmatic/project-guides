@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.19] - 2026-04-17
+
+### Fixed
+- **`project_guide/actions.py:render_fresh_stories_artifact`** — Constrained the N.s placeholder validator to the Jinja-rendered output. The scan now runs immediately after `template.render(...)` and before the `## Future` section is spliced in verbatim. Previously it ran on the final output, so any literal `{{ name }}` in the user-authored Future prose (e.g. the existing "Template & Rendering" deferred item in this project's own `stories.md`) was misread as an unrendered placeholder and blocked `archive-stories`. The guard still fails loudly on genuinely missing context variables in the rendered header.
+
 ## [2.4.18] - 2026-04-16
 
 ### Added

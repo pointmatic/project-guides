@@ -652,3 +652,55 @@ def test_render_fresh_stories_artifact_full_context_passes_validation():
 
 
 # --- End Story N.s -----------------------------------------------------------
+
+
+# --- Story N.t ---------------------------------------------------------------
+
+
+def test_render_fresh_stories_artifact_allows_literal_placeholder_in_future_section():
+    """Literal ``{{ var }}`` in a carried Future section must not trip the guard.
+
+    The N.s validator is scoped to catching missing Jinja context variables in
+    the rendered *header*. The ``## Future`` section is spliced in verbatim
+    *after* rendering, so it is user prose, not a Jinja template fragment. A
+    literal ``{{ var }}`` in that prose (e.g. an entry discussing Jinja
+    escaping) was being misread as an unrendered placeholder and blocked
+    ``archive-stories``.
+    """
+    template = _bundled_stories_template()
+    carried = (
+        "## Future\n\n"
+        "### Template & Rendering [Deferred]\n\n"
+        "- Support for literal `{{ var }}` strings in template output.\n"
+    )
+    rendered = render_fresh_stories_artifact(
+        template,
+        {"project_name": "demo", "programming_language": "Python"},
+        future_section=carried,
+    )
+    assert "{{ var }}" in rendered
+    assert "demo" in rendered
+
+
+def test_render_fresh_stories_artifact_future_placeholder_matching_context_key_also_allowed():
+    """Even a Future-section placeholder that matches a real context key is prose, not a template.
+
+    Guards against a naive fix that only exempts *unknown* names — the Future
+    splice is not a template fragment, so no name should be re-rendered or
+    re-validated regardless of whether it appears in the context dict.
+    """
+    template = _bundled_stories_template()
+    carried = (
+        "## Future\n\n"
+        "### Example [Deferred]\n\n"
+        "- Documented shorthand: `{{ project_name }}`.\n"
+    )
+    rendered = render_fresh_stories_artifact(
+        template,
+        {"project_name": "demo", "programming_language": "Python"},
+        future_section=carried,
+    )
+    assert "{{ project_name }}" in rendered
+
+
+# --- End Story N.t -----------------------------------------------------------

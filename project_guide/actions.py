@@ -342,13 +342,12 @@ def render_fresh_stories_artifact(
     template = env.get_template(artifact_template.name)
     rendered = template.render(phases_and_stories="", **context)
 
-    if future_section:
-        replacement = future_section.rstrip() + "\n"
-        rendered = _FUTURE_RE.sub(lambda _m: replacement, rendered)
-
-    # Any placeholder that survived Jinja is the fingerprint of a missing
-    # context variable, a typo, or a removed `{% if %}` guard — previously
-    # these leaked silently into the fresh stories.md header.
+    # Validate the Jinja-rendered output only. Any placeholder that survived
+    # Jinja is the fingerprint of a missing context variable, a typo, or a
+    # removed `{% if %}` guard — previously these leaked silently into the
+    # fresh stories.md header. The `## Future` section is spliced in verbatim
+    # below (user prose, never rendered), so it must not be scanned; a literal
+    # `{{ name }}` in Future prose is legitimate content, not a bug.
     matches = UNRENDERED_PLACEHOLDER_RE.findall(rendered)
     if matches:
         seen: set[str] = set()
@@ -362,6 +361,10 @@ def render_fresh_stories_artifact(
             f"{', '.join(unique)}. "
             "Hint: check the caller's context dict for a missing variable."
         )
+
+    if future_section:
+        replacement = future_section.rstrip() + "\n"
+        rendered = _FUTURE_RE.sub(lambda _m: replacement, rendered)
 
     return rendered
 

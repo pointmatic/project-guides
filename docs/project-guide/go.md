@@ -22,7 +22,7 @@ For efficiency, when you change modes, start a new LLM conversation.
 ### For LLMs
 
 **Modes**
-This Project-Guide offers a human-in-the-loop workflow for you to follow that can be dynamically reconfigured based on the project `mode`. Each `mode` defines a focused cycle of steps to guide you (the LLM) to help generate artifacts for some facet in the project lifecycle. This document is customized for code_direct.
+This Project-Guide offers a human-in-the-loop workflow for you to follow that can be dynamically reconfigured based on the project `mode`. Each `mode` defines a focused sequence of steps to guide you (the LLM) to help generate artifacts for some facet in the project lifecycle. This document is customized for archive_stories.
 
 **Approval Gate**
 When you have completed the steps, pause for the developer to review, correct, redirect, or ask questions about your work.  
@@ -115,71 +115,123 @@ At approval gates, present the completed work and wait. **Do not prompt for, off
 
 ---
 
-# code_direct mode (cycle)
+# archive_stories mode (sequence)
 
-> Generate code directly, test after
+> Archive docs/specs/stories.md and re-render a fresh one for the next phase
 
 
-Implement stories rapidly with direct commits to main. Focus on feature completion and iteration speed over process overhead.
+Archive the completed `docs/specs/stories.md` so the next phase can start with a clean slate. The current file is moved to `docs/specs/.archive/stories-vX.Y.Z.md` (version derived from the latest story in the file), and a fresh empty `stories.md` is re-rendered from the artifact template with the `## Future` section preserved verbatim.
 
-**Next Action**
-Restart the cycle of steps. 
+This mode is intended to run after all active stories are `[Done]` and before the developer plans the next phase. Phase letters continue across the archive boundary (see below).
+
+## Prerequisites
+
+- `docs/specs/stories.md` exists.
+- Ideally, all stories in `stories.md` are `[Done]`. The mode will **warn** but not block if any are not — the developer may choose to proceed anyway (e.g. to drop deferred work).
+
+## Steps
+
+### 1. Read `docs/specs/stories.md`
+
+Load the current stories file. You will need:
+
+- The **latest versioned story heading** (`### Story X.y: vN.N.N ...`) — this becomes the archive version suffix.
+- The **latest `## Phase <Letter>:` heading** — informational only, but useful to show the developer which phase is being closed.
+- Whether a `## Future` section is present — it will be preserved verbatim.
+
+### 2. Check for non-`[Done]` stories
+
+Scan all `### Story X.y: ... [<status>]` headings. If **any** story's status is not `[Done]`, list them for the developer:
+
+> ⚠ The following stories are not marked `[Done]`:
+> - `Story J.o: v2.0.14 ... [In Progress]`
+> - `Story J.r: v2.0.16 ... [Planned]`
+>
+> Archiving now will move these to `.archive/` along with the completed stories. You can:
+> 1. Finish or explicitly drop them first, then archive.
+> 2. Move them to the `## Future` section (they will carry over to the fresh `stories.md`).
+> 3. Proceed anyway (they stay in the archived file only).
+>
+> How would you like to proceed?
+
+Wait for the developer's decision before continuing.
+
+### 3. Show the planned archive path
+
+Compute the archive target:
+
+- **Source**: `docs/specs/stories.md`
+- **Latest version**: `vX.Y.Z` (from step 1)
+- **Archive target**: `docs/specs/.archive/stories-vX.Y.Z.md`
+- **Future section**: will be preserved (or the template default will be used if none is present)
+
+Present this to the developer and await explicit approval.
+
+> I will archive `docs/specs/stories.md` → `docs/specs/.archive/stories-v2.0.20.md`.
+> The fresh `stories.md` will contain an empty body and carry over the current `## Future` section.
+> Say "go" to proceed.
+
+### 4. Perform the archive
+
+After approval, run:
+
+```bash
+project-guide archive-stories
+```
+
+This CLI command wraps `project_guide.actions.perform_archive` — it moves the source to `.archive/` and re-renders a fresh `stories.md` from the bundled artifact template. If the archive target already exists (or any pre-check fails), the command raises an error and leaves the workspace untouched.
+
+On success, the command prints the archived path, the version, the phase letter, and whether a Future section was carried.
+
+### 5. Suggest next mode
+
+After the archive succeeds, suggest the next step:
+
+> ✓ Archived `stories.md` → `.archive/stories-vX.Y.Z.md` (Phase X closed).
+> The fresh `stories.md` is empty and ready for the next phase.
+>
+> Next, run:
+> ```bash
+> project-guide mode plan_phase
+> ```
+>
+> `plan_phase` will read `.archive/` to continue the phase letter sequence (e.g. if the archive's last phase was `K`, the next phase is `L`). See the Phase and Story ID Scheme below.
+
+**After completing all steps below**, prompt the user to change modes:
+
+```bash
+project-guide mode plan_phase
+```
 
 ---
 
 
-## Cycle Steps
+## Phase and Story ID Scheme
 
-For each story:
+Phase and story IDs use a base-26 letter scheme with no zero. The same scheme applies to both — single letters first, then two-letter combinations, etc. This keeps IDs short while supporting projects of any size, and lets archive boundaries continue the sequence cleanly.
 
-1. **Read** the story's checklist from `docs/specs/stories.md`
-2. **Implement** all tasks in the checklist
-3. **Add copyright/license headers** to every new source file
-4. **Run tests** -- `pyve run pytest` (fix failures before continuing)
-5. **Run linting** -- fix any issues immediately
-6. **Mark tasks** as `[x]` in `stories.md` and change story suffix to `[Done]`
-7. **Bump version** in package manifest and source (if the story has a version)
-8. **Update CHANGELOG.md** with the version entry
-9. **Present** the completed story concisely: what changed (files + line refs), verification results (test counts, lint status), and the suggested next story. Do not propose commits, pushes, or bundling options. Do not offer "want me to also…?" follow-ups.
-10. **Wait** for the developer to say "go" before starting the next story
+### Phase letters
 
-## Velocity Practices
+Phases are labeled `A`, `B`, …, `Z`, then `AA`, `AB`, …, `AZ`, `BA`, …, `ZZ`, then `AAA`, …. The scheme is base-26 with no zero — there is no "phase 0" and `B` follows `A` (not `AB`).
 
-**LLM's role in each cycle:**
+Examples in order: `A`, `B`, …, `Z`, `AA`, `AB`, `AC`, …, `AZ`, `BA`, `BB`, …, `ZZ`, `AAA`, ….
 
-- **Version bump per story** -- v0.1.0, v0.2.0, v0.3.0, etc. — bump in package manifest and source
-- **Minimal process overhead** -- focus on making it work, not making it perfect
-- **Tests run after every story** -- not after every file, but before presenting to developer
-- **Fix linting immediately** -- small incremental fixes, not batch cleanup
-- **Update CHANGELOG.md** with the version entry before presenting
+### Story sub-letters
 
-**Developer's role (do NOT prompt for, offer, or initiate):**
+Within a phase, stories use lowercase letters following the same scheme: `A.a`, `A.b`, …, `A.z`, then `A.aa`, `A.ab`, …, `A.az`, `A.ba`, ….
 
-- **Direct commits to main** -- no branches, no PRs, no code review (velocity convention)
-- **Commit messages** reference story IDs: `"Story A.a: v0.1.0 Hello World"`
-- **Decides when to commit** -- the LLM presents, the developer commits. Multiple stories may be bundled into one commit at the developer's discretion — that is not the LLM's call to make or suggest.
+Examples: `A.a`, `A.b`, …, `A.z`, `A.aa`, `A.ab`, ….
 
-## Story Ordering
+### Continuing across archive boundaries
 
-- Start with Story A.a (Hello World) if not yet implemented
-- If unclear which story is next, ask: "Which story should I work on next?"
-- Never skip ahead -- complete stories in order within each phase
+When `stories.md` is archived (via `archive_stories` mode), the fresh `stories.md` starts empty — but phase letters do **not** reset. To determine the next phase letter:
 
-## File Header Reminder
+1. Look in `docs/specs/.archive/` for files matching `stories-vX.Y.Z.md`.
+2. If any exist, read the one with the highest version and find the highest phase letter inside it. The next phase letter is the successor in the base-26 sequence (e.g., if the archive's last phase was `K`, the next is `L`; if it was `AZ`, the next is `BA`).
+3. If `.archive/` is missing or empty, start at `A`.
 
-Every new source file must include the copyright and license header as the very first content (before code, docstrings, or imports).
+Story sub-letters reset within each phase — they do not continue across phases or archive boundaries.
 
-## When to Switch Modes
+---
 
-Switch to **code_test_first** when:
-- Working on a story with complex logic that benefits from TDD
-- The developer requests test-first approach
-
-Switch to **debug** when:
-- A bug is discovered during implementation
-- Tests are failing unexpectedly
-
-Switch to **production mode** when:
-- CI/CD phase is complete and branch protection is enabled
-- The project is ready for public users
 
