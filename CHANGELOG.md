@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.21.1] - 2026-08-22
+
+**The wrappers stopped re-offering work that had already shipped.** Reported from the field against a squash-merge repository.
+
+### Fixed
+- **`git-push` / `git-commit` read committed state from `stories.md` at `HEAD`, not from commit subjects alone.** On a repository whose `main` is protected and merged by squash, the wrappers proposed a bundled commit subject covering eight already-merged stories, when exactly one was uncommitted. The squash-merge presumption added in Story Q.u reaches **backwards** — it presumes the stories *preceding* the first parseable commit subject merged, and trusts everything after it. Squash merges land at the tip of history, so the opaque region is the recent tail, which is exactly what the anchor declared trustworthy. No choice of anchor position fixes it: the information is not in the subject stream, because a squash merge rewrote it.
+
+  The fix reads a signal a squash merge cannot destroy. Merging rewrites the *subjects* of the commits it absorbs, but it carries the *file* those commits edited — including the `stories.md` that marks them `[Done]`. The committed set is now the union of the commit-subject scan and the `[Done]` set in `git show HEAD:./<spec_artifacts_path>/stories.md`. Union rather than replacement: subjects remain the only signal that can name a bundled commit, and the sole input to the duplicate-story-ID warning.
+
+- **The `--amend` staging guard had the same blind spot.** It computes its own committed set, so a story that squash-merged after the anchor read as uncommitted and `--amend` refused with "that work would land inside the previous commit" — about work already in `main`. The guard now takes the same union, keeping the invariant that it asks the flow's question.
+
+Both readers degrade to contributing nothing — never to an error of their own — when git is absent, the cwd is not a repository, the repo has no commits, or `stories.md` is untracked at `HEAD`. The path is read as `HEAD:./<path>` so git resolves it against the current directory rather than the repository root.
+
+**Known limitation:** the signal assumes a story's `[Done]` flip lands in the same commit as its work, which the wrappers enforce by staging the whole tree. A `[Done]` flip committed ahead of the work it describes reads as shipped.
+
 ## [2.21.0] - 2026-08-13
 
 **Branch workflows, reachable gitbetter flags, and honest staleness (Subphase R-3, Stories R.p–R.s).** Three shipped surfaces did the wrong thing for anyone working on branches, and one documented gap had been deferred twice.

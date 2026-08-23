@@ -125,6 +125,20 @@ def _read_done_stories(spec_artifacts_path: str) -> list[StoryHeading] | None:
     return results
 
 
+def parse_done_story_ids(text: str) -> set[str]:
+    """Return the IDs of every ``[Done]`` story in a stories.md *body*.
+
+    The content-addressed counterpart to :func:`_read_done_stories`, which
+    reads a path. Story R.v needs the ``[Done]`` set of a stories.md revision
+    that exists only inside git (``git show HEAD:...``), never on disk.
+
+    Header stories are not distinguished here. The caller intersects this set
+    with its own commit-units list, which has already had headers filtered
+    out, so re-deriving the flag from body text buys nothing.
+    """
+    return {m.group(1) for m in _STORY_RE.finditer(text) if m.group(3) == "Done"}
+
+
 _PHASE_BOUNDARY_RE = re.compile(r"^(?:## Phase |## Future)", re.MULTILINE)
 
 

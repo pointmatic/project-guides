@@ -66,6 +66,7 @@ from project_guide.stories import (
     derive_bundle_commit_message,
     derive_commit_message,
     parse_committed_ids_from_subject,
+    parse_done_story_ids,
 )
 from project_guide.sync import (
     file_matches_template,
@@ -1944,6 +1945,42 @@ def _get_committed_story_ids() -> tuple[set[str], dict[str, list[str]]]:
     return committed, duplicates
 
 
+def _get_head_done_story_ids(spec_artifacts_path: str) -> set[str]:
+    """Story IDs already marked ``[Done]`` in stories.md as committed at HEAD.
+
+    The squash-proof half of the committed set. A squash merge rewrites commit
+    *subjects* into a PR title — which is why
+    :func:`_get_committed_story_ids` cannot see the stories that shipped
+    through one — but it preserves the *content* it merged. A story that
+    merged carried the stories.md marking it ``[Done]`` in with it, so HEAD's
+    copy of that file answers "did this ship?" without depending on any commit
+    subject surviving.
+
+    The path is passed as ``HEAD:./<path>`` so git resolves it relative to the
+    current directory rather than the repository root — the wrapper does not
+    require being run from the top of the worktree.
+
+    Returns an empty set for every state in which the question cannot be
+    answered — git absent, not a repository, no commits yet, stories.md not
+    tracked at HEAD — which degrades to exactly the pre-R.v behavior rather
+    than erroring on its own.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "show", f"HEAD:./{spec_artifacts_path}/stories.md"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except (FileNotFoundError, OSError):
+        return set()
+
+    if result.returncode != 0:
+        return set()
+
+    return parse_done_story_ids(result.stdout)
+
+
 def _get_current_branch() -> str | None:
     """Return the current git branch name, or ``None`` when undeterminable.
 
@@ -2332,6 +2369,7 @@ def _run_amend(
     keep: bool,
     skip_input: bool,
     done_stories: list | None,
+    spec_artifacts_path: str,
 ) -> None:
     """Run gitbetter's ``--amend``: the current tree onto the last commit.
 
@@ -2389,6 +2427,11 @@ def _run_amend(
     # where stories.md gives it standing, and nowhere else.
     commit_units = [s for s in (done_stories or []) if not s.is_header]
     committed, _duplicates = _get_committed_story_ids()
+    # R.v: the same union the normal flow applies. The guard must ask the flow's
+    # question or it refuses to amend on exactly the histories the flow has just
+    # learned to read — a story that squash-merged after the anchor would look
+    # uncommitted here and block an amend of the commit that followed it.
+    committed |= _get_head_done_story_ids(spec_artifacts_path)
     committed = _relaxed_committed_set(branch_name, commit_units, committed)
     uncommitted = [s for s in commit_units if s.story_id not in committed]
     if uncommitted:
@@ -2455,7 +2498,9 @@ def _run_gitbetter_wrapper(
     # exits, which exist because the normal flow cannot derive a message
     # without stories. `--amend` reads its message from git instead.
     if amend:
-        _run_amend(tool_name, branch_name, keep, skip_input, done_stories)
+        _run_amend(
+            tool_name, branch_name, keep, skip_input, done_stories, spec_artifacts_path
+        )
 
     if done_stories is None:
         click.secho(
@@ -2477,6 +2522,14 @@ def _run_gitbetter_wrapper(
 
     if duplicates and not _prompt_continue_on_duplicate_ids(duplicates, skip_input):
         sys.exit(1)
+
+    # R.v: augment the subject-derived set with the stories already [Done] in
+    # HEAD's stories.md. Subjects are the only signal that can name a *bundle*
+    # (and the only one the duplicate warning above can use), but they are
+    # erased by squash merges; committed file content is not. Union, never
+    # replace: a story committed under its own subject before stories.md was
+    # updated is still committed.
+    committed |= _get_head_done_story_ids(spec_artifacts_path)
 
     # P.v: filter header stories (zero-checklist body) out of the commit-units
     # set. Headers are decorative groupings of sub-numbered children and never

@@ -577,9 +577,47 @@ Windows CI failed on `v2.21.0`'s commit. `init`'s detection-miss warning (Story 
 
 **The gap this exposes in the verification checklist.** The four local gates — tests, ruff, mypy, the stripped-`PATH` run — all passed on the commit Windows rejected, because every one of them runs on POSIX. The stripped-`PATH` gate added in R.m.1 closed the *environment* dimension (pyve present vs. absent); this is the *platform* dimension, and no local gate covers it. The mitigation is not another local run but a habit: assert the forward-slash form, and reproduce Windows rendering with `PureWindowsPath` where a message names a path.
 
+### Story R.v: `v2.21.1` Read committed state from `stories.md` at `HEAD` [Done]
+
+Reported from the field (pyve, 2026-08-22). On a squash-merged `main`, `project-guide git-push fix/P.ap-pyve-in-ci` proposed a ~500-character bundled subject covering **eight** stories — `P.ai` through `P.ap` — when exactly one, `P.ap`, was uncommitted. `P.ai`–`P.ao` had shipped through a squashed PR.
+
+**The anchor reaches the wrong direction.** Story Q.u's presumption announces the *first* `[Done]` story whose ID parses out of the log and presumes everything **before** it merged (`_presumed_squash_merged_prefix` takes `committed_in_branch[0]` and presumes `commit_units[:anchor_idx]`). In the report the anchor was `P.af.3`, so the presumption covered `P.v`–`P.af.2` and the eight stories *after* the anchor fell into what FR-15 called the "genuinely uncommitted tail." Squash merges land at the **tip** of history, so the opaque region is always the recent tail — exactly what the anchor declares trustworthy. A *trailing* anchor fails identically: the squashed stories still follow the last parseable subject. The signal is not in the subject stream, because a squash merge is the thing that removed it.
+
+**A squash merge destroys subjects; it preserves content.** Merging rewrites the subjects of the commits it absorbs, but it carries the `stories.md` those commits edited — the one that marks them `[Done]`. `HEAD`'s copy of that file therefore answers "did this ship?" with no subject surviving. This is a local, complete answer: no forge API, no dependence on GitHub's squash-body setting, immune to rebase and PR-title rewriting.
+
+- [x] `parse_done_story_ids(text)` in `stories.py` — the content-addressed counterpart to `_read_done_stories`, which reads a path; the R.v revision exists only inside git
+- [x] `_get_head_done_story_ids()` (`cli.py`) — `git show HEAD:./<spec_artifacts_path>/stories.md`. The leading `./` makes git resolve against the cwd rather than the repo root, so the wrapper still works from a subdirectory
+- [x] Union it into `committed` in `_run_gitbetter_wrapper`, immediately after the duplicate check so every downstream consumer reads the result. **Union, never replace** — subjects remain the only signal that can name a bundled commit, and the sole input to the duplicate-ID warning
+- [x] Same union in `_run_amend`'s staging guard, which computes its own set and had the identical blind spot: a story squash-merged after the anchor read as uncommitted, so `--amend` refused with "that work would land inside the previous commit" about work already in `main`. `spec_artifacts_path` threaded through to reach it
+- [x] Degradation is silence, not error: git absent, non-repository cwd, empty repo, or untracked `stories.md` → empty set → exactly the pre-R.v behavior
+- [x] Five tests. The headline reproduces the report minimized (anchor parses, a later story squash-merged, one genuinely uncommitted); plus the fully-merged steady state (→ `Nothing to commit`, where the no-anchor prompt could only ever guess "the last one"), the degradation path, the `HEAD:./` path form, and the `--amend` guard
+- [x] Verified both directions — with the fix neutralized, 4 of the 5 fail (the degradation test asserts pre-R.v behavior, so it must pass either way)
+- [x] `features.md` FR-15 gains "What counts as committed" and the backwards-only correction; `tech-spec.md` § External CLI Dependencies gains the two-source union, the subject-vs-content table, the `HEAD:./` rationale, and a do-not-move-the-anchor note
+- [x] Verification: 911 passed (906 + 5), ruff clean, mypy clean, stripped-`PATH` run 911 passed
+
+**Version — `v2.21.1`, correcting a stale premise in R.u.** R.u recorded that "neither `v2.20.0` nor `v2.21.0` is tagged or on PyPI," which was true when written. Both have since happened: `v2.21.0` is tagged at R.u's own commit and published (checked via `git tag` and `pip index versions`, not assumed). The defect is in shipped code and this is a bug fix, so it takes its own patch line rather than riding an already-released version.
+
+**Prevention scan.** The root-cause pattern is "derive committed state from commit subjects." Both call sites of `_get_committed_story_ids()` are fixed. `status` reads `stories.md` only and never consults git, so it has no exposure. The `Future` § "Story tracker" entry is updated below — its premise was correct about the subject-scanning architecture and is now narrower.
+
+**What this does not fix.** The signal assumes a story's `[Done]` flip lands in the same commit as its work — enforced in practice by gitbetter staging the whole tree, but a `[Done]` flip committed *ahead* of its work reads as shipped. And the wrapper still cannot attribute *multiple* genuinely-uncommitted stories to separate commits; it proposes a bundle. Also observed in the report and left alone: the bundled subject has no length sanity check, so a legitimate 8-story bundle emits ~500 characters.
+
 ---
 
 ## Future
+
+### Story tracker [Deferred]
+
+There is no reasonable way to track which stories should be added to the commit message when a branch is being committed on a repo with the main branch locked. When there are multiple stories marked `[Done]` but one or more were already committed, squashed, and merged. This really needs a story service that tracks each commit as well as the commit hash. The `stories.md` file should instead be converted into an interface between the developer and story service, scanning it for human or LLM-added updates. This could be a SQLite DB or a hierarchical directory and file system tracked in git (straightforward). It could also be git-ignored and track only a zip copy (clever, complicated). Tracking what is active could keep an `.archive` directly to clearly mark a branch of stories that are either cancelled or completed so the surface to scan for updates remains smaller.
+
+**Narrowed by Story R.v (2026-08-22), not resolved.** The premise above was accurate about the subject-scanning architecture: a squash merge rewrites the subjects the wrapper reconstructs from, and no heuristic over `git log --pretty=%s` recovers them. R.v answers the *detection* half without a service, by reading a signal the squash preserves — `stories.md` at `HEAD` already marks the merged stories `[Done]`. That is the cheapest form of the "convert `stories.md` into the interface" idea in this entry: the file already is the record, so nothing new has to be stored.
+
+Three things a service would still buy, none of which R.v provides:
+
+- **Commit hashes.** Nothing records *which* commit carried a story, so there is no way to link a story to its diff, detect a story whose commit was reverted, or attribute a story across a rebase.
+- **Multi-story attribution.** With several genuinely-uncommitted `[Done]` stories the wrapper still proposes one bundled subject; splitting them into separate commits with correct per-story messages needs per-story state the file does not carry.
+- **A bounded scan surface.** The `.archive` idea stands on its own — `archive_stories` already exists and already shrinks the surface; the gap is that nothing prompts for it on a release boundary.
+
+Revisit if hash-level attribution becomes concrete. The detection bug that motivated this entry is fixed.
 
 ### Shell completion on Windows — support git-bash properly, or refuse [Deferred]
 

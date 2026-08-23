@@ -84,7 +84,7 @@ project-guide/
 │               ├── llm_entry_point.md  # Jinja2 entry point template (renders to go.md)
 │               ├── modes/              # Mode templates + header partials
 │               └── artifacts/          # Artifact structure templates
-└── tests/                              # 901 tests across 15 files
+└── tests/                              # 911 tests across 15 files
     ├── test_cli.py                     # CLI command tests
     ├── test_sync.py                    # Sync logic tests
     ├── test_integration.py             # End-to-end workflow tests
@@ -498,7 +498,24 @@ The colon rule: a colon precedes a *version* or a *title*, never two bare IDs. T
 
 **Out-of-sequence partition.** After the header filter, the `[Done]` list in document order must be a clean **committed prefix → uncommitted suffix**. Any uncommitted story whose index precedes the last committed story's index is out-of-sequence. Phase boundaries are not respected; the partition operates on the flat list.
 
-**Squash-merge presumption** (`_presume_committed_on_branch`, and the pure `_presumed_squash_merged_prefix` it shares with the `--amend` guard). Squash merges rewrite commit subjects into PR titles, so earlier `[Done]` stories may not parse from the log at hand even though they shipped. Two heuristics: with an **anchor** (≥1 story parses), presume every story before it merged and run the normal flow on the tail; with **no anchor** and 2+ uncommitted, offer `Commit just the last one? [Y/n]`.
+**The committed set has two sources, unioned** (Story R.v). `_get_committed_story_ids()` parses `git log --pretty=%s`; `_get_head_done_story_ids()` runs `git show HEAD:./<spec_artifacts_path>/stories.md` and returns its `[Done]` IDs via `parse_done_story_ids()`. The union is taken once, immediately after the duplicate check, and every downstream consumer — the partition, the presumption, the `--amend` staging guard — reads the result.
+
+Subjects and content fail in opposite directions, which is why both are read:
+
+| | names a *bundle* | survives a squash merge |
+|---|---|---|
+| commit subject | yes | no |
+| `[Done]` at HEAD | n/a (per-story) | yes |
+
+A squash merge rewrites the subjects of the commits it absorbs, but it *carries the file those commits edited* — including the `stories.md` that marks them `[Done]`. So HEAD's copy of that file answers "did this ship?" without any subject surviving. **Union, never replace:** the subject scan remains the only signal that can name a bundled commit, and it is the sole input to the duplicate-ID warning. Both readers degrade to "nothing known" (empty set) when git is absent, the cwd is not a repository, the repo has no commits, or `stories.md` is untracked — never to an error of their own.
+
+The read is `HEAD:./<path>`, not `HEAD:<path>`: the leading `./` makes git resolve the path against the current directory rather than the repository root, so the wrapper does not require being run from the top of the worktree.
+
+**Known limitation.** The signal assumes a story's `[Done]` flip lands in the same commit as its work — which the wrappers enforce in practice, since gitbetter stages the whole tree. A `[Done]` flip committed *ahead* of the work it describes reads as shipped, and the wrapper will decline to derive a message for it.
+
+**Squash-merge presumption** (`_presume_committed_on_branch`, and the pure `_presumed_squash_merged_prefix` it shares with the `--amend` guard). A **fallback for the pre-R.v blind spot, retained for histories the HEAD read cannot cover** (a `stories.md` that was renamed, moved, or not yet tracked at HEAD). Two heuristics: with an **anchor** (≥1 story parses), presume every story before it merged and run the normal flow on the tail; with **no anchor** and 2+ uncommitted, offer `Commit just the last one? [Y/n]`.
+
+**The anchor reaches backwards only, and that was the R.v defect.** It presumes the stories *preceding* the first parseable subject merged, and trusts everything after it. Squash merges land at the **tip** of history, so the opaque region is the recent tail — precisely what the anchor declares trustworthy. No choice of anchor position fixes this (a *trailing* anchor fails identically, since the squashed stories follow the last parseable subject); the signal simply is not in the subject stream. Do not attempt to repair this by moving the anchor.
 
 **Destination-aware gate** (Story R.p). Whether the presumption applies is decided by *where the work is going*, not where the developer is standing: a supplied `branch_name` selects it from any checkout. Naming the current branch is not branch work (an ordinary push keeps the strict discipline), and an undeterminable branch stays strict — the mechanism needs a branch to scan and a name to quote. Announcements name the branch **scanned** (the current one); the destination has no log yet.
 
@@ -550,8 +567,9 @@ All operations are file-based on small files (<100KB each). No performance conce
 | `test_cross_repo_contract.py` | Pyve-hosting cross-repo contract guards |
 | `test_runtime.py` | Runtime helpers (skip-input, project-name detection) |
 | `test_archive_stories_mode.py` | `archive_stories` mode end-to-end |
+| `test_completion.py` | `completion` command group: install/uninstall/status/show |
 
-**Total: 901 tests across 15 files, ≥85% coverage (currently ~91%).**
+**Total: 911 tests across 15 files, ≥85% coverage (currently ~91%).**
 
 ### Key Test Patterns
 

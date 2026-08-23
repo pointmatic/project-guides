@@ -2469,10 +2469,22 @@ def _write_stories_md_raw(body: str) -> None:
     )
 
 
-def _mock_git_log_subjects(monkeypatch, subjects: list[str], git_push_argv_capture: list | None = None, branch: str = "main"):
+def _mock_git_log_subjects(
+    monkeypatch,
+    subjects: list[str],
+    git_push_argv_capture: list | None = None,
+    branch: str = "main",
+    head_stories_md: str | None = None,
+):
     """Patch subprocess.run so `git log` returns the given subjects, `git
     rev-parse --abbrev-ref HEAD` returns the given branch name, and
-    `git-push` invocations capture their argv into the given list."""
+    `git-push` invocations capture their argv into the given list.
+
+    ``head_stories_md`` is the body of `stories.md` as committed at HEAD, for
+    the Story R.v committed-state read (`git show HEAD:<path>`). ``None`` — the
+    default — makes that read fail the way it does outside a repository, so
+    every pre-R.v test keeps exercising the subject-only committed set.
+    """
     import project_guide.cli as cli_module
 
     class _FakeCompleted:
@@ -2486,12 +2498,25 @@ def _mock_git_log_subjects(monkeypatch, subjects: list[str], git_push_argv_captu
             return _FakeCompleted(0, stdout="\n".join(subjects) + ("\n" if subjects else ""))
         if argv and argv[:2] == ["git", "rev-parse"]:
             return _FakeCompleted(0, stdout=branch + "\n")
+        if argv and argv[:2] == ["git", "show"]:
+            if head_stories_md is None:
+                return _FakeCompleted(128, stderr="fatal: not a git repository\n")
+            return _FakeCompleted(0, stdout=head_stories_md)
         # Anything else is a git-push invocation in these tests.
         if git_push_argv_capture is not None:
             git_push_argv_capture.append(list(argv))
         return _FakeCompleted(0)
 
     monkeypatch.setattr(cli_module.subprocess, "run", fake_run)
+
+
+def _stories_md_body(*headings: str) -> str:
+    """The exact text `_write_stories_md` would write, without writing it.
+
+    For authoring the HEAD-committed side of a `stories.md` pair, where the
+    worktree and HEAD versions differ only in story status.
+    """
+    return _STORIES_HEADER + "\n\n".join(f"{h}\n\n- [x] done" for h in headings) + "\n"
 
 
 def _mock_git_push_on_path(monkeypatch, path: str | None = "/usr/local/bin/git-push"):
@@ -3893,6 +3918,188 @@ def test_git_commit_gets_the_same_gate(runner, tmp_path, monkeypatch):
 # --- End Story R.p ------------------------------------------------------------
 
 
+# --- Story R.v: read committed state from stories.md at HEAD ------------------
+#
+# Reported from the field (pyve, 2026-08-22). The anchor presumption reaches
+# backwards only: it presumes the stories *before* the first parseable subject
+# merged, and trusts everything after it. Squash merges land at the *tip* of
+# history, so the opaque region is the recent tail — exactly what the anchor
+# declares trustworthy. Subjects cannot answer this; the committed content of
+# stories.md can, because a squash merge preserves the file it rewrote the
+# subjects of.
+
+
+def test_squash_merged_stories_after_the_anchor_are_not_reoffered(runner, tmp_path, monkeypatch):
+    """The reported bug, minimized.
+
+    A.a and A.b kept their subjects (older, pre-branch-protection history).
+    A.c then shipped through a squash-merged PR, so its subject became the PR
+    title and no longer parses. Only A.d is genuinely uncommitted.
+
+    Before this story the anchor (A.a) presumed nothing — there is nothing
+    before it — and A.c fell into the "genuinely uncommitted tail" alongside
+    A.d, producing a two-story bundle offer for work that had already shipped.
+    """
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        _write_stories_md(
+            "### Story A.a: v0.1.0 First [Done]",
+            "### Story A.b: v0.2.0 Second [Done]",
+            "### Story A.c: v0.3.0 Third [Done]",
+            "### Story A.d: v0.4.0 Fourth [Done]",
+        )
+        _mock_git_push_on_path(monkeypatch)
+        captured: list = []
+        _mock_git_log_subjects(
+            monkeypatch,
+            subjects=["A.b: v0.2.0 Second", "A.a: v0.1.0 First"],
+            git_push_argv_capture=captured,
+            branch="main",
+            # A.c is [Done] at HEAD — it merged, and the merge carried the file
+            # that says so. A.d is still [Planned] there: it is this commit.
+            head_stories_md=_stories_md_body(
+                "### Story A.a: v0.1.0 First [Done]",
+                "### Story A.b: v0.2.0 Second [Done]",
+                "### Story A.c: v0.3.0 Third [Done]",
+                "### Story A.d: v0.4.0 Fourth [Planned]",
+            ),
+        )
+
+        result = runner.invoke(main, ['git-push', 'fix/a-d'])
+
+        assert result.exit_code == 0, result.output
+        assert "Proposed bundled commit subject" not in result.output
+        assert len(captured) == 1, captured
+        assert captured[0][1] == "A.d: v0.4.0 Fourth"
+
+
+def test_fully_merged_history_with_no_parseable_subjects_is_nothing_to_commit(
+    runner, tmp_path, monkeypatch
+):
+    """The squash-merged steady state: zero subjects parse, nothing is pending.
+
+    This is the shape the no-anchor prompt was invented to survive — it could
+    only ever guess "the last one", and guessed wrong whenever the answer was
+    "none of them". HEAD's stories.md answers it outright.
+    """
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        headings = (
+            "### Story A.a: v0.1.0 First [Done]",
+            "### Story A.b: v0.2.0 Second [Done]",
+            "### Story A.c: v0.3.0 Third [Done]",
+        )
+        _write_stories_md(*headings)
+        _mock_git_push_on_path(monkeypatch)
+        captured: list = []
+        _mock_git_log_subjects(
+            monkeypatch,
+            subjects=["Add the third thing (#42)"],
+            git_push_argv_capture=captured,
+            branch="main",
+            head_stories_md=_stories_md_body(*headings),
+        )
+
+        result = runner.invoke(main, ['git-push', 'fix/next'])
+
+        assert result.exit_code == 0, result.output
+        assert "Nothing to commit" in result.output
+        assert captured == []
+
+
+def test_untracked_stories_md_at_head_degrades_to_the_subject_only_set(
+    runner, tmp_path, monkeypatch
+):
+    """`git show` failing is not an error — it is the pre-R.v behavior.
+
+    Covers git being absent, a non-repository cwd, an empty repo, and a
+    stories.md that is simply not tracked yet: all the same non-zero exit.
+    """
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        _write_stories_md(
+            "### Story A.a: v0.1.0 First [Done]",
+            "### Story A.b: v0.2.0 Second [Done]",
+        )
+        _mock_git_push_on_path(monkeypatch)
+        captured: list = []
+        _mock_git_log_subjects(
+            monkeypatch,
+            subjects=["A.a: v0.1.0 First"],
+            git_push_argv_capture=captured,
+            branch="main",
+            head_stories_md=None,
+        )
+
+        result = runner.invoke(main, ['git-push'])
+
+        assert result.exit_code == 0, result.output
+        assert len(captured) == 1, captured
+        assert captured[0][1] == "A.b: v0.2.0 Second"
+
+
+def test_head_read_asks_git_for_a_cwd_relative_path(runner, tmp_path, monkeypatch):
+    """`HEAD:./<path>` — relative to the cwd, not the repository root.
+
+    `HEAD:<path>` would be root-relative, so the wrapper would read the wrong
+    file (or nothing) whenever it runs from a subdirectory of the worktree.
+    """
+    import project_guide.cli as cli_module
+
+    seen: list = []
+
+    class _Completed:
+        returncode = 128
+        stdout = ""
+        stderr = ""
+
+    def fake_run(argv, **kwargs):
+        seen.append(list(argv))
+        return _Completed()
+
+    monkeypatch.setattr(cli_module.subprocess, "run", fake_run)
+
+    assert cli_module._get_head_done_story_ids("docs/specs") == set()
+    assert seen == [["git", "show", "HEAD:./docs/specs/stories.md"]]
+
+
+def test_amend_guard_accepts_a_story_that_squash_merged_after_the_anchor(
+    runner, tmp_path, monkeypatch
+):
+    """The `--amend` staging guard reads the flow's committed set, not its own.
+
+    A.b shipped through a squash-merged PR. Amending onto A.c's commit must not
+    be refused on the grounds that A.b "is not committed yet" — the guard exists
+    to protect against staging *unshipped* work.
+    """
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        headings = (
+            "### Story A.a: v0.1.0 First [Done]",
+            "### Story A.b: v0.2.0 Second [Done]",
+            "### Story A.c: v0.3.0 Third [Done]",
+        )
+        _write_stories_md(*headings)
+        _mock_git_push_on_path(monkeypatch)
+        captured: list = []
+        _mock_git(
+            monkeypatch,
+            subjects=["A.c: v0.3.0 Third", "A.a: v0.1.0 First"],
+            branch="main",
+            capture=captured,
+            last_subject="A.c: v0.3.0 Third",
+            head_stories_md=_stories_md_body(*headings),
+        )
+        _interactive(monkeypatch)
+
+        result = runner.invoke(main, ['git-push', '--amend'])
+
+        assert result.exit_code == 0, result.output
+        assert "Refusing to amend" not in result.output
+        assert len(captured) == 1, captured
+        assert captured[0][1] == "A.c: v0.3.0 Third"
+        assert "--amend" in captured[0]
+
+
+# --- End Story R.v ------------------------------------------------------------
+
+
 # --- Story R.q: gitbetter --keep / --amend pass-through -----------------------
 #
 # Both wrappers built `argv = [tool_path, message]` plus an optional branch, so
@@ -3902,11 +4109,21 @@ def test_git_commit_gets_the_same_gate(runner, tmp_path, monkeypatch):
 # apply. What it does need is two guards.
 
 
-def _mock_git(monkeypatch, *, subjects, branch="main", capture=None, last_subject=None):
+def _mock_git(
+    monkeypatch,
+    *,
+    subjects,
+    branch="main",
+    capture=None,
+    last_subject=None,
+    head_stories_md=None,
+):
     """Like `_mock_git_log_subjects`, but also answers `git log -1 --pretty=%s`.
 
     `last_subject=None` means "no previous commit" (non-zero exit), which is
     the state `--amend` has to report rather than hand to gitbetter.
+    `head_stories_md=None` means stories.md is not tracked at HEAD, so the
+    R.v committed-state read contributes nothing.
     """
     import project_guide.cli as cli_module
 
@@ -3925,6 +4142,10 @@ def _mock_git(monkeypatch, *, subjects, branch="main", capture=None, last_subjec
             return _Completed(0, stdout="\n".join(subjects) + ("\n" if subjects else ""))
         if argv[:2] == ["git", "rev-parse"]:
             return _Completed(0, stdout=branch + "\n")
+        if argv[:2] == ["git", "show"]:
+            if head_stories_md is None:
+                return _Completed(128)
+            return _Completed(0, stdout=head_stories_md)
         if capture is not None:
             capture.append(list(argv))
         return _Completed(0)
